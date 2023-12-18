@@ -352,11 +352,10 @@ theorem id_apply_one' {n : ℕ} (h : n = 1) (v : Fin n → E) :
 /-- For `n ≠ 1`, the `n`-th coefficient of `id 𝕜 E` is zero, by definition. -/
 @[simp]
 theorem id_apply_ne_one {n : ℕ} (h : n ≠ 1) : (FormalMultilinearSeries.id 𝕜 E) n = 0 := by
-  cases' n with n
-  · rfl
-  · cases n
-    · contradiction
-    · rfl
+  match n with
+    | 0 => rfl
+    | 1 => contradiction
+    | n + 2 => rfl
 
 end
 
@@ -388,20 +387,18 @@ theorem comp_id (p : FormalMultilinearSeries 𝕜 E F) : p.comp (id 𝕜 E) = p 
     rw [compAlongComposition_apply, ContinuousMultilinearMap.zero_apply]
     apply ContinuousMultilinearMap.map_coord_zero _ j
     dsimp [applyComposition]
-    rw [id_apply_ne_one _ _ (ne_of_gt A)]
-    rfl
+    rw [id_apply_ne_one _ _ (ne_of_gt A), ContinuousMultilinearMap.zero_apply]
   · simp
 
 @[simp]
 theorem id_comp (p : FormalMultilinearSeries 𝕜 E F) (h : p 0 = 0) : (id 𝕜 F).comp p = p := by
   ext1 n
-  by_cases hn : n = 0
-  · rw [hn, h]
+  obtain rfl|n_pos := n.eq_zero_or_pos
+  · rw [h]
     ext v
     rw [comp_coeff_zero', id_apply_ne_one _ _ zero_ne_one]
     rfl
   · dsimp [FormalMultilinearSeries.comp]
-    have n_pos : 0 < n := bot_lt_iff_ne_bot.mpr hn
     rw [Finset.sum_eq_single (Composition.single n n_pos)]
     · show compAlongComposition (id 𝕜 F) p (Composition.single n n_pos) = p n
       ext v
@@ -415,8 +412,8 @@ theorem id_comp (p : FormalMultilinearSeries 𝕜 E F) (h : p 0 = 0) : (id 𝕜 
       intro b _ hb
       have A : b.length ≠ 1 := by simpa [Composition.eq_single_iff_length] using hb
       ext v
-      rw [compAlongComposition_apply, id_apply_ne_one _ _ A]
-      rfl
+      rw [compAlongComposition_apply, id_apply_ne_one _ _ A, ContinuousMultilinearMap.zero_apply,
+        ContinuousMultilinearMap.zero_apply]
     · simp
 
 /-! ### Summability properties of the composition of formal power series-/
@@ -536,8 +533,7 @@ def compChangeOfVariables (m M N : ℕ) (i : Σ n, Fin n → ℕ) (hi : i ∈ co
     Σ n, Composition n := by
   rcases i with ⟨n, f⟩
   rw [mem_compPartialSumSource_iff] at hi
-  refine ⟨∑ j, f j, ofFn fun a => f a, fun hi' => ?_, by simp [sum_ofFn]⟩
-  rename_i i
+  refine ⟨∑ j, f j, ofFn fun a => f a, fun {i} hi' => ?_, by simp [sum_ofFn]⟩
   obtain ⟨j, rfl⟩ : ∃ j : Fin n, f j = i := by rwa [mem_ofFn, Set.mem_range] at hi'
   exact (hi.2 j).1
 
@@ -673,6 +669,9 @@ theorem comp_partialSum (q : FormalMultilinearSeries 𝕜 F G) (p : FormalMultil
   rintro ⟨k, blocks_fun⟩ H
   apply congr _ (compChangeOfVariables_length 0 N N H).symm
   intros
+  -- Replacing the following two lines by
+  -- `rw [← compChangeOfVariables_blocksFun 0 N N H, applyComposition, Function.comp_def]`
+  -- breaks the `simpa` in `comp_assoc`.
   rw [← compChangeOfVariables_blocksFun 0 N N H]
   rfl
 
@@ -707,7 +706,7 @@ theorem HasFPowerSeriesAt.comp {g : F → G} {f : E → F} {q : FormalMultilinea
   refine ⟨min rf' r, ?_⟩
   refine
     ⟨le_trans (min_le_right rf' r) (FormalMultilinearSeries.le_comp_radius_of_summable q p r hr),
-      min_pos, @fun y hy => ?_⟩
+      min_pos, fun {y} hy => ?_⟩
   /- Let `y` satisfy `‖y‖ < min (r, rf', δ)`. We want to show that `g (f (x + y))` is the sum of
     `q.comp p` applied to `y`. -/
   -- First, check that `y` is small enough so that estimates for `f` and `g` apply.
@@ -782,9 +781,8 @@ theorem HasFPowerSeriesAt.comp {g : F → G} {f : E → F} {q : FormalMultilinea
             ‖compAlongComposition q p c‖ * ∏ _j : Fin n, ‖y‖ := by
           apply ContinuousMultilinearMap.le_opNorm
         _ ≤ ‖compAlongComposition q p c‖ * (r : ℝ) ^ n := by
-          apply mul_le_mul_of_nonneg_left _ (norm_nonneg _)
           rw [Finset.prod_const, Finset.card_fin]
-          apply pow_le_pow_left (norm_nonneg _)
+          gcongr
           rw [EMetric.mem_ball, edist_eq_coe_nnnorm] at hy
           have := le_trans (le_of_lt hy) (min_le_right _ _)
           rwa [ENNReal.coe_le_coe, ← NNReal.coe_le_coe, coe_nnnorm] at this
@@ -796,10 +794,9 @@ theorem HasFPowerSeriesAt.comp {g : F → G} {f : E → F} {q : FormalMultilinea
   have E : HasSum (fun n => (q.comp p) n fun _j => y) (g (f (x + y))) := by
     apply D.sigma
     intro n
-    dsimp [FormalMultilinearSeries.comp]
-    convert hasSum_fintype (α := G) (β := Composition n) _
-    simp only [ContinuousMultilinearMap.sum_apply]
-    rfl
+    simp only [compAlongComposition_apply, FormalMultilinearSeries.comp,
+      ContinuousMultilinearMap.sum_apply]
+    exact hasSum_fintype _
   rw [Function.comp_apply]
   exact E
 
@@ -895,8 +892,9 @@ theorem sigma_composition_eq_iff (i j : Σ a : Composition n, Composition a.leng
   rcases i with ⟨a, b⟩
   rcases j with ⟨a', b'⟩
   rintro ⟨h, h'⟩
-  have H : a = a' := by ext1; exact h
-  induction H; congr; ext1; exact h'
+  obtain rfl : a = a' := by ext1; exact h
+  obtain rfl : b = b' := by ext1; exact h'
+  rfl
 
 /-- Rewriting equality in the dependent type
 `Σ (c : Composition n), Π (i : Fin c.length), Composition (c.blocksFun i)` in
@@ -908,7 +906,7 @@ theorem sigma_pi_composition_eq_iff
   rcases u with ⟨a, b⟩
   rcases v with ⟨a', b'⟩
   dsimp at H
-  have h : a = a' := by
+  obtain rfl : a = a' := by
     ext1
     have :
       map List.sum (ofFn fun i : Fin (Composition.length a) => (b i).blocks) =
@@ -919,7 +917,6 @@ theorem sigma_pi_composition_eq_iff
       (ofFn fun i : Fin (Composition.length a) => (b i).blocks.sum) =
         ofFn fun i : Fin (Composition.length a') => (b' i).blocks.sum at this
     simpa [Composition.blocks_sum, Composition.ofFn_blocksFun] using this
-  induction h
   ext1
   · rfl
   · simp only [heq_eq_eq, ofFn_inj] at H ⊢
@@ -936,7 +933,7 @@ def gather (a : Composition n) (b : Composition a.length) : Composition n where
   blocks_pos := by
     rw [forall_mem_map]
     intro j hj
-    suffices H : ∀ i ∈ j, 1 ≤ i by calc
+    suffices H : ∀ i ∈ j, 1 ≤ i from calc
       0 < j.length := length_pos_of_mem_splitWrtComposition hj
       _ ≤ j.sum := length_le_sum_of_one_le _ H
     intro i hi
@@ -1053,7 +1050,7 @@ def sigmaEquivSigmaPi (n : ℕ) :
     ⟨{  blocks := (ofFn fun j => (i.2 j).blocks).join
         blocks_pos := by
           simp only [and_imp, List.mem_join, exists_imp, forall_mem_ofFn_iff]
-          exact @fun i j hj => Composition.blocks_pos _ hj
+          exact fun {i} j hj => Composition.blocks_pos _ hj
         blocks_sum := by simp [sum_ofFn, Composition.blocks_sum, Composition.sum_blocksFun] },
       { blocks := ofFn fun j => (i.2 j).length
         blocks_pos := by
@@ -1094,15 +1091,13 @@ def sigmaEquivSigmaPi (n : ℕ) :
       ext1
       dsimp [Composition.gather]
       rwa [splitWrtComposition_join]
-      simp only [map_ofFn]
-      rfl
+      simp only [map_ofFn, Function.comp_def]
     · rw [Fin.heq_fun_iff]
       · intro i
         dsimp [Composition.sigmaCompositionAux]
         rw [getElem_of_eq (splitWrtComposition_join _ _ _)]
         · simp only [getElem_ofFn]
-        · simp only [map_ofFn]
-          rfl
+        · simp only [map_ofFn, Function.comp_def]
       · congr
 
 end Composition
