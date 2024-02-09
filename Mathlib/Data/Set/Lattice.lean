@@ -82,8 +82,8 @@ theorem mem_iInter₂_of_mem {s : ∀ i, κ i → Set α} {a : α} (h : ∀ i j,
     a ∈ ⋂ (i) (j), s i j :=
   mem_iInter₂.2 h
 
-instance completeAtomicBooleanAlgebra : CompleteAtomicBooleanAlgebra (Set α) :=
-  { instBooleanAlgebraSet with
+instance instCompleteAtomicBooleanAlgebra : CompleteAtomicBooleanAlgebra (Set α) :=
+  { instBooleanAlgebra with
     le_sSup := fun s t t_in a a_in => ⟨t, t_in, a_in⟩
     sSup_le := fun s t h a ⟨t', ⟨t'_in, a_in⟩⟩ => h t' t'_in a_in
     le_sInf := fun s t h a a_in t' t'_in => h t' t'_in a_in
