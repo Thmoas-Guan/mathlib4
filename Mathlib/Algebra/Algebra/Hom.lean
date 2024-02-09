@@ -302,6 +302,10 @@ def toLinearMap : A →ₗ[R] B where
   map_smul' := map_smul _
 
 @[simp]
+theorem coe_toLinearMap : φ.toLinearMap = (φ : A → B) :=
+  rfl
+
+@[simp]
 theorem toLinearMap_apply (p : A) : φ.toLinearMap p = φ p :=
   rfl
 
@@ -428,6 +432,15 @@ def toIntAlgHom [Ring R] [Ring S] [Algebra ℤ R] [Algebra ℤ S] (f : R →+* S
 lemma toIntAlgHom_injective [Ring R] [Ring S] [Algebra ℤ R] [Algebra ℤ S] :
     Function.Injective (RingHom.toIntAlgHom : (R →+* S) → _) :=
   fun _ _ e ↦ DFunLike.ext _ _ (fun x ↦ DFunLike.congr_fun e x)
+
+@[simp]
+lemma coe_toIntAlgHom [Ring R] [Ring S] [Algebra ℤ R] [Algebra ℤ S] (f : R →+* S) :
+    f.toIntAlgHom = (f : R → S) :=
+  rfl
+
+lemma toIntAlgHom_apply [Ring R] [Ring S] [Algebra ℤ R] [Algebra ℤ S] (f : R →+* S) {x : R} :
+    f.toIntAlgHom x = f x :=
+  rfl
 
 end RingHom
 
