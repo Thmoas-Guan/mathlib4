@@ -774,7 +774,7 @@ section Right
 variable [Preorder α] [Monoid α] [OrderedAddCommGroup β] [DistribMulAction α β]
 
 instance instSMulPosMono [SMulPosMono α β] : SMulPosMono α βᵒᵈ where
-  elim _b hb a₁ a₂ ha := by
+  elim b hb a₁ a₂ ha := by
     rw [← neg_le_neg_iff, ← smul_neg, ← smul_neg]
     exact smul_le_smul_of_nonneg_right (β := β) ha <| neg_nonneg.2 hb
 
