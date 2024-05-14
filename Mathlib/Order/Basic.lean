@@ -1303,6 +1303,11 @@ instance Prop.partialOrder : PartialOrder Prop where
   le_trans _ _ _ f g := g ∘ f
   le_antisymm _ _ Hab Hba := propext ⟨Hab, Hba⟩
 
+@[simp]
+theorem Prop.lt_iff {p q : Prop} : p < q ↔ ¬ (q → p) := by
+  rw [lt_iff_le_not_le]
+  by_cases q <;> simp [*]
+
 end «Prop»
 
 /-! ### Linear order from a total partial order -/
