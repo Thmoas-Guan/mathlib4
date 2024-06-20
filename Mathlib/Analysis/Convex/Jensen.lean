@@ -336,4 +336,16 @@ lemma ConvexOn.bddAbove_convexHull {s t : Set E} (hst : s ⊆ t) (hf : ConvexOn 
 lemma ConcaveOn.bddBelow_convexHull {s t : Set E} (hst : s ⊆ t) (hf : ConcaveOn 𝕜 t f) :
     BddBelow (f '' s) → BddBelow (f '' convexHull 𝕜 s) := hf.dual.bddAbove_convexHull hst
 
+lemma ConvexOn.bddAbove_convexHull {s t : Set E} (hst : s ⊆ t) (hf : ConvexOn 𝕜 t f) :
+    BddAbove (f '' s) → BddAbove (f '' convexHull 𝕜 s) := by
+  rintro ⟨b, hb⟩
+  refine ⟨b, ?_⟩
+  rintro _ ⟨x, hx, rfl⟩
+  obtain ⟨y, hy, hxy⟩ :=
+    (hf.subset (convexHull_min hst hf.1) (convex_convexHull ..)).exists_ge_of_mem_convexHull hx
+  exact hxy.trans <| hb <| mem_image_of_mem _ hy
+
+lemma ConcaveOn.bddBelow_convexHull {s t : Set E} (hst : s ⊆ t) (hf : ConcaveOn 𝕜 t f) :
+    BddBelow (f '' s) → BddBelow (f '' convexHull 𝕜 s) := hf.dual.bddAbove_convexHull hst
+
 end MaximumPrinciple
