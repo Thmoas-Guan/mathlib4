@@ -267,6 +267,9 @@ theorem refl_toAlgHom : ↑(refl : A₁ ≃ₐ[R] A₁) = AlgHom.id R A₁ :=
 theorem coe_refl : ⇑(refl : A₁ ≃ₐ[R] A₁) = id :=
   rfl
 
+@[simp]
+theorem refl_apply (x : A₁) : (refl : A₁ ≃ₐ[R] A₁) x = x := rfl
+
 /-- Algebra equivalences are symmetric. -/
 @[symm]
 def symm (e : A₁ ≃ₐ[R] A₂) : A₂ ≃ₐ[R] A₁ :=
@@ -355,9 +358,12 @@ theorem symm_apply_apply (e : A₁ ≃ₐ[R] A₂) : ∀ x, e.symm (e x) = x :=
   e.toEquiv.symm_apply_apply
 
 @[simp]
-theorem symm_trans_apply (e₁ : A₁ ≃ₐ[R] A₂) (e₂ : A₂ ≃ₐ[R] A₃) (x : A₃) :
-    (e₁.trans e₂).symm x = e₁.symm (e₂.symm x) :=
-  rfl
+theorem symm_comp_self (e : A₁ ≃ₐ[R] A₂) : e.symm ∘ e = id :=
+  funext e.symm_apply_apply
+
+@[simp]
+theorem self_comp_symm (e : A₁ ≃ₐ[R] A₂) : e ∘ e.symm = id :=
+  funext e.apply_symm_apply
 
 @[simp]
 theorem coe_trans (e₁ : A₁ ≃ₐ[R] A₂) (e₂ : A₂ ≃ₐ[R] A₃) : ⇑(e₁.trans e₂) = e₂ ∘ e₁ :=
@@ -366,6 +372,47 @@ theorem coe_trans (e₁ : A₁ ≃ₐ[R] A₂) (e₂ : A₂ ≃ₐ[R] A₃) : �
 @[simp]
 theorem trans_apply (e₁ : A₁ ≃ₐ[R] A₂) (e₂ : A₂ ≃ₐ[R] A₃) (x : A₁) : (e₁.trans e₂) x = e₂ (e₁ x) :=
   rfl
+
+@[simp]
+theorem symm_trans_apply (e₁ : A₁ ≃ₐ[R] A₂) (e₂ : A₂ ≃ₐ[R] A₃) (x : A₃) :
+    (e₁.trans e₂).symm x = e₁.symm (e₂.symm x) :=
+  rfl
+
+theorem apply_eq_iff_eq (e : A₁ ≃ₐ[R] A₂) {x y : A₁} : e x = e y ↔ x = y :=
+  e.injective.eq_iff
+
+theorem apply_eq_iff_symm_apply (e : A₁ ≃ₐ[R] A₂) {x : A₁} {y : A₂} : e x = y ↔ x = e.symm y :=
+  e.toEquiv.apply_eq_iff_eq_symm_apply
+
+theorem symm_apply_eq (e : A₁ ≃ₐ[R] A₂) {x y} : e.symm x = y ↔ x = e y :=
+  e.toEquiv.symm_apply_eq
+
+theorem eq_symm_apply (e : A₁ ≃ₐ[R] A₂) {x y} : y = e.symm x ↔ e y = x :=
+  e.toEquiv.eq_symm_apply
+
+theorem eq_comp_symm {α : Type*} (e : A₁ ≃ₐ[R] A₂) (f : A₂ → α) (g : A₁ → α) :
+    f = g ∘ e.symm ↔ f ∘ e = g :=
+  e.toEquiv.eq_comp_symm f g
+
+theorem comp_symm_eq {α : Type*} (e : A₁ ≃ₐ[R] A₂) (f : A₂ → α) (g : A₁ → α) :
+    g ∘ e.symm = f ↔ g = f ∘ e :=
+  e.toEquiv.comp_symm_eq f g
+
+theorem eq_symm_comp {α : Type*} (e : A₁ ≃ₐ[R] A₂) (f : α → A₁) (g : α → A₂) :
+    f = e.symm ∘ g ↔ e ∘ f = g :=
+  e.toEquiv.eq_symm_comp f g
+
+theorem symm_comp_eq {α : Type*} (e : A₁ ≃ₐ[R] A₂) (f : α → A₁) (g : α → A₂) :
+    e.symm ∘ g = f ↔ g = e ∘ f :=
+  e.toEquiv.symm_comp_eq f g
+
+@[simp]
+theorem symm_trans_self (e : A₁ ≃ₐ[R] A₂) : e.symm.trans e = refl :=
+  DFunLike.ext _ _ e.apply_symm_apply
+
+@[simp]
+theorem self_trans_symm (e : A₁ ≃ₐ[R] A₂) : e.trans e.symm = refl :=
+  DFunLike.ext _ _ e.symm_apply_apply
 
 @[simp]
 theorem comp_symm (e : A₁ ≃ₐ[R] A₂) : AlgHom.comp (e : A₁ →ₐ[R] A₂) ↑e.symm = AlgHom.id R A₂ := by
