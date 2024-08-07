@@ -430,11 +430,12 @@ theorem coe_coe_symm_apply_coe_apply {F : Type*} [EquivLike F A₁ A₂] [AlgEqu
   EquivLike.left_inv f x
 
 -- Porting note: `simp` normal form of `invFun_eq_symm`
-@[simp]
-theorem symm_toEquiv_eq_symm {e : A₁ ≃ₐ[R] A₂} : (e : A₁ ≃ A₂).symm = e.symm :=
-  rfl
+-- @[simp]
+-- theorem symm_toEquiv_eq_symm {e : A₁ ≃ₐ[R] A₂} : (e : A₁ ≃ A₂).symm = e.symm :=
+--   rfl
 
 --this should be a simp lemma but causes a lint timeout
+@[simp]
 theorem toRingEquiv_symm (f : A₁ ≃ₐ[R] A₁) : (f : A₁ ≃+* A₁).symm = f.symm :=
   rfl
 

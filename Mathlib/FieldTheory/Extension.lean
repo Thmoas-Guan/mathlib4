@@ -123,11 +123,15 @@ theorem exists_algHom_adjoin_of_splits' :
       exact ⟨subset_adjoin_of_subset_left S (F := L'.toSubfield) le_rfl, subset_adjoin _ _⟩
     · ext x
       rw [AlgHom.comp_assoc]
-      exact congr($hφ _).trans (congr_arg f <| AlgEquiv.symm_apply_apply _ _)
+      exact congr($hφ _).trans
+        (congr_arg f <|
+          AlgEquiv.symm_apply_apply (AlgEquiv.ofInjectiveField (IsScalarTower.toAlgHom F L E)) _)
   letI : Algebra L L' := (AlgEquiv.ofInjectiveField _).toRingEquiv.toRingHom.toAlgebra
   have : IsScalarTower L L' E := IsScalarTower.of_algebraMap_eq' rfl
   refine ⟨(hK s hs).1.tower_top, (hK s hs).1.minpoly_splits_tower_top' ?_⟩
-  convert (hK s hs).2; ext; exact congr_arg f (AlgEquiv.symm_apply_apply _ _)
+  convert (hK s hs).2; ext
+  apply congr_arg f
+  exact AlgEquiv.symm_apply_apply (AlgEquiv.ofInjectiveField (IsScalarTower.toAlgHom F L E)) _
 
 theorem exists_algHom_of_adjoin_splits' (hS : adjoin L S = ⊤) :
     ∃ φ : E →ₐ[F] K, φ.comp (IsScalarTower.toAlgHom F L E) = f :=
