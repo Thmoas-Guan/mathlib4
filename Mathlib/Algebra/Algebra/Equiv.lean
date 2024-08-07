@@ -435,7 +435,6 @@ theorem coe_coe_symm_apply_coe_apply {F : Type*} [EquivLike F A₁ A₂] [AlgEqu
 --   rfl
 
 --this should be a simp lemma but causes a lint timeout
-@[simp]
 theorem toRingEquiv_symm (f : A₁ ≃ₐ[R] A₁) : (f : A₁ ≃+* A₁).symm = f.symm :=
   rfl
 
