@@ -171,6 +171,7 @@ namespace MulEquiv
 section Mul
 variable [Mul M] [Mul N] [Mul P] [Mul Q]
 
+--OK
 @[to_additive]
 instance : EquivLike (M ≃* N) M N where
   coe f := f.toFun
@@ -183,24 +184,25 @@ instance : EquivLike (M ≃* N) M N where
     congr
     apply Equiv.coe_fn_injective h₁
 
+--OK
 @[to_additive]
 instance : MulEquivClass (M ≃* N) M N where
   map_mul f := f.map_mul'
 
-@[to_additive] -- shortcut instance that doesn't generate any subgoals
-instance : CoeFun (M ≃* N) fun _ ↦ M → N where
-  coe f := f
+-- @[to_additive] -- shortcut instance that doesn't generate any subgoals
+-- instance : CoeFun (M ≃* N) fun _ ↦ M → N where
+--   coe f := f
 
+-- OK
 @[to_additive (attr := simp)]
 theorem toEquiv_eq_coe (f : M ≃* N) : f.toEquiv = f :=
   rfl
 
+-- NOK
 -- Porting note: added, to simplify `f.toMulHom` back to the coercion via `MulHomClass.toMulHom`.
 @[to_additive (attr := simp)]
 theorem toMulHom_eq_coe (f : M ≃* N) : f.toMulHom = ↑f :=
   rfl
-
--- Porting note: `to_fun_eq_coe` no longer needed in Lean4
 
 @[to_additive (attr := simp)]
 theorem coe_toEquiv (f : M ≃* N) : ⇑(f : M ≃ N) = f := rfl
@@ -218,30 +220,62 @@ protected theorem map_mul (f : M ≃* N) : ∀ x y, f (x * y) = f x * f y :=
 attribute [deprecated map_mul (since := "2024-08-08")] MulEquiv.map_mul
 attribute [deprecated map_add (since := "2024-08-08")] AddEquiv.map_add
 
+-- OK
+/-- Two multiplicative isomorphisms agree if they are defined by the
+same underlying function. -/
+@[to_additive (attr := ext)
+  "Two additive isomorphisms agree if they are defined by the same underlying function."]
+theorem ext {f g : MulEquiv M N} (h : ∀ x, f x = g x) : f = g :=
+  DFunLike.ext f g h
+
+-- OK
+@[to_additive]
+protected theorem congr_arg {f : MulEquiv M N} {x x' : M} : x = x' → f x = f x' :=
+  DFunLike.congr_arg f
+
+-- OK
+@[to_additive]
+protected theorem congr_fun {f g : MulEquiv M N} (h : f = g) (x : M) : f x = g x :=
+  DFunLike.congr_fun h x
+
 /-- Makes a multiplicative isomorphism from a bijection which preserves multiplication. -/
 @[to_additive "Makes an additive isomorphism from a bijection which preserves addition."]
 def mk' (f : M ≃ N) (h : ∀ x y, f (x * y) = f x * f y) : M ≃* N := ⟨f, h⟩
 
+-- OK
 @[to_additive]
 protected theorem bijective (e : M ≃* N) : Function.Bijective e :=
   EquivLike.bijective e
 
+-- OK
 @[to_additive]
 protected theorem injective (e : M ≃* N) : Function.Injective e :=
   EquivLike.injective e
 
+-- OK
 @[to_additive]
 protected theorem surjective (e : M ≃* N) : Function.Surjective e :=
   EquivLike.surjective e
 
+-- OK
 /-- The identity map is a multiplicative isomorphism. -/
 @[to_additive (attr := refl) "The identity map is an additive isomorphism."]
 def refl (M : Type*) [Mul M] : M ≃* M :=
   { Equiv.refl _ with map_mul' := fun _ _ => rfl }
 
+-- OK
 @[to_additive]
 instance : Inhabited (M ≃* M) := ⟨refl M⟩
 
+-- OK
+@[to_additive (attr := simp)]
+theorem coe_refl : ⇑(refl M) = id := rfl
+
+-- OK
+@[to_additive (attr := simp)]
+theorem refl_apply (m : M) : refl M m = m := rfl
+
+-- NOK
 /-- An alias for `h.symm.map_mul`. Introduced to fix the issue in
 https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/!4.234183.20.60simps.60.20maximum.20recursion.20depth
 -/
@@ -250,52 +284,59 @@ lemma symm_map_mul {M N : Type*} [Mul M] [Mul N] (h : M ≃* N) (x y : N) :
     h.symm (x * y) = h.symm x * h.symm y :=
   map_mul (h.toMulHom.inverse h.toEquiv.symm h.left_inv h.right_inv) x y
 
+-- OK
 /-- The inverse of an isomorphism is an isomorphism. -/
 @[to_additive (attr := symm) "The inverse of an isomorphism is an isomorphism."]
 def symm {M N : Type*} [Mul M] [Mul N] (h : M ≃* N) : N ≃* M :=
   ⟨h.toEquiv.symm, h.symm_map_mul⟩
 
+-- OK
 @[to_additive] -- Porting note: no longer a `simp`, see below
 theorem invFun_eq_symm {f : M ≃* N} : f.invFun = f.symm := rfl
--- Porting note: to_additive translated the name incorrectly in mathlib 3.
 
+-- NOK
 @[to_additive (attr := simp)]
 theorem coe_toEquiv_symm (f : M ≃* N) : ((f : M ≃ N).symm : N → M) = f.symm := rfl
 
+-- NOK
 @[to_additive (attr := simp)]
 theorem equivLike_inv_eq_symm (f : M ≃* N) : EquivLike.inv f = f.symm := rfl
 
--- we don't hyperlink the note in the additive version, since that breaks syntax highlighting
--- in the whole file.
-
+-- OK
 /-- See Note [custom simps projection] -/
 @[to_additive "See Note [custom simps projection]"] -- this comment fixes the syntax highlighting "
 def Simps.symm_apply (e : M ≃* N) : N → M :=
   e.symm
 
+-- OK
 initialize_simps_projections AddEquiv (toFun → apply, invFun → symm_apply)
 
+-- OK
 initialize_simps_projections MulEquiv (toFun → apply, invFun → symm_apply)
 
+-- OK
 @[to_additive (attr := simp)]
 theorem toEquiv_symm (f : M ≃* N) : (f.symm : N ≃ M) = (f : M ≃ N).symm := rfl
 
+-- OK
 @[to_additive (attr := simp)]
 theorem coe_mk (f : M ≃ N) (hf : ∀ x y, f (x * y) = f x * f y) : (mk f hf : M → N) = f := rfl
 
--- Porting note: `toEquiv_mk` no longer needed in Lean4
-
+-- OK
 @[to_additive (attr := simp)]
 theorem symm_symm (f : M ≃* N) : f.symm.symm = f := rfl
 
+-- OK
 @[to_additive]
 theorem symm_bijective : Function.Bijective (symm : (M ≃* N) → N ≃* M) :=
   Function.bijective_iff_has_inverse.mpr ⟨_, symm_symm, symm_symm⟩
 
+-- OK
 @[to_additive (attr := simp)]
 theorem symm_mk (f : M ≃ N) (h) :
     (MulEquiv.mk f h).symm = ⟨f.symm, (MulEquiv.mk f h).symm_map_mul⟩ := rfl
 
+-- OK
 @[to_additive (attr := simp)]
 theorem refl_symm : (refl M).symm = refl M := rfl
 
@@ -323,12 +364,6 @@ theorem symm_comp_self (e : M ≃* N) : e.symm ∘ e = id :=
 @[to_additive (attr := simp)]
 theorem self_comp_symm (e : M ≃* N) : e ∘ e.symm = id :=
   funext e.apply_symm_apply
-
-@[to_additive (attr := simp)]
-theorem coe_refl : ↑(refl M) = id := rfl
-
-@[to_additive (attr := simp)]
-theorem refl_apply (m : M) : refl M m = m := rfl
 
 @[to_additive (attr := simp)]
 theorem coe_trans (e₁ : M ≃* N) (e₂ : N ≃* P) : ↑(e₁.trans e₂) = e₂ ∘ e₁ := rfl
@@ -385,13 +420,6 @@ theorem symm_trans_self (e : M ≃* N) : e.symm.trans e = refl N :=
 theorem self_trans_symm (e : M ≃* N) : e.trans e.symm = refl M :=
   DFunLike.ext _ _ e.symm_apply_apply
 
-/-- Two multiplicative isomorphisms agree if they are defined by the
-same underlying function. -/
-@[to_additive (attr := ext)
-  "Two additive isomorphisms agree if they are defined by the same underlying function."]
-theorem ext {f g : MulEquiv M N} (h : ∀ x, f x = g x) : f = g :=
-  DFunLike.ext f g h
-
 @[to_additive (attr := simp)]
 theorem mk_coe (e : M ≃* N) (e' h₁ h₂ h₃) : (⟨⟨e, e', h₁, h₂⟩, h₃⟩ : M ≃* N) = e :=
   ext fun _ => rfl
@@ -399,14 +427,7 @@ theorem mk_coe (e : M ≃* N) (e' h₁ h₂ h₃) : (⟨⟨e, e', h₁, h₂⟩,
 @[to_additive (attr := simp)]
 theorem mk_coe' (e : M ≃* N) (f h₁ h₂ h₃) : (MulEquiv.mk ⟨f, e, h₁, h₂⟩ h₃ : N ≃* M) = e.symm :=
   symm_bijective.injective <| ext fun _ => rfl
-
-@[to_additive]
-protected theorem congr_arg {f : MulEquiv M N} {x x' : M} : x = x' → f x = f x' :=
-  DFunLike.congr_arg f
-
-@[to_additive]
-protected theorem congr_fun {f g : MulEquiv M N} (h : f = g) (x : M) : f x = g x :=
-  DFunLike.congr_fun h x
+-- OK until here
 
 /-- The `MulEquiv` between two monoids with a unique element. -/
 @[to_additive "The `AddEquiv` between two `AddMonoid`s with a unique element."]

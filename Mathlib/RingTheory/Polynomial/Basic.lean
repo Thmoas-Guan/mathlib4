@@ -782,7 +782,7 @@ private theorem prime_C_iff_of_fintype {R : Type u} (σ : Type v) {r : R} [CommR
       convert (finSuccEquiv R d).toMulEquiv.symm.prime_iff (p := Polynomial.C (C r))
       rw [← finSuccEquiv_comp_C_eq_C]
       simp_rw [RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, MulEquiv.symm_mk,
-        AlgEquiv.toEquiv_eq_coe, AlgEquiv.symm_toEquiv_eq_symm, MulEquiv.coe_mk, EquivLike.coe_coe]
+        AlgEquiv.toEquiv_eq_coe, ← AlgEquiv.toEquiv_symm, MulEquiv.coe_mk, EquivLike.coe_coe]
 
 theorem prime_C_iff : Prime (C r : MvPolynomial σ R) ↔ Prime r :=
   ⟨comap_prime C constantCoeff (constantCoeff_C _), fun hr =>
