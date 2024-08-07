@@ -374,6 +374,7 @@ theorem MulEquiv.uniqueFactorizationMonoid (e : α ≃* β) (hα : UniqueFactori
         he ▸ e.prime_iff.1 (hp c hc),
         Units.map e.toMonoidHom u,
       by
+        -- TODO erw
         erw [Multiset.prod_hom, ← map_mul e, h]
         simp⟩
 
