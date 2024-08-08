@@ -68,6 +68,8 @@ def toCommGrp : AddCommGrp ⥤ CommGrp where
 
 end AddCommGrp
 
+-- TODO rename below defs
+
 /-- The equivalence of categories between `Grp` and `AddGrp`
 -/
 @[simps]
