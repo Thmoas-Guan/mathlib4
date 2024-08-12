@@ -53,23 +53,23 @@ variable {X : Type*}
 /-! ### Dynamical nets -/
 
 /-- Given a subset `F`, a uniform neighborhood `U` and an integer `n`, a subset `s` of `F` is a
-`(U, n)`-dynamical net of `F` if no two orbits of length `n` of points in `s` shadow each other.-/
+`(n, U)`-dynamical net of `F` if no two orbits of length `n` of points in `s` shadow each other.-/
 def IsDynNetOf (T : X → X) (F : Set X) (U : Set (X × X)) (n : ℕ) (s : Set X) : Prop :=
-    s ⊆ F ∧ s.PairwiseDisjoint (fun x : X ↦ ball x (DynamicalUni T U n))
+    s ⊆ F ∧ s.PairwiseDisjoint (fun x : X ↦ ball x (dynEntourage T U n))
 
 theorem dynNet_monotone_time {T : X → X} {F : Set X} {U : Set (X × X)} {m n : ℕ} (m_n : m ≤ n)
     {s : Set X} (h : IsDynNetOf T F U m s) :
     IsDynNetOf T F U n s := by
   use h.1
   refine PairwiseDisjoint.mono h.2 (fun x ↦ ?_)
-  apply ball_mono (dynamical_uni_antitone_time T U m_n)
+  apply ball_mono (dynEntourage_antitone T U m_n)
 
 theorem dynNet_antitone {T : X → X} {F : Set X} {U V : Set (X × X)} (U_V : U ⊆ V) {n : ℕ}
     {s : Set X} (h : IsDynNetOf T F V n s) :
     IsDynNetOf T F U n s := by
   use h.1
   refine PairwiseDisjoint.mono h.2 (fun x ↦ ?_)
-  apply ball_mono (dynamical_uni_monotone_uni T n U_V)
+  apply ball_mono (dynEntourage_monotone T n U_V)
 
 theorem dynNet_by_empty (T : X → X) (F : Set X) (U : Set (X × X)) (n : ℕ) :
     IsDynNetOf T F U n ∅ :=
@@ -79,26 +79,26 @@ theorem dynNet_by_singleton (T : X → X) {F : Set X} (U : Set (X × X)) (n : �
     IsDynNetOf T F U n {x} :=
   ⟨singleton_subset_iff.2 h, pairwise_singleton x _⟩
 
-/- The first of two key results to compare two versions topological entropy: with cover and with
+/-- The first of two key results to compare two versions topological entropy: with cover and with
   nets.-/
 theorem dynNet_card_le_dynCover_card {T : X → X} {F : Set X} {U : Set (X × X)}
     (U_symm : SymmetricRel U) {n : ℕ} {s t : Finset X} (hs : IsDynNetOf T F U n s)
     (ht : IsDynCoverOf T F U n t) :
     s.card ≤ t.card := by
-  have : ∀ x ∈ s, ∃ z ∈ t, x ∈ ball z (DynamicalUni T U n) := by
+  have : ∀ x ∈ s, ∃ z ∈ t, x ∈ ball z (dynEntourage T U n) := by
     intro x x_s
     specialize ht (hs.1 x_s)
     simp only [Finset.coe_sort_coe, mem_iUnion, Subtype.exists, exists_prop] at ht
     exact ht
   choose! F s_to_t using this
-  simp only [mem_ball_symmetry (dynamical_uni_of_symm T U_symm n)] at s_to_t
+  simp only [mem_ball_symmetry (SymmetricRel.dynEntourage T U_symm n)] at s_to_t
   apply Finset.card_le_card_of_injOn F (fun x x_s ↦ (s_to_t x x_s).1)
   intro x x_s y y_s Fx_Fy
   exact PairwiseDisjoint.elim_set hs.2 x_s y_s (F x) (s_to_t x x_s).2 (Fx_Fy ▸ (s_to_t y y_s).2)
 
 /-! ### Maximal cardinal of dynamical nets -/
 
-/--The largest cardinal of a `(U, n)`-dynamical net of F. Takes values in `ℕ∞`, and is infinite
+/--The largest cardinal of a `(n, U)`-dynamical net of `F`. Takes values in `ℕ∞`, and is infinite
 if and only if `F` admits nets of arbitrarily large size.-/
 noncomputable def netMaxcard (T : X → X) (F : Set X) (U : Set (X × X)) (n : ℕ) : ℕ∞ :=
   ⨆ (s : Finset X) (_ : IsDynNetOf T F U n s), (s.card : ℕ∞)
@@ -193,7 +193,7 @@ theorem netMaxcard_time_zero (T : X → X) {F : Set X} (h : F.Nonempty) (U : Set
     netMaxcard T F U 0 = 1 := by
   apply le_antisymm (iSup₂_le _) ((netMaxcard_pos_iff T F U 0).2 h)
   intro s ⟨_, s_net⟩
-  simp only [ball, dynamical_uni_time_zero, preimage_univ] at s_net
+  simp only [ball, dynEntourage_zero, preimage_univ] at s_net
   norm_cast
   refine Finset.card_le_one.2 (fun x x_s y y_s ↦ ?_)
   exact PairwiseDisjoint.elim_set s_net x_s y_s x (mem_univ x) (mem_univ x)
@@ -202,7 +202,7 @@ theorem netMaxcard_by_univ (T : X → X) {F : Set X} (h : F.Nonempty) (n : ℕ) 
     netMaxcard T F univ n = 1 := by
   apply le_antisymm (iSup₂_le _) ((netMaxcard_pos_iff T F univ n).2 h)
   intro s ⟨_, s_net⟩
-  simp only [ball, dynamical_univ, preimage_univ] at s_net
+  simp only [ball, dynEntourage_univ, preimage_univ] at s_net
   norm_cast
   refine Finset.card_le_one.2 (fun x x_s y y_s ↦ ?_)
   exact PairwiseDisjoint.elim_set s_net x_s y_s x (mem_univ x) (mem_univ x)
@@ -235,7 +235,7 @@ theorem netMaxcard_le_coverMincard (T : X → X) (F : Set X) {U : Set (X × X)} 
     rw [← t_mincard]
     exact iSup₂_le (fun s s_net ↦ Nat.cast_le.2 (dynNet_card_le_dynCover_card h s_net t_cover))
 
-/- The second of two key resultd to compare the two versions of Bowen-Dinaburg's topological
+/-- The second of two key results to compare the two versions of Bowen-Dinaburg's topological
   entropy: with cover and with nets.-/
 theorem coverMincard_comp_le_netMaxcard (T : X → X) (F : Set X) {U : Set (X × X)}
     (U_rfl : idRel ⊆ U) (U_symm : SymmetricRel U) (n : ℕ) :
@@ -253,14 +253,14 @@ theorem coverMincard_comp_le_netMaxcard (T : X → X) (F : Set X) {U : Set (X ×
       apply And.intro (insert_subset x_F s_net.1)
       refine pairwiseDisjoint_insert.2 (And.intro s_net.2 (fun y y_s _ ↦ ?_))
       refine disjoint_left.2 (fun z z_x z_y ↦ x_uncov y y_s ?_)
-      exact inter_of_dynamical_balls T n U_symm x y (nonempty_of_mem ⟨z_x, z_y⟩)
+      exact mem_ball_dynEntourage_comp T n U_symm x y (nonempty_of_mem ⟨z_x, z_y⟩)
     rw [← Finset.coe_insert x s] at larger_net
     apply not_le_of_lt _ (card_le_netMaxcard larger_net)
     rw [← s_netMaxcard, Nat.cast_lt]
     refine lt_of_lt_of_eq (lt_add_one s.card) (Eq.symm (Finset.card_insert_of_not_mem fun x_s ↦ ?_))
     apply x_uncov x x_s
-    apply ball_mono (dynamical_uni_monotone_uni T n (subset_comp_self U_rfl)) x
-    apply ball_mono (dynamical_uni_of_rfl T U_rfl n) x
+    apply ball_mono (dynEntourage_monotone T n (subset_comp_self U_rfl)) x
+    apply ball_mono (idRel_subset_dynEntourage T U_rfl n) x
     simp only [ball, mem_preimage, mem_idRel]
 
 open ENNReal EReal
@@ -277,15 +277,15 @@ theorem log_netMaxcard_nonneg (T : X → X) {F : Set X} (h : F.Nonempty)
 
 /-! ### Net entropy of uniformities -/
 
-/--The entropy of a uniformity neighborhood U, defined as the exponential rate of growth of the
-size of the largest (n, U)-dynamical net of F. Takes values in the space fo extended real numbers
-[-∞,+∞]. This version uses a limsup.-/
+/--The entropy of an entourage `U`, defined as the exponential rate of growth of the size of the
+largest `(n, U)`-dynamical net of `F`. Takes values in the space of extended real numbers
+[-∞,+∞]. This version uses a `limsup`.-/
 noncomputable def netEntropyInfUni (T : X → X) (F : Set X) (U : Set (X × X)) :=
   Filter.atTop.liminf fun n : ℕ ↦ log (netMaxcard T F U n) / n
 
-/--The entropy of a uniformity neighborhood U, defined as the exponential rate of growth of the
-size of the largest (n, U)-dynamical net of F. Takes values in the space fo extended real numbers
-[-∞,+∞]. This version uses a liminf.-/
+/--The entropy of an entourage `U`, defined as the exponential rate of growth of the size of the
+largest `(n, U)`-dynamical net of `F`. Takes values in the space of extended real numbers
+[-∞,+∞]. This version uses a `liminf`.-/
 noncomputable def netEntropySupUni (T : X → X) (F : Set X) (U : Set (X × X)) :=
   Filter.atTop.limsup fun n : ℕ ↦ log (netMaxcard T F U n) / n
 
@@ -307,8 +307,8 @@ theorem netEntropyInfUni_le_netEntropySupUni (T : X → X) (F : Set X) (U : Set 
 
 @[simp]
 theorem netEntropySupUni_bot {T : X → X} {U : Set (X × X)} : netEntropySupUni T ∅ U = ⊥ := by
-  suffices h : ∀ᶠ n : ℕ in Filter.atTop, log (netMaxcard T ∅ U n) / n = ⊥
-  · rw [netEntropySupUni, Filter.limsup_congr h]
+  suffices h : ∀ᶠ n : ℕ in Filter.atTop, log (netMaxcard T ∅ U n) / n = ⊥ by
+    rw [netEntropySupUni, Filter.limsup_congr h]
     exact Filter.limsup_const ⊥
   · simp only [netMaxcard_zero, ENat.toENNReal_zero, log_zero, Filter.eventually_atTop]
     use 1
@@ -367,13 +367,13 @@ theorem CoverEntropySupUni_comp_le_netEntropySupUni (T : X → X) (F : Set X) {U
 
 /-! ### Net entropy -/
 
-/-- The entropy of T restricted to F, obtained by taking the supremum over uniformity neighbourhoods.
+/-- The entropy of `T` restricted to `F`, obtained by taking the supremum over entourages.
 Note that this supremum is approached by taking small neighbourhoods.-/
 noncomputable def netEntropyInf [UniformSpace X] (T : X → X) (F : Set X) :=
   ⨆ U ∈ 𝓤 X, netEntropyInfUni T F U
 
-/-- An alternative definition of the entropy of T restricted to F, using a liminf instead of
-a limsup.-/
+/-- An alternative definition of the entropy of `T` restricted to `F`, using a `liminf` instead of
+a `limsup`.-/
 noncomputable def netEntropySup [UniformSpace X] (T : X → X) (F : Set X) :=
   ⨆ U ∈ 𝓤 X, netEntropySupUni T F U
 
@@ -389,8 +389,6 @@ theorem netEntropySup_antitone (T : X → X) (F : Set X) :
   refine iSup₂_mono' (fun U U_uni₂ ↦ ?_)
   use U, (Filter.le_def.1 h) U U_uni₂
 
-variable [UniformSpace X]
-
 theorem netEntropyInfUni_le_netEntropyInf [UniformSpace X] (T : X → X) (F : Set X) {U : Set (X × X)}
     (h : U ∈ 𝓤 X) :
     netEntropyInfUni T F U ≤ netEntropyInf T F :=
@@ -401,8 +399,8 @@ theorem netEntropySupUni_le_netEntropySup [UniformSpace X] (T : X → X) (F : Se
     netEntropySupUni T F U ≤ netEntropySup T F :=
   le_iSup₂ (f := fun (U : Set (X × X)) (_ : U ∈ 𝓤 X) ↦ netEntropySupUni T F U) U h
 
-theorem netEntropyInf_eq_iSup_basis {ι : Sort*} [UniformSpace X] {p : ι → Prop} {s : ι → Set (X × X)}
-    (h : (𝓤 X).HasBasis p s) (T : X → X) (F : Set X) :
+theorem netEntropyInf_eq_iSup_basis {ι : Sort*} [UniformSpace X] {p : ι → Prop}
+    {s : ι → Set (X × X)} (h : (𝓤 X).HasBasis p s) (T : X → X) (F : Set X) :
     netEntropyInf T F = ⨆ (i : ι) (_ : p i), netEntropyInfUni T F (s i) := by
   apply le_antisymm
   · refine iSup₂_le (fun U U_uni ↦ ?_)
@@ -412,8 +410,8 @@ theorem netEntropyInf_eq_iSup_basis {ι : Sort*} [UniformSpace X] {p : ι → Pr
   · refine iSup₂_mono' (fun i h_i ↦ ?_)
     use s i, Filter.HasBasis.mem_of_mem h h_i
 
-theorem netEntropySup_eq_iSup_basis {ι : Sort*} [UniformSpace X] {p : ι → Prop} {s : ι → Set (X × X)}
-    (h : (𝓤 X).HasBasis p s) (T : X → X) (F : Set X) :
+theorem netEntropySup_eq_iSup_basis {ι : Sort*} [UniformSpace X] {p : ι → Prop}
+    {s : ι → Set (X × X)} (h : (𝓤 X).HasBasis p s) (T : X → X) (F : Set X) :
     netEntropySup T F = ⨆ (i : ι) (_ : p i), netEntropySupUni T F (s i) := by
   apply le_antisymm
   · refine iSup₂_le (fun U U_uni ↦ ?_)
@@ -422,6 +420,8 @@ theorem netEntropySup_eq_iSup_basis {ι : Sort*} [UniformSpace X] {p : ι → Pr
     apply le_iSup₂ i h_i
   · refine iSup₂_mono' (fun i h_i ↦ ?_)
     use s i, Filter.HasBasis.mem_of_mem h h_i
+
+variable [UniformSpace X]
 
 theorem netEntropyInf_le_netEntropySup (T : X → X) (F : Set X) :
     netEntropyInf T F ≤ netEntropySup T F :=

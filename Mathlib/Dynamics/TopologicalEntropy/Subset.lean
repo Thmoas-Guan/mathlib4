@@ -107,21 +107,21 @@ theorem dynCover_closure [UniformSpace X] {T : X → X} (h : UniformContinuous T
   rcases (hasBasis_symmetric.mem_iff' V).1 V_uni with ⟨W, ⟨W_uni, W_symm⟩, W_V⟩
   rw [id_eq] at W_V
   refine dynCover_monotone (compRel_mono (Subset.refl U) W_V) (fun x x_clos ↦ ?_)
-  rcases mem_closure_iff_ball.1 x_clos (dynamical_uni_of_uni h W_uni n) with ⟨y, y_x, y_F⟩
+  rcases mem_closure_iff_ball.1 x_clos (dynEntourage_mem_uniformity h W_uni n) with ⟨y, y_x, y_F⟩
   specialize s_cover y_F
   simp only [iUnion_coe_set, mem_iUnion, exists_prop] at s_cover
   rcases s_cover with ⟨z, z_s, y_z⟩
   simp only [iUnion_coe_set, mem_iUnion, exists_prop]
   use z, z_s
-  rw [mem_ball_symmetry (dynamical_uni_of_symm T W_symm n)] at y_x
-  exact ball_mono (dynamical_uni_of_comp T U W n) z (mem_ball_comp y_z y_x)
+  rw [mem_ball_symmetry (SymmetricRel.dynEntourage T W_symm n)] at y_x
+  exact ball_mono (dynEntourage_comp_subset T U W n) z (mem_ball_comp y_z y_x)
 
 theorem coverMincard_of_closure [UniformSpace X] {T : X → X} (h : UniformContinuous T) (F : Set X)
     (U : Set (X × X)) {V : Set (X × X)} (V_uni : V ∈ 𝓤 X) (n : ℕ) :
     coverMincard T (closure F) (U ○ V) n ≤ coverMincard T F U n := by
   rcases eq_top_or_lt_top (coverMincard T F U n) with (h' | h')
-  . exact h' ▸ le_top
-  . rcases (coverMincard_finite_iff T F U n).1 h' with ⟨s, s_cover, s_coverMincard⟩
+  · exact h' ▸ le_top
+  · rcases (coverMincard_finite_iff T F U n).1 h' with ⟨s, s_cover, s_coverMincard⟩
     exact s_coverMincard ▸ coverMincard_le_card (dynCover_closure h V_uni s_cover)
 
 theorem coverEntropyInfUni_closure [UniformSpace X] {T : X → X} (h : UniformContinuous T)
@@ -165,24 +165,25 @@ theorem dynCover_union {T : X → X} {F G : Set X} {U : Set (X × X)} {n : ℕ} 
     IsDynCoverOf T (F ∪ G) U n (s ∪ t) := by
   intro x x_FG
   rcases x_FG with (x_F | x_G)
-  . refine mem_of_subset_of_mem (iSup₂_mono' fun y y_s ↦ ?_) (hs x_F)
+  · refine mem_of_subset_of_mem (iSup₂_mono' fun y y_s ↦ ?_) (hs x_F)
     use y, (mem_union_left t y_s)
-  . refine mem_of_subset_of_mem (iSup₂_mono' fun y y_t ↦ ?_) (ht x_G)
+  · refine mem_of_subset_of_mem (iSup₂_mono' fun y y_t ↦ ?_) (ht x_G)
     use y, (mem_union_right s y_t)
 
 theorem coverMincard_union_le (T : X → X) (F G : Set X) (U : Set (X × X)) (n : ℕ) :
     coverMincard T (F ∪ G) U n ≤ coverMincard T F U n + coverMincard T G U n := by
   classical
   rcases eq_top_or_lt_top (coverMincard T F U n) with (hF | hF)
-  . rw [hF, top_add]; exact le_top
+  · rw [hF, top_add]; exact le_top
   rcases eq_top_or_lt_top (coverMincard T G U n) with (hG | hG)
-  . rw [hG, add_top]; exact le_top
+  · rw [hG, add_top]; exact le_top
   rcases (coverMincard_finite_iff T F U n).1 hF with ⟨s, s_cover, s_coverMincard⟩
   rcases (coverMincard_finite_iff T G U n).1 hG with ⟨t, t_cover, t_coverMincard⟩
   rw [← s_coverMincard, ← t_coverMincard]
   have := dynCover_union s_cover t_cover
   rw [← Finset.coe_union s t] at this
-  apply le_trans (coverMincard_le_card this) (le_trans (WithTop.coe_mono (Finset.card_union_le s t)) _)
+  apply le_trans (coverMincard_le_card this)
+    (le_trans (WithTop.coe_mono (Finset.card_union_le s t)) _)
   norm_cast
 
 theorem coverEntropySupUni_union (T : X → X) (F G : Set X) (U : Set (X × X)) :
@@ -205,7 +206,8 @@ theorem coverEntropySupUni_union (T : X → X) (F G : Set X) (U : Set (X × X)) 
     apply log_monotone
     norm_cast
     rw [mul_two]
-    exact le_trans (coverMincard_union_le T F G U n) (add_le_add (le_max_left _ _) (le_max_right _ _))
+    exact le_trans (coverMincard_union_le T F G U n)
+      (add_le_add (le_max_left _ _) (le_max_right _ _))
   apply le_trans (limsup_le_limsup (Filter.eventually_of_forall fun n ↦ key n))
   have := Filter.Tendsto.limsup_eq <| EReal.tendsto_const_div_atTop_nhds_zero_nat
     (ne_of_gt (bot_lt_log_iff.2 Nat.ofNat_pos)) (ne_of_lt (log_lt_top_iff.2 two_lt_top))

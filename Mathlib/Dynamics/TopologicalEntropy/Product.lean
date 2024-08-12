@@ -48,14 +48,13 @@ theorem UniformityProd_of_uniform_prod {α β : Type*} [UniformSpace α] [Unifor
   refine subset_trans (subset_trans (fun _ ↦ ?_) (inter_subset_inter a_sub b_sub)) uv_sub
   simp [UniformityProd]
 
-theorem dynamical_uni_prod (S : X → X) (T : Y → Y) (U : Set (X × X)) (V : Set (Y × Y))
-    (n : ℕ) :
-    DynamicalUni (map S T) (UniformityProd U V) n =
-    UniformityProd (DynamicalUni S U n) (DynamicalUni T V n) := by
+theorem dynamical_uni_prod (S : X → X) (T : Y → Y) (U : Set (X × X)) (V : Set (Y × Y)) (n : ℕ) :
+    dynEntourage (map S T) (UniformityProd U V) n =
+    UniformityProd (dynEntourage S U n) (dynEntourage T V n) := by
   ext xy
-  rw [dynamical_uni_mem]
+  rw [mem_dynEntourage]
   simp only [UniformityProd, mem_setOf_eq]
-  rw [dynamical_uni_mem, dynamical_uni_mem, ← forall₂_and]
+  rw [mem_dynEntourage, mem_dynEntourage, ← forall₂_and]
   refine forall₂_congr fun k _ ↦ ?_
   simp only [map_iterate, map_fst, map_snd]
 
@@ -162,10 +161,10 @@ theorem netMaxcard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U :
     use s ×ˢ ({y} : Finset Y)
     rw [Finset.coe_product]
     apply And.intro
-    . apply dynNet_prod s_net
+    · apply dynNet_prod s_net
       rw [Finset.coe_singleton]
       exact dynNet_by_singleton T V n y_G
-    . rw [Finset.card_product s ({y} : Finset Y), Finset.card_singleton y, mul_one]
+    · rw [Finset.card_product s ({y} : Finset Y), Finset.card_singleton y, mul_one]
       exact le_of_lt s_card
   rcases eq_top_or_lt_top (netMaxcard T G V n) with (h₂ | h₂)
   · refine le_of_le_of_eq le_top (Eq.symm ((netMaxcard_infinite_iff _ _ _ n).2 fun k ↦ ?_))
@@ -177,10 +176,10 @@ theorem netMaxcard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U :
     use ({x} : Finset X) ×ˢ t
     rw [Finset.coe_product]
     apply And.intro
-    . apply dynNet_prod _ t_net
+    · apply dynNet_prod _ t_net
       rw [Finset.coe_singleton]
       exact dynNet_by_singleton S U n x_F
-    . rw [Finset.card_product ({x} : Finset X) t, Finset.card_singleton x, one_mul]
+    · rw [Finset.card_product ({x} : Finset X) t, Finset.card_singleton x, one_mul]
       exact le_of_lt t_card
   rcases (netMaxcard_finite_iff S F U n).1 h₁ with ⟨s, s_cover, s_card⟩
   rcases (netMaxcard_finite_iff T G V n).1 h₂ with ⟨t, t_cover, t_card⟩
@@ -196,9 +195,9 @@ theorem coverEntropySupUni_prod_le (S : X → X) (T : Y → Y) (F : Set X) (G : 
     coverEntropySupUni (map S T) (F ×ˢ G) (UniformityProd U V)
     ≤ (coverEntropySupUni S F U) + (coverEntropySupUni T G V) := by
   rcases F.eq_empty_or_nonempty with (rfl | F_nemp)
-  . simp
+  · simp
   rcases G.eq_empty_or_nonempty with (rfl | G_nemp)
-  . simp
+  · simp
   apply le_trans _ <| limsup_add_le_add_limsup
     (Or.inl <| ne_of_gt <| lt_of_lt_of_le bot_lt_zero (coverEntropySupUni_nonneg S F_nemp U))
     (Or.inr <| ne_of_gt <| lt_of_lt_of_le bot_lt_zero (coverEntropySupUni_nonneg T G_nemp V))
@@ -214,9 +213,9 @@ theorem le_netEntropyInfUni_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Se
     (netEntropyInfUni S F U) + (netEntropyInfUni T G V)
     ≤ netEntropyInfUni (map S T) (F ×ˢ G) (UniformityProd U V) := by
   rcases F.eq_empty_or_nonempty with (rfl | F_nemp)
-  . simp
+  · simp
   rcases G.eq_empty_or_nonempty with (rfl | G_nemp)
-  . simp
+  · simp
   apply le_trans add_liminf_le_liminf_add
   refine Filter.liminf_le_liminf <| eventually_of_forall fun n ↦ ?_
   simp only [Pi.add_apply]
