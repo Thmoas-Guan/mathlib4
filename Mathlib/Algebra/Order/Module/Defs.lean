@@ -5,10 +5,11 @@ Authors: Yaël Dillies
 -/
 import Mathlib.Algebra.Order.Field.Defs
 import Mathlib.Algebra.Order.GroupWithZero.Unbundled
-import Mathlib.Algebra.Order.Module.Synonym
 import Mathlib.GroupTheory.GroupAction.Group
 import Mathlib.Tactic.Positivity.Core
 import Mathlib.Algebra.Order.Field.Unbundled.Basic
+import Mathlib.Algebra.Module.Defs
+import Mathlib.Algebra.Order.GroupWithZero.Action.Synonym
 
 /-!
 # Monotonicity of scalar multiplication by positive elements
