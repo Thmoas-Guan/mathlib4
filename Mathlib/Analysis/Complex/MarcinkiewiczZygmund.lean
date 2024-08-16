@@ -16,8 +16,11 @@ by the $$L^p$$-norm of `f` up to some multiplicative constant.
 
 ## TODO
 
-We currently only prove the inequality for `p = 2 * m` an even natural number. The general `p` case
-can be obtained from this specific one by nesting of Lp norms.
+* We currently only prove the inequality for `p = 2 * m` an even natural number. The general `p`
+  case can be obtained from this specific one by nesting of Lp norms.
+* At the expense of a worse constant, we could generalise from `ℝ` or `ℂ` to a real or complex
+  finite dimensional inner product space. See
+  https://github.com/leanprover-community/mathlib4/pull/15443#issuecomment-2292512308.
 -/
 
 open Finset Fintype Nat Real
