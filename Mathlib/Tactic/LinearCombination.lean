@@ -258,6 +258,11 @@ partial def expandLinearCombo (ty : Expr) (stx : Syntax.Term) : TermElabM Expand
       let i := mkIdent n
       .proof rel <$> ``($i $p₂ $c₁)
     | .proof _ _, .proof _ _ => throwError "'linear_combination' supports only linear operations"
+  | `($e⁻¹) => do
+    -- special-case inversion
+    match ← expandLinearCombo ty e with
+    | .const c => .const <$> `($c⁻¹)
+    | _ => throwError "'linear_combination' supports only linear operations"
   | `($e₁ / $e₂) => do
     match ← expandLinearCombo ty e₁, ← expandLinearCombo ty e₂ with
     | .const c₁, .const c₂ => .const <$> ``($c₁ / $c₂)
