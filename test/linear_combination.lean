@@ -214,7 +214,7 @@ example (a : ℚ) (ha : a = 1) : a = 2 := by linear_combination ha
 --   this behavior.
 /--
 error: application type mismatch
-  Mathlib.Tactic.LinearCombination.c_mul_pf h2 0
+  Mathlib.Tactic.LinearCombination.mul_const_eq h2 0
 argument
   0
 has type
