@@ -158,6 +158,9 @@ lemma Boundaryless.of_boundary_eq_empty (h : I.boundary M = ∅) : BoundarylessM
     rw [h]
     trivial
 
+instance [BoundarylessManifold I M] : IsEmpty (I.boundary M) :=
+  isEmpty_coe_sort.mpr (Boundaryless.boundary_eq_empty I)
+
 end BoundarylessManifold
 
 /-! Interior and boundary of the product of two manifolds. -/
@@ -167,7 +170,7 @@ variable {I}
   {E' : Type*} [NormedAddCommGroup E'] [NormedSpace 𝕜 E']
   {H' : Type*} [TopologicalSpace H']
   {N : Type*} [TopologicalSpace N] [ChartedSpace H' N]
-  (J : ModelWithCorners 𝕜 E' H') [SmoothManifoldWithCorners J N] {x : M} {y : N}
+  (J : ModelWithCorners 𝕜 E' H') {x : M} {y : N}
 
 /-- The interior of `M × N` is the product of the interiors of `M` and `N`. -/
 lemma interior_prod :
