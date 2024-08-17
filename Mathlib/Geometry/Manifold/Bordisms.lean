@@ -3,9 +3,6 @@ Copyright (c) 2024 Michael Rothgang. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael Rothgang
 -/
-import Mathlib.Geometry.Manifold.Diffeomorph
-import Mathlib.Geometry.Manifold.Instances.Real
-import Mathlib.Geometry.Manifold.Instances.Sphere
 import Mathlib.Geometry.Manifold.InteriorBoundary
 
 /-!
@@ -14,7 +11,6 @@ TODO docstring
 -/
 
 open scoped Manifold
-open Metric (sphere)
 open FiniteDimensional Set
 
 noncomputable section
@@ -68,21 +64,25 @@ lemma map_f [Fact (finrank ℝ E = n)] (s : SingularNManifold X n M I) {φ : X �
 
 /-- The canonical singular `n`-manifold associated to the empty set (seen as an `n`-dimensional
 manifold, i.e. modelled on an `n`-dimensional space). -/
-def empty [Fact (finrank ℝ E = n)] [IsEmpty M] : SingularNManifold X n M I where--:= sorry
+def empty [Fact (finrank ℝ E = n)] [IsEmpty M] : SingularNManifold X n M I where
   f := fun x ↦ (IsEmpty.false x).elim
   hf := by
     rw [continuous_iff_continuousAt]
     exact fun x ↦ (IsEmpty.false x).elim
 
--- /-- The product of a singular `n`- and a `m`-manifold into a single point
--- is a singular `n+m`-manifold. -/
--- -- This induces a commutative ring structure on the unoriented bordism group Ω_n^O = Ω_n^O(pt).
--- TODO: how to state "a single point" in Lean?
--- def prod {m n : ℕ} [Fact (finrank ℝ E = m)] [Fact (finrank ℝ E' = n)]
---     (s : SingularNManifold Pt m M I) (t : SingularNManifold Pt n M' I') :
---     SingularNManifold Pt (m + n) (M × M') (I.prod I') where
---   hdim := Fact.mk (by rw [finrank_prod, s.hdim.out, t.hdim.out])
---   f := sorry -- wait: what is this supposed to mean?? fun p ↦ (s.f p.1, t.f p.2)
---   hf := sorry
+/-- An `n`-dimensional manifold induces a singular `n`-manifold on the one-point space. -/
+def trivial [Fact (finrank ℝ E = n)] : SingularNManifold PUnit n M I where
+  f := fun _ ↦ PUnit.unit
+  hf := continuous_const
+
+/-- The product of a singular `n`- and a `m`-manifold into a one-point space
+is a singular `n+m`-manifold. -/
+-- FUTURE: prove that this observation inducess a commutative ring structure
+-- on the unoriented bordism group `Ω_n^O = Ω_n^O(pt)`.
+def prod {m n : ℕ} [h : Fact (finrank ℝ E = m)] [k : Fact (finrank ℝ E' = n)] :
+    SingularNManifold PUnit (m + n) (M × M') (I.prod I') where
+  f := fun _ ↦ PUnit.unit
+  hf := continuous_const
+  hdim := Fact.mk (by rw [finrank_prod, h.out, k.out])
 
 end SingularNManifold
