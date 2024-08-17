@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael Rothgang
 -/
 import Mathlib.Geometry.Manifold.InteriorBoundary
+import Mathlib.Geometry.Manifold.ContMDiff.Defs
 
 /-!
 TODO docstring
@@ -51,16 +52,30 @@ noncomputable def refl (hdim : finrank ℝ E = n) : SingularNManifold M n M I wh
   f := id
   hf := continuous_id
 
--- functoriality: pre-step towards functoriality of the bordism groups
--- xxx: good name?
+/-- A map of topological spaces induces a corresponding map of singular n-manifolds. -/
+-- This is part of proving functoriality of the bordism groups.
 noncomputable def map [Fact (finrank ℝ E = n)] (s : SingularNManifold X n M I)
     {φ : X → Y} (hφ : Continuous φ) : SingularNManifold Y n M I where
   f := φ ∘ s.f
   hf := hφ.comp s.hf
 
 @[simp]
-lemma map_f [Fact (finrank ℝ E = n)] (s : SingularNManifold X n M I) {φ : X → Y} (hφ : Continuous φ) :
-    (s.map hφ).f = φ ∘ s.f := rfl
+lemma map_f [Fact (finrank ℝ E = n)]
+    (s : SingularNManifold X n M I) {φ : X → Y} (hφ : Continuous φ) : (s.map hφ).f = φ ∘ s.f :=
+  rfl
+
+/-- If `(M', f)` is a singular `n`-manifold on `X` and `M'` another `n`-dimensional smooth manifold,
+a smooth map `φ : M → M'` induces a singular `n`-manifold structore on `M`. -/
+noncomputable def comap [Fact (finrank ℝ E = n)] [Fact (finrank ℝ E' = n)]
+    (s : SingularNManifold X n M' I')
+    {φ : M → M'} (hφ : Smooth I I' φ) : SingularNManifold X n M I where
+  f := s.f ∘ φ
+  hf := s.hf.comp hφ.continuous
+
+@[simp]
+lemma comap_f [Fact (finrank ℝ E = n)] [Fact (finrank ℝ E' = n)]
+    (s : SingularNManifold X n M' I') {φ : M → M'} (hφ : Smooth I I' φ) : (s.comap hφ).f = s.f ∘ φ :=
+  rfl
 
 /-- The canonical singular `n`-manifold associated to the empty set (seen as an `n`-dimensional
 manifold, i.e. modelled on an `n`-dimensional space). -/
