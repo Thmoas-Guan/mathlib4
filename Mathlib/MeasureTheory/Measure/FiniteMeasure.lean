@@ -428,7 +428,7 @@ theorem _root_.Filter.Tendsto.mass {γ : Type*} {F : Filter γ} {μs : γ → Fi
 theorem tendsto_iff_weakDual_tendsto {γ : Type*} {F : Filter γ} {μs : γ → FiniteMeasure Ω}
     {μ : FiniteMeasure Ω} :
     Tendsto μs F (𝓝 μ) ↔ Tendsto (fun i ↦ (μs i).toWeakDualBCNN) F (𝓝 μ.toWeakDualBCNN) :=
-  Inducing.tendsto_nhds_iff ⟨rfl⟩
+  IsInducing.tendsto_nhds_iff ⟨rfl⟩
 
 theorem tendsto_iff_forall_toWeakDualBCNN_tendsto {γ : Type*} {F : Filter γ}
     {μs : γ → FiniteMeasure Ω} {μ : FiniteMeasure Ω} :

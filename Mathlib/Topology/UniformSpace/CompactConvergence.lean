@@ -260,11 +260,11 @@ theorem uniformContinuous_comp (g : C(β, δ)) (hg : UniformContinuous g) :
     UniformOnFun.postcomp_uniformContinuous hg |>.comp
       uniformEmbedding_toUniformOnFunIsCompact.uniformContinuous
 
-theorem uniformInducing_comp (g : C(β, δ)) (hg : UniformInducing g) :
-    UniformInducing (ContinuousMap.comp g : C(α, β) → C(α, δ)) :=
-  uniformEmbedding_toUniformOnFunIsCompact.toUniformInducing.of_comp_iff.mp <|
-    UniformOnFun.postcomp_uniformInducing hg |>.comp
-      uniformEmbedding_toUniformOnFunIsCompact.toUniformInducing
+theorem isUniformInducing_comp (g : C(β, δ)) (hg : IsUniformInducing g) :
+    IsUniformInducing (ContinuousMap.comp g : C(α, β) → C(α, δ)) :=
+  uniformEmbedding_toUniformOnFunIsCompact.toIsUniformInducing.of_comp_iff.mp <|
+    UniformOnFun.postcomp_isUniformInducing hg |>.comp
+      uniformEmbedding_toUniformOnFunIsCompact.toIsUniformInducing
 
 theorem uniformEmbedding_comp (g : C(β, δ)) (hg : UniformEmbedding g) :
     UniformEmbedding (ContinuousMap.comp g : C(α, β) → C(α, δ)) :=

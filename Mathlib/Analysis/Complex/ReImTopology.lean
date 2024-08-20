@@ -52,10 +52,10 @@ theorem isOpenMap_re : IsOpenMap re :=
 theorem isOpenMap_im : IsOpenMap im :=
   isHomeomorphicTrivialFiberBundle_im.isOpenMap_proj
 
-theorem quotientMap_re : QuotientMap re :=
+theorem quotientMap_re : IsQuotientMap re :=
   isHomeomorphicTrivialFiberBundle_re.quotientMap_proj
 
-theorem quotientMap_im : QuotientMap im :=
+theorem quotientMap_im : IsQuotientMap im :=
   isHomeomorphicTrivialFiberBundle_im.quotientMap_proj
 
 theorem interior_preimage_re (s : Set ℝ) : interior (re ⁻¹' s) = re ⁻¹' interior s :=

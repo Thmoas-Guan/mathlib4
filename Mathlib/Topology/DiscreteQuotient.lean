@@ -107,7 +107,7 @@ theorem fiber_eq (x : X) : S.proj ⁻¹' {S.proj x} = setOf (S.Rel x) :=
 theorem proj_surjective : Function.Surjective S.proj :=
   Quotient.surjective_Quotient_mk''
 
-theorem proj_quotientMap : QuotientMap S.proj :=
+theorem proj_quotientMap : IsQuotientMap S.proj :=
   quotientMap_quot_mk
 
 theorem proj_continuous : Continuous S.proj :=

@@ -27,18 +27,18 @@ epimorphism. The theorem `TopCat.effectiveEpi_iff_quotientMap` should be used in
 this definition.
 -/
 noncomputable
-def effectiveEpiStructOfQuotientMap {B X : TopCat.{u}} (π : X ⟶ B) (hπ : QuotientMap π) :
+def effectiveEpiStructOfQuotientMap {B X : TopCat.{u}} (π : X ⟶ B) (hπ : IsQuotientMap π) :
     EffectiveEpiStruct π where
-  /- `QuotientMap.lift` gives the required morphism -/
+  /- `IsQuotientMap.lift` gives the required morphism -/
   desc e h := hπ.lift e fun a b hab ↦
     DFunLike.congr_fun (h ⟨fun _ ↦ a, continuous_const⟩ ⟨fun _ ↦ b, continuous_const⟩
     (by ext; exact hab)) a
-  /- `QuotientMap.lift_comp` gives the factorisation -/
+  /- `IsQuotientMap.lift_comp` gives the factorisation -/
   fac e h := (hπ.lift_comp e
     fun a b hab ↦ DFunLike.congr_fun (h ⟨fun _ ↦ a, continuous_const⟩ ⟨fun _ ↦ b, continuous_const⟩
     (by ext; exact hab)) a)
-  /- Uniqueness follows from the fact that `QuotientMap.lift` is an equivalence (given by
-  `QuotientMap.liftEquiv`). -/
+  /- Uniqueness follows from the fact that `IsQuotientMap.lift` is an equivalence (given by
+  `IsQuotientMap.liftEquiv`). -/
   uniq e h g hm := by
     suffices g = hπ.liftEquiv ⟨e,
       fun a b hab ↦ DFunLike.congr_fun
@@ -46,12 +46,12 @@ def effectiveEpiStructOfQuotientMap {B X : TopCat.{u}} (π : X ⟶ B) (hπ : Quo
         a⟩ by assumption
     rw [← Equiv.symm_apply_eq hπ.liftEquiv]
     ext
-    simp only [QuotientMap.liftEquiv_symm_apply_coe, ContinuousMap.comp_apply, ← hm]
+    simp only [IsQuotientMap.liftEquiv_symm_apply_coe, ContinuousMap.comp_apply, ← hm]
     rfl
 
 /-- The effective epimorphisms in `TopCat` are precisely the quotient maps. -/
 theorem effectiveEpi_iff_quotientMap {B X : TopCat.{u}} (π : X ⟶ B) :
-    EffectiveEpi π ↔ QuotientMap π := by
+    EffectiveEpi π ↔ IsQuotientMap π := by
   /- The backward direction is given by `effectiveEpiStructOfQuotientMap` above. -/
   refine ⟨fun _ ↦ ?_, fun hπ ↦ ⟨⟨effectiveEpiStructOfQuotientMap π hπ⟩⟩⟩
   /- Since `TopCat` has pullbacks, `π` is in fact a `RegularEpi`. This means that it exhibits `B` as
@@ -60,8 +60,8 @@ theorem effectiveEpi_iff_quotientMap {B X : TopCat.{u}} (π : X ⟶ B) :
   have hπ : RegularEpi π := inferInstance
   let F := parallelPair hπ.left hπ.right
   let i : B ≅ colimit F := hπ.isColimit.coconePointUniqueUpToIso (colimit.isColimit _)
-  suffices QuotientMap (homeoOfIso i ∘ π) by
-    simpa [← Function.comp.assoc] using (homeoOfIso i).symm.quotientMap.comp this
+  suffices IsQuotientMap (homeoOfIso i ∘ π) by
+    simpa [← Function.comp.assoc] using (homeoOfIso i).symm.isQuotientMap.comp this
   constructor
   /- Effective epimorphisms are epimorphisms and epimorphisms in `TopCat` are surjective. -/
   · change Function.Surjective (π ≫ i.hom)

@@ -47,6 +47,6 @@ instance QuotientGroup.continuousSMul [LocallyCompactSpace G] : ContinuousSMul G
     have H : Continuous (F ∘ fun p : G × G => (p.1, QuotientGroup.mk p.2)) := by
       change Continuous fun p : G × G => QuotientGroup.mk (p.1 * p.2)
       exact continuous_coinduced_rng.comp continuous_mul
-    exact QuotientMap.continuous_lift_prod_right quotientMap_quotient_mk' H
+    exact IsQuotientMap.continuous_lift_prod_right quotientMap_quotient_mk' H
 
 end Quotient

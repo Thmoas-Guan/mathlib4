@@ -61,11 +61,11 @@ variable {K}
 
 /-- extension of inversion to the completion of a field. -/
 def hatInv : hat K → hat K :=
-  denseInducing_coe.extend fun x : K => (↑x⁻¹ : hat K)
+  isDenseInducing_coe.extend fun x : K => (↑x⁻¹ : hat K)
 
 theorem continuous_hatInv [CompletableTopField K] {x : hat K} (h : x ≠ 0) :
     ContinuousAt hatInv x := by
-  refine denseInducing_coe.continuousAt_extend ?_
+  refine isDenseInducing_coe.continuousAt_extend ?_
   apply mem_of_superset (compl_singleton_mem_nhds h)
   intro y y_ne
   rw [mem_compl_singleton_iff] at y_ne
@@ -77,13 +77,13 @@ theorem continuous_hatInv [CompletableTopField K] {x : hat K} (h : x ≠ 0) :
   rw [this, ← Filter.map_map]
   apply Cauchy.map _ (Completion.uniformContinuous_coe K)
   apply CompletableTopField.nice
-  · haveI := denseInducing_coe.comap_nhds_neBot y
+  · haveI := isDenseInducing_coe.comap_nhds_neBot y
     apply cauchy_nhds.comap
     rw [Completion.comap_coe_eq_uniformity]
   · have eq_bot : 𝓝 (0 : hat K) ⊓ 𝓝 y = ⊥ := by
       by_contra h
       exact y_ne (eq_of_nhds_neBot <| neBot_iff.mpr h).symm
-    erw [denseInducing_coe.nhds_eq_comap (0 : K), ← Filter.comap_inf, eq_bot]
+    erw [isDenseInducing_coe.nhds_eq_comap (0 : K), ← Filter.comap_inf, eq_bot]
     exact comap_bot
 
 open Classical in
@@ -97,7 +97,7 @@ instance instInvCompletion : Inv (hat K) :=
 variable [TopologicalDivisionRing K]
 
 theorem hatInv_extends {x : K} (h : x ≠ 0) : hatInv (x : hat K) = ↑(x⁻¹ : K) :=
-  denseInducing_coe.extend_eq_at ((continuous_coe K).continuousAt.comp (continuousAt_inv₀ h))
+  isDenseInducing_coe.extend_eq_at ((continuous_coe K).continuousAt.comp (continuousAt_inv₀ h))
 
 variable [CompletableTopField K]
 
@@ -126,7 +126,7 @@ theorem mul_hatInv_cancel {x : hat K} (x_ne : x ≠ 0) : x * hatInv x = 1 := by
       continuous_id.continuousAt.prod (continuous_hatInv x_ne)
     exact (_root_.continuous_mul.continuousAt.comp this : _)
   have clo : x ∈ closure (c '' {0}ᶜ) := by
-    have := denseInducing_coe.dense x
+    have := isDenseInducing_coe.dense x
     rw [← image_univ, show (univ : Set K) = {0} ∪ {0}ᶜ from (union_compl_self _).symm,
       image_union] at this
     apply mem_closure_of_mem_closure_union this
@@ -176,11 +176,11 @@ variable (L : Type*) [Field L] [UniformSpace L] [CompletableTopField L]
 instance Subfield.completableTopField (K : Subfield L) : CompletableTopField K where
   nice F F_cau inf_F := by
     let i : K →+* L := K.subtype
-    have hi : UniformInducing i := uniformEmbedding_subtype_val.toUniformInducing
+    have hi : IsUniformInducing i := uniformEmbedding_subtype_val.toIsUniformInducing
     rw [← hi.cauchy_map_iff] at F_cau ⊢
     rw [map_comm (show (i ∘ fun x => x⁻¹) = (fun x => x⁻¹) ∘ i by ext; rfl)]
     apply CompletableTopField.nice _ F_cau
-    rw [← Filter.push_pull', ← map_zero i, ← hi.inducing.nhds_eq_comap, inf_F, Filter.map_bot]
+    rw [← Filter.push_pull', ← map_zero i, ← hiisInducing.nhds_eq_comap, inf_F, Filter.map_bot]
 
 instance (priority := 100) completableTopField_of_complete (L : Type*) [Field L] [UniformSpace L]
     [TopologicalDivisionRing L] [T0Space L] [CompleteSpace L] : CompletableTopField L where
@@ -201,14 +201,14 @@ variable {α β : Type*} [Field β] [b : UniformSpace β] [CompletableTopField �
 
 /-- The pullback of a completable topological field along a uniform inducing
 ring homomorphism is a completable topological field. -/
-theorem UniformInducing.completableTopField
+theorem IsUniformInducing.completableTopField
     [UniformSpace α] [T0Space α]
-    {f : α →+* β} (hf : UniformInducing f) :
+    {f : α →+* β} (hf : IsUniformInducing f) :
     CompletableTopField α := by
   refine CompletableTopField.mk (fun F F_cau inf_F => ?_)
-  rw [← UniformInducing.cauchy_map_iff hf] at F_cau ⊢
+  rw [← IsUniformInducing.cauchy_map_iff hf] at F_cau ⊢
   have h_comm : (f ∘ fun x => x⁻¹) = (fun x => x⁻¹) ∘ f := by
     ext; simp only [Function.comp_apply, map_inv₀, Subfield.coe_inv]
   rw [Filter.map_comm h_comm]
   apply CompletableTopField.nice _ F_cau
-  rw [← Filter.push_pull', ← map_zero f, ← hf.inducing.nhds_eq_comap, inf_F, Filter.map_bot]
+  rw [← Filter.push_pull', ← map_zero f, ← hfisInducing.nhds_eq_comap, inf_F, Filter.map_bot]

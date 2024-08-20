@@ -71,7 +71,7 @@ is injective.
 -/
 theorem injective_quotient_le_comap_map (P : Ideal R[X]) :
     Function.Injective <|
-      Ideal.quotientMap
+      Ideal.isQuotientMap
         (Ideal.map (Polynomial.mapRingHom (Quotient.mk (P.comap (C : R →+* R[X])))) P)
         (Polynomial.mapRingHom (Ideal.Quotient.mk (P.comap (C : R →+* R[X]))))
         le_comap_map := by
@@ -95,7 +95,7 @@ in the file `RingTheory.Jacobson`.
 theorem quotient_mk_maps_eq (P : Ideal R[X]) :
     ((Quotient.mk (map (mapRingHom (Quotient.mk (P.comap (C : R →+* R[X])))) P)).comp C).comp
         (Quotient.mk (P.comap (C : R →+* R[X]))) =
-      (Ideal.quotientMap (map (mapRingHom (Quotient.mk (P.comap (C : R →+* R[X])))) P)
+      (Ideal.isQuotientMap (map (mapRingHom (Quotient.mk (P.comap (C : R →+* R[X])))) P)
             (mapRingHom (Quotient.mk (P.comap (C : R →+* R[X])))) le_comap_map).comp
         ((Quotient.mk P).comp C) := by
   refine RingHom.ext fun x => ?_
@@ -142,7 +142,7 @@ theorem comap_eq_of_scalar_tower_quotient [Algebra R S] [Algebra (R ⧸ p) (S �
 
 /-- If `P` lies over `p`, then `R / p` has a canonical map to `S / P`. -/
 def Quotient.algebraQuotientOfLEComap (h : p ≤ comap f P) : Algebra (R ⧸ p) (S ⧸ P) :=
-  RingHom.toAlgebra <| quotientMap _ f h
+  RingHom.toAlgebra <| isQuotientMap _ f h
 
 /-- `R / p` has a canonical map to `S / pS`. -/
 instance Quotient.algebraQuotientMapQuotient : Algebra (R ⧸ p) (S ⧸ map f p) :=

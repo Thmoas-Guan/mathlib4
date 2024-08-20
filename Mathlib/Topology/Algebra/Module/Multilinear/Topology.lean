@@ -96,13 +96,13 @@ instance instUniformContinuousConstSMul {M : Type*}
 variable [∀ i, ContinuousSMul 𝕜 (E i)] [ContinuousConstSMul 𝕜 F] [CompleteSpace F] [T2Space F]
 
 open UniformOnFun in
-theorem completeSpace (h : RestrictGenTopology {s : Set (Π i, E i) | IsVonNBounded 𝕜 s}) :
+theorem completeSpace (h : IsRestrictGen {s : Set (Π i, E i) | IsVonNBounded 𝕜 s}) :
     CompleteSpace (ContinuousMultilinearMap 𝕜 E F) := by
   classical
   have H : ∀ {m : Π i, E i},
       Continuous fun f : (Π i, E i) →ᵤ[{s | IsVonNBounded 𝕜 s}] F ↦ toFun _ f m :=
     (uniformContinuous_eval (isVonNBounded_covers) _).continuous
-  rw [completeSpace_iff_isComplete_range uniformEmbedding_toUniformOnFun.toUniformInducing,
+  rw [completeSpace_iff_isComplete_range uniformEmbedding_toUniformOnFun.toIsUniformInducing,
     range_toUniformOnFun]
   simp only [setOf_and, setOf_forall]
   apply_rules [IsClosed.isComplete, IsClosed.inter]
@@ -134,7 +134,7 @@ instance instContinuousSMul [ContinuousSMul 𝕜 F] :
   let φ : ContinuousMultilinearMap 𝕜 E F →ₗ[𝕜] (Π i, E i) → F :=
     { toFun := (↑), map_add' := fun _ _ ↦ rfl, map_smul' := fun _ _ ↦ rfl }
   UniformOnFun.continuousSMul_induced_of_image_bounded _ _ _ _ φ
-    embedding_toUniformOnFun.toInducing fun _ _ hu ↦ hu.image_multilinear _
+    embedding_toUniformOnFun.isInducing fun _ _ hu ↦ hu.image_multilinear _
 
 theorem hasBasis_nhds_zero_of_basis {ι : Type*} {p : ι → Prop} {b : ι → Set F}
     (h : (𝓝 (0 : F)).HasBasis p b) :

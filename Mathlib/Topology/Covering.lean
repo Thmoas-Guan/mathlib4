@@ -152,7 +152,7 @@ protected theorem isLocalHomeomorph : IsLocalHomeomorph f :=
 protected theorem isOpenMap : IsOpenMap f :=
   hf.isLocalHomeomorph.isOpenMap
 
-protected theorem quotientMap (hf' : Function.Surjective f) : QuotientMap f :=
+protected theorem isQuotientMap (hf' : Function.Surjective f) : IsQuotientMap f :=
   hf.isOpenMap.to_quotientMap hf.continuous hf'
 
 protected theorem isSeparatedMap : IsSeparatedMap f :=

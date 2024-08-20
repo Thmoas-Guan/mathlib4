@@ -63,10 +63,10 @@ theorem continuous_inl [Zero M] : Continuous (inl : R → tsze R M) :=
 theorem continuous_inr [Zero R] : Continuous (inr : M → tsze R M) :=
   continuous_const.prod_mk continuous_id
 
-theorem embedding_inl [Zero M] : Embedding (inl : R → tsze R M) :=
+theorem IsEmbedding.inl [Zero M] : Embedding (inl : R → tsze R M) :=
   embedding_of_embedding_compose continuous_inl continuous_fst embedding_id
 
-theorem embedding_inr [Zero R] : Embedding (inr : M → tsze R M) :=
+theorem IsEmbedding.inr [Zero R] : Embedding (inr : M → tsze R M) :=
   embedding_of_embedding_compose continuous_inr continuous_snd embedding_id
 
 variable (R M)

@@ -538,7 +538,7 @@ theorem uniformEmbedding_toProdMulOpposite : UniformEmbedding (@toProdMulOpposit
   uniformEmbedding_comap toProdMulOpposite_injective
 
 instance [CompleteSpace A] : CompleteSpace 𝓜(𝕜, A) := by
-  rw [completeSpace_iff_isComplete_range uniformEmbedding_toProdMulOpposite.toUniformInducing]
+  rw [completeSpace_iff_isComplete_range uniformEmbedding_toProdMulOpposite.toIsUniformInducing]
   apply IsClosed.isComplete
   simp only [range_toProdMulOpposite, Set.setOf_forall]
   refine isClosed_iInter fun x => isClosed_iInter fun y => isClosed_eq ?_ ?_

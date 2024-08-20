@@ -461,22 +461,22 @@ section CommRing_CommRing
 
 variable {S : Type v} [CommRing S]
 /-- The ring hom `R/I →+* S/J` induced by a ring hom `f : R →+* S` with `I ≤ f⁻¹(J)` -/
-def quotientMap {I : Ideal R} (J : Ideal S) (f : R →+* S) (hIJ : I ≤ J.comap f) : R ⧸ I →+* S ⧸ J :=
+def isQuotientMap {I : Ideal R} (J : Ideal S) (f : R →+* S) (hIJ : I ≤ J.comap f) : R ⧸ I →+* S ⧸ J :=
   Quotient.lift I ((Quotient.mk J).comp f) fun _ ha => by
     simpa [Function.comp_apply, RingHom.coe_comp, Quotient.eq_zero_iff_mem] using hIJ ha
 
 @[simp]
 theorem quotientMap_mk {J : Ideal R} {I : Ideal S} {f : R →+* S} {H : J ≤ I.comap f} {x : R} :
-    quotientMap I f H (Quotient.mk J x) = Quotient.mk I (f x) :=
+    isQuotientMap I f H (Quotient.mk J x) = Quotient.mk I (f x) :=
   Quotient.lift_mk J _ _
 
 @[simp]
 theorem quotientMap_algebraMap {J : Ideal A} {I : Ideal S} {f : A →+* S} {H : J ≤ I.comap f}
-    {x : R₁} : quotientMap I f H (algebraMap R₁ (A ⧸ J) x) = Quotient.mk I (f (algebraMap _ _ x)) :=
+    {x : R₁} : isQuotientMap I f H (algebraMap R₁ (A ⧸ J) x) = Quotient.mk I (f (algebraMap _ _ x)) :=
   Quotient.lift_mk J _ _
 
 theorem quotientMap_comp_mk {J : Ideal R} {I : Ideal S} {f : R →+* S} (H : J ≤ I.comap f) :
-    (quotientMap I f H).comp (Quotient.mk J) = (Quotient.mk I).comp f :=
+    (isQuotientMap I f H).comp (Quotient.mk J) = (Quotient.mk I).comp f :=
   RingHom.ext fun x => by simp only [Function.comp_apply, RingHom.coe_comp, Ideal.quotientMap_mk]
 
 /-- The ring equiv `R/I ≃+* S/J` induced by a ring equiv `f : R ≃+* S`, where `J = f(I)`. -/
@@ -484,12 +484,12 @@ theorem quotientMap_comp_mk {J : Ideal R} {I : Ideal S} {f : R →+* S} (H : J �
 def quotientEquiv (I : Ideal R) (J : Ideal S) (f : R ≃+* S) (hIJ : J = I.map (f : R →+* S)) :
     R ⧸ I ≃+* S ⧸ J :=
   {
-    quotientMap J (↑f) (by
+    isQuotientMap J (↑f) (by
       rw [hIJ]
       exact le_comap_map)
   with
     invFun :=
-      quotientMap I (↑f.symm)
+      isQuotientMap I (↑f.symm)
         (by
           rw [hIJ]
           exact le_of_eq (map_comap_of_equiv I f))
@@ -516,19 +516,19 @@ theorem quotientEquiv_symm_mk (I : Ideal R) (J : Ideal S) (f : R ≃+* S)
 
 /-- `H` and `h` are kept as separate hypothesis since H is used in constructing the quotient map. -/
 theorem quotientMap_injective' {J : Ideal R} {I : Ideal S} {f : R →+* S} {H : J ≤ I.comap f}
-    (h : I.comap f ≤ J) : Function.Injective (quotientMap I f H) := by
-  refine (injective_iff_map_eq_zero (quotientMap I f H)).2 fun a ha => ?_
+    (h : I.comap f ≤ J) : Function.Injective (isQuotientMap I f H) := by
+  refine (injective_iff_map_eq_zero (isQuotientMap I f H)).2 fun a ha => ?_
   obtain ⟨r, rfl⟩ := Quotient.mk_surjective a
   rw [quotientMap_mk, Quotient.eq_zero_iff_mem] at ha
   exact Quotient.eq_zero_iff_mem.mpr (h ha)
 
-/-- If we take `J = I.comap f` then `QuotientMap` is injective automatically. -/
+/-- If we take `J = I.comap f` then `IsQuotientMap` is injective automatically. -/
 theorem quotientMap_injective {I : Ideal S} {f : R →+* S} :
-    Function.Injective (quotientMap I f le_rfl) :=
+    Function.Injective (isQuotientMap I f le_rfl) :=
   quotientMap_injective' le_rfl
 
 theorem quotientMap_surjective {J : Ideal R} {I : Ideal S} {f : R →+* S} {H : J ≤ I.comap f}
-    (hf : Function.Surjective f) : Function.Surjective (quotientMap I f H) := fun x =>
+    (hf : Function.Surjective f) : Function.Surjective (isQuotientMap I f H) := fun x =>
   let ⟨x, hx⟩ := Quotient.mk_surjective x
   let ⟨y, hy⟩ := hf x
   ⟨(Quotient.mk J) y, by simp [hx, hy]⟩
@@ -538,8 +538,8 @@ theorem comp_quotientMap_eq_of_comp_eq {R' S' : Type*} [CommRing R'] [CommRing S
     {f' : R' →+* S'} {g : R →+* R'} {g' : S →+* S'} (hfg : f'.comp g = g'.comp f) (I : Ideal S') :
     -- Porting note: was losing track of I
     let leq := le_of_eq (_root_.trans (comap_comap (I := I) f g') (hfg ▸ comap_comap (I := I) g f'))
-    (quotientMap I g' le_rfl).comp (quotientMap (I.comap g') f le_rfl) =
-    (quotientMap I f' le_rfl).comp (quotientMap (I.comap f') g leq) := by
+    (isQuotientMap I g' le_rfl).comp (isQuotientMap (I.comap g') f le_rfl) =
+    (isQuotientMap I f' le_rfl).comp (isQuotientMap (I.comap f') g leq) := by
   refine RingHom.ext fun a => ?_
   obtain ⟨r, rfl⟩ := Quotient.mk_surjective a
   simp only [RingHom.comp_apply, quotientMap_mk]
@@ -556,7 +556,7 @@ variable [CommRing B] [Algebra R₁ B]
 /-- The algebra hom `A/I →+* B/J` induced by an algebra hom `f : A →ₐ[R₁] B` with `I ≤ f⁻¹(J)`. -/
 def quotientMapₐ {I : Ideal A} (J : Ideal B) (f : A →ₐ[R₁] B) (hIJ : I ≤ J.comap f) :
     A ⧸ I →ₐ[R₁] B ⧸ J :=
-  { quotientMap J (f : A →+* B) hIJ with commutes' := fun r => by simp only [RingHom.toFun_eq_coe,
+  { isQuotientMap J (f : A →+* B) hIJ with commutes' := fun r => by simp only [RingHom.toFun_eq_coe,
     quotientMap_algebraMap, AlgHom.coe_toRingHom, AlgHom.commutes, Quotient.mk_algebraMap] }
 
 @[simp]
@@ -585,7 +585,7 @@ end
 
 instance (priority := 100) quotientAlgebra {I : Ideal A} [Algebra R A] :
     Algebra (R ⧸ I.comap (algebraMap R A)) (A ⧸ I) :=
-  (quotientMap I (algebraMap R A) (le_of_eq rfl)).toAlgebra
+  (isQuotientMap I (algebraMap R A) (le_of_eq rfl)).toAlgebra
 
 theorem algebraMap_quotient_injective {I : Ideal A} [Algebra R A] :
     Function.Injective (algebraMap (R ⧸ I.comap (algebraMap R A)) (A ⧸ I)) := by

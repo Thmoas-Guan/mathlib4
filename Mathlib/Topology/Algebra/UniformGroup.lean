@@ -195,9 +195,9 @@ theorem uniformGroup_inf {u₁ u₂ : UniformSpace β} (h₁ : @UniformGroup β 
   cases b <;> assumption
 
 @[to_additive]
-lemma UniformInducing.uniformGroup {γ : Type*} [Group γ] [UniformSpace γ] [UniformGroup γ]
+lemma IsUniformInducing.uniformGroup {γ : Type*} [Group γ] [UniformSpace γ] [UniformGroup γ]
     [UniformSpace β] {F : Type*} [FunLike F β γ] [MonoidHomClass F β γ]
-    (f : F) (hf : UniformInducing f) :
+    (f : F) (hf : IsUniformInducing f) :
     UniformGroup β where
   uniformContinuous_div := by
     simp_rw [hf.uniformContinuous_iff, Function.comp_def, map_div]
@@ -206,7 +206,7 @@ lemma UniformInducing.uniformGroup {γ : Type*} [Group γ] [UniformSpace γ] [Un
 @[to_additive]
 protected theorem UniformGroup.comap {γ : Type*} [Group γ] {u : UniformSpace γ} [UniformGroup γ]
     {F : Type*} [FunLike F β γ] [MonoidHomClass F β γ] (f : F) : @UniformGroup β (u.comap f) _ :=
-  letI : UniformSpace β := u.comap f; UniformInducing.uniformGroup f ⟨rfl⟩
+  letI : UniformSpace β := u.comap f; IsUniformInducing.uniformGroup f ⟨rfl⟩
 
 end LatticeOps
 
@@ -597,7 +597,7 @@ variable [TopologicalSpace β] [Group β]
 variable [FunLike hom β α] [MonoidHomClass hom β α] {e : hom}
 
 @[to_additive]
-theorem tendsto_div_comap_self (de : DenseInducing e) (x₀ : α) :
+theorem tendsto_div_comap_self (de : IsDenseInducing e) (x₀ : α) :
     Tendsto (fun t : β × β => t.2 / t.1) ((comap fun p : β × β => (e p.1, e p.2)) <| 𝓝 (x₀, x₀))
       (𝓝 1) := by
   have comm : ((fun x : α × α => x.2 / x.1) ∘ fun t : β × β => (e t.1, e t.2)) =
@@ -611,7 +611,7 @@ theorem tendsto_div_comap_self (de : DenseInducing e) (x₀ : α) :
 
 end
 
-namespace DenseInducing
+namespace IsDenseInducing
 
 variable {α : Type*} {β : Type*} {γ : Type*} {δ : Type*}
 variable {G : Type*}
@@ -623,8 +623,8 @@ variable [TopologicalSpace β] [AddCommGroup β]
 variable [TopologicalSpace γ] [AddCommGroup γ] [TopologicalAddGroup γ]
 variable [TopologicalSpace δ] [AddCommGroup δ]
 variable [UniformSpace G] [AddCommGroup G]
-variable {e : β →+ α} (de : DenseInducing e)
-variable {f : δ →+ γ} (df : DenseInducing f)
+variable {e : β →+ α} (de : IsDenseInducing e)
+variable {f : δ →+ γ} (df : IsDenseInducing f)
 variable {φ : β →+ δ →+ G}
 variable (hφ : Continuous (fun p : β × δ => φ p.1 p.2))
 variable {W' : Set G} (W'_nhd : W' ∈ 𝓝 (0 : G))
@@ -698,7 +698,7 @@ private theorem extend_Z_bilin_key (x₀ : α) (y₀ : γ) : ∃ U ∈ comap e (
   have h₄ := H x₁ x₁_in x xU₁ y yV₁ y' y'V₁
   exact W4 h₁ h₂ h₃ h₄
 
-open DenseInducing
+open IsDenseInducing
 
 variable [T0Space G] [CompleteSpace G]
 
@@ -740,7 +740,7 @@ theorem extend_Z_bilin : Continuous (extend (de.prod df) (fun p : β × δ => φ
       rcases p with ⟨⟨x, y⟩, ⟨x', y'⟩⟩
       apply h <;> tauto
 
-end DenseInducing
+end IsDenseInducing
 
 section CompleteQuotient
 

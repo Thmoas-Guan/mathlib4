@@ -343,8 +343,8 @@ theorem MonoidHom.isClosed_range_coe : IsClosed (Set.range ((↑) : (M₁ →* M
 end PointwiseLimits
 
 @[to_additive]
-theorem Inducing.continuousMul {M N F : Type*} [Mul M] [Mul N] [FunLike F M N] [MulHomClass F M N]
-    [TopologicalSpace M] [TopologicalSpace N] [ContinuousMul N] (f : F) (hf : Inducing f) :
+theorem IsInducing.continuousMul {M N F : Type*} [Mul M] [Mul N] [FunLike F M N] [MulHomClass F M N]
+    [TopologicalSpace M] [TopologicalSpace N] [ContinuousMul N] (f : F) (hf : IsInducing f) :
     ContinuousMul M :=
   ⟨(hf.continuousSMul hf.continuous (map_mul f _ _)).1⟩
 
@@ -352,12 +352,12 @@ theorem Inducing.continuousMul {M N F : Type*} [Mul M] [Mul N] [FunLike F M N] [
 theorem continuousMul_induced {M N F : Type*} [Mul M] [Mul N] [FunLike F M N] [MulHomClass F M N]
     [TopologicalSpace N] [ContinuousMul N] (f : F) : @ContinuousMul M (induced f ‹_›) _ :=
   letI := induced f ‹_›
-  Inducing.continuousMul f ⟨rfl⟩
+  IsInducing.continuousMul f ⟨rfl⟩
 
 @[to_additive]
 instance Subsemigroup.continuousMul [TopologicalSpace M] [Semigroup M] [ContinuousMul M]
     (S : Subsemigroup M) : ContinuousMul S :=
-  Inducing.continuousMul ({ toFun := (↑), map_mul' := fun _ _ => rfl} : MulHom S M) ⟨rfl⟩
+  IsInducing.continuousMul ({ toFun := (↑), map_mul' := fun _ _ => rfl} : MulHom S M) ⟨rfl⟩
 
 @[to_additive]
 instance Submonoid.continuousMul [TopologicalSpace M] [Monoid M] [ContinuousMul M]

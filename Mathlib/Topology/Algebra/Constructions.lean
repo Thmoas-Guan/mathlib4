@@ -86,7 +86,7 @@ instance instTopologicalSpaceUnits : TopologicalSpace Mˣ :=
   TopologicalSpace.induced (embedProduct M) inferInstance
 
 @[to_additive]
-theorem inducing_embedProduct : Inducing (embedProduct M) :=
+theorem inducing_embedProduct : IsInducing (embedProduct M) :=
   ⟨rfl⟩
 
 @[to_additive]
@@ -141,7 +141,7 @@ theorem continuous_val : Continuous ((↑) : Mˣ → M) :=
 protected theorem continuous_iff {f : X → Mˣ} :
     Continuous f ↔ Continuous (val ∘ f) ∧ Continuous (fun x => ↑(f x)⁻¹ : X → M) := by
   simp only [inducing_embedProduct.continuous_iff, embedProduct_apply, (· ∘ ·),
-    continuous_prod_mk, opHomeomorph.symm.inducing.continuous_iff, opHomeomorph_symm_apply,
+    continuous_prod_mk, opHomeomorph.symmisInducing.continuous_iff, opHomeomorph_symm_apply,
     unop_op]
 
 @[to_additive]

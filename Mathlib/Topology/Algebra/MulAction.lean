@@ -170,8 +170,8 @@ Then the action of `N` on `X` is continuous as well.
 
 In many cases, `f = id` so that `g` is an action homomorphism in the sense of `AddActionHom`.
 However, this version also works for `f = AddUnits.val`."]
-lemma Inducing.continuousSMul {N : Type*} [SMul N Y] [TopologicalSpace N] {f : N → M}
-    (hg : Inducing g) (hf : Continuous f) (hsmul : ∀ {c x}, g (c • x) = f c • g x) :
+lemma IsInducing.continuousSMul {N : Type*} [SMul N Y] [TopologicalSpace N] {f : N → M}
+    (hg : IsInducing g) (hf : Continuous f) (hsmul : ∀ {c x}, g (c • x) = f c • g x) :
     ContinuousSMul N Y where
   continuous_smul := by
     simpa only [hg.continuous_iff, Function.comp_def, hsmul]
@@ -180,7 +180,7 @@ lemma Inducing.continuousSMul {N : Type*} [SMul N Y] [TopologicalSpace N] {f : N
 @[to_additive]
 instance SMulMemClass.continuousSMul {S : Type*} [SetLike S X] [SMulMemClass S M X] (s : S) :
     ContinuousSMul M s :=
-  inducing_subtype_val.continuousSMul continuous_id rfl
+  IsInducing.subtypeVal.continuousSMul continuous_id rfl
 
 end SMul
 

@@ -99,7 +99,7 @@ theorem Continuous.exists_lift_sigma [ConnectedSpace α] [∀ i, TopologicalSpac
     exact ⟨i, hs.trans_subset (image_subset_range _ _)⟩
   rcases range_subset_range_iff_exists_comp.1 hi with ⟨g, rfl⟩
   refine ⟨i, g, ?_, rfl⟩
-  rwa [← embedding_sigmaMk.continuous_iff] at hf
+  rwa [← IsEmbedding.sigmaMk.continuous_iff] at hf
 
 theorem nonempty_inter [PreconnectedSpace α] {s t : Set α} :
     IsOpen s → IsOpen t → s ∪ t = univ → s.Nonempty → t.Nonempty → (s ∩ t).Nonempty := by
@@ -453,14 +453,14 @@ theorem preimage_connectedComponent_connected [TopologicalSpace β] {f : α → 
       from (this.trans T₂_v.1).trans inter_subset_right
     exact preimage_mono h
 
-theorem QuotientMap.preimage_connectedComponent [TopologicalSpace β] {f : α → β}
-    (hf : QuotientMap f) (h_fibers : ∀ y : β, IsConnected (f ⁻¹' {y})) (a : α) :
+theorem IsQuotientMap.preimage_connectedComponent [TopologicalSpace β] {f : α → β}
+    (hf : IsQuotientMap f) (h_fibers : ∀ y : β, IsConnected (f ⁻¹' {y})) (a : α) :
     f ⁻¹' connectedComponent (f a) = connectedComponent a :=
   ((preimage_connectedComponent_connected h_fibers (fun _ => hf.isClosed_preimage.symm)
       _).subset_connectedComponent mem_connectedComponent).antisymm
     (hf.continuous.mapsTo_connectedComponent a)
 
-theorem QuotientMap.image_connectedComponent [TopologicalSpace β] {f : α → β} (hf : QuotientMap f)
+theorem IsQuotientMap.image_connectedComponent [TopologicalSpace β] {f : α → β} (hf : IsQuotientMap f)
     (h_fibers : ∀ y : β, IsConnected (f ⁻¹' {y})) (a : α) :
     f '' connectedComponent a = connectedComponent (f a) := by
   rw [← hf.preimage_connectedComponent h_fibers, image_preimage_eq _ hf.surjective]
@@ -505,7 +505,7 @@ instance : TopologicalSpace (ConnectedComponents α) :=
 theorem surjective_coe : Surjective (mk : α → ConnectedComponents α) :=
   surjective_quot_mk _
 
-theorem quotientMap_coe : QuotientMap (mk : α → ConnectedComponents α) :=
+theorem quotientMap_coe : IsQuotientMap (mk : α → ConnectedComponents α) :=
   quotientMap_quot_mk
 
 @[continuity]

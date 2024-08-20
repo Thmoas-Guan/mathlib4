@@ -103,7 +103,7 @@ variable (hT : Dense (T.domain : Set E))
 /-- The unique continuous extension of the operator `adjointDomainMkCLM` to `E`. -/
 def adjointDomainMkCLMExtend (y : T.adjointDomain) : E →L[𝕜] 𝕜 :=
   (T.adjointDomainMkCLM y).extend (Submodule.subtypeL T.domain) hT.denseRange_val
-    uniformEmbedding_subtype_val.toUniformInducing
+    uniformEmbedding_subtype_val.toIsUniformInducing
 
 @[simp]
 theorem adjointDomainMkCLMExtend_apply (y : T.adjointDomain) (x : T.domain) :

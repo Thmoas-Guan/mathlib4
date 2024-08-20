@@ -35,15 +35,15 @@ instance {ι : Type*} [Finite ι] {X : ι → Type*} [(i : ι) → TopologicalSp
 instance (priority := 100) [CompactSpace X] : WeaklyLocallyCompactSpace X where
   exists_compact_mem_nhds _ := ⟨univ, isCompact_univ, univ_mem⟩
 
-protected theorem ClosedEmbedding.weaklyLocallyCompactSpace [WeaklyLocallyCompactSpace Y]
-    {f : X → Y} (hf : ClosedEmbedding f) : WeaklyLocallyCompactSpace X where
+protected theorem IsClosedEmbedding.weaklyLocallyCompactSpace [WeaklyLocallyCompactSpace Y]
+    {f : X → Y} (hf : IsClosedEmbedding f) : WeaklyLocallyCompactSpace X where
   exists_compact_mem_nhds x :=
     let ⟨K, hK, hKx⟩ := exists_compact_mem_nhds (f x)
     ⟨f ⁻¹' K, hf.isCompact_preimage hK, hf.continuous.continuousAt hKx⟩
 
 protected theorem IsClosed.weaklyLocallyCompactSpace [WeaklyLocallyCompactSpace X]
     {s : Set X} (hs : IsClosed s) : WeaklyLocallyCompactSpace s :=
-  (closedEmbedding_subtype_val hs).weaklyLocallyCompactSpace
+  (isClosedEmbedding_subtype_val hs).weaklyLocallyCompactSpace
 
 /-- In a weakly locally compact space,
 every compact set is contained in the interior of a compact set. -/
@@ -169,28 +169,28 @@ theorem exists_compact_between [LocallyCompactSpace X] {K U : Set X} (hK : IsCom
   let ⟨L, hKL, hL, hLU⟩ := exists_mem_nhdsSet_isCompact_mapsTo continuous_id hK hU h_KU
   ⟨L, hL, subset_interior_iff_mem_nhdsSet.2 hKL, hLU⟩
 
-protected theorem ClosedEmbedding.locallyCompactSpace [LocallyCompactSpace Y] {f : X → Y}
-    (hf : ClosedEmbedding f) : LocallyCompactSpace X :=
+protected theorem IsClosedEmbedding.locallyCompactSpace [LocallyCompactSpace Y] {f : X → Y}
+    (hf : IsClosedEmbedding f) : LocallyCompactSpace X :=
   haveI : ∀ x : X, (𝓝 x).HasBasis (fun s => s ∈ 𝓝 (f x) ∧ IsCompact s) (f ⁻¹' ·) := fun x ↦ by
-    rw [hf.toInducing.nhds_eq_comap]
+    rw [hf.isInducing.nhds_eq_comap]
     exact (compact_basis_nhds _).comap _
   .of_hasBasis this fun x s hs => hf.isCompact_preimage hs.2
 
 protected theorem IsClosed.locallyCompactSpace [LocallyCompactSpace X] {s : Set X}
     (hs : IsClosed s) : LocallyCompactSpace s :=
-  (closedEmbedding_subtype_val hs).locallyCompactSpace
+  (isClosedEmbedding_subtype_val hs).locallyCompactSpace
 
-protected theorem OpenEmbedding.locallyCompactSpace [LocallyCompactSpace Y] {f : X → Y}
-    (hf : OpenEmbedding f) : LocallyCompactSpace X := by
+protected theorem IsOpenEmbedding.locallyCompactSpace [LocallyCompactSpace Y] {f : X → Y}
+    (hf : IsOpenEmbedding f) : LocallyCompactSpace X := by
   have : ∀ x : X,
       (𝓝 x).HasBasis (fun s ↦ (s ∈ 𝓝 (f x) ∧ IsCompact s) ∧ s ⊆ range f) (f ⁻¹' ·) := fun x ↦ by
     rw [hf.nhds_eq_comap]
     exact ((compact_basis_nhds _).restrict_subset <| hf.isOpen_range.mem_nhds <|
       mem_range_self _).comap _
   refine .of_hasBasis this fun x s hs => ?_
-  rw [hf.toInducing.isCompact_iff, image_preimage_eq_of_subset hs.2]
+  rw [hf.isInducing.isCompact_iff, image_preimage_eq_of_subset hs.2]
   exact hs.1.2
 
 protected theorem IsOpen.locallyCompactSpace [LocallyCompactSpace X] {s : Set X} (hs : IsOpen s) :
     LocallyCompactSpace s :=
-  hs.openEmbedding_subtype_val.locallyCompactSpace
+  hs.isOpenEmbedding_subtype_val.locallyCompactSpace

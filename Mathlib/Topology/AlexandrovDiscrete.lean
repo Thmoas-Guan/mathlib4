@@ -155,7 +155,7 @@ lemma IsOpen.exterior_subset_iff (ht : IsOpen t) : exterior s ⊆ t ↔ s ⊆ t 
 @[simp] lemma exterior_eq_empty : exterior s = ∅ ↔ s = ∅ :=
   ⟨eq_bot_mono subset_exterior, by rintro rfl; exact exterior_empty⟩
 
-lemma Inducing.alexandrovDiscrete [AlexandrovDiscrete α] {f : β → α} (h : Inducing f) :
+lemma IsInducing.alexandrovDiscrete [AlexandrovDiscrete α] {f : β → α} (h : IsInducing f) :
     AlexandrovDiscrete β where
   isOpen_sInter S hS := by
     simp_rw [h.isOpen_iff] at hS ⊢
@@ -263,7 +263,7 @@ instance AlexandrovDiscrete.toLocallyCompactSpace : LocallyCompactSpace α where
       exterior_singleton_subset_iff_mem_nhds.2 hU, (finite_singleton _).isCompact_exterior⟩
 
 instance Subtype.instAlexandrovDiscrete {p : α → Prop} : AlexandrovDiscrete {a // p a} :=
-  inducing_subtype_val.alexandrovDiscrete
+  IsInducing.subtypeVal.alexandrovDiscrete
 
 instance Quotient.instAlexandrovDiscrete {s : Setoid α} : AlexandrovDiscrete (Quotient s) :=
   alexandrovDiscrete_coinduced

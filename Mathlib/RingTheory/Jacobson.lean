@@ -284,16 +284,16 @@ theorem isIntegral_isLocalization_polynomial_quotient
     (P : Ideal R[X]) (pX : R[X]) (hpX : pX ∈ P) [Algebra (R ⧸ P.comap (C : R →+* R[X])) Rₘ]
     [IsLocalization.Away (pX.map (Quotient.mk (P.comap (C : R →+* R[X])))).leadingCoeff Rₘ]
     [Algebra (R[X] ⧸ P) Sₘ] [IsLocalization ((Submonoid.powers (pX.map (Quotient.mk (P.comap
-      (C : R →+* R[X])))).leadingCoeff).map (quotientMap P C le_rfl) : Submonoid (R[X] ⧸ P)) Sₘ] :
-    (IsLocalization.map Sₘ (quotientMap P C le_rfl) (Submonoid.powers (pX.map (Quotient.mk (P.comap
+      (C : R →+* R[X])))).leadingCoeff).map (isQuotientMap P C le_rfl) : Submonoid (R[X] ⧸ P)) Sₘ] :
+    (IsLocalization.map Sₘ (isQuotientMap P C le_rfl) (Submonoid.powers (pX.map (Quotient.mk (P.comap
       (C : R →+* R[X])))).leadingCoeff).le_comap_map : Rₘ →+* Sₘ).IsIntegral := by
   let P' : Ideal R := P.comap C
   let M : Submonoid (R ⧸ P') :=
     Submonoid.powers (pX.map (Quotient.mk (P.comap (C : R →+* R[X])))).leadingCoeff
   let M' : Submonoid (R[X] ⧸ P) :=
     (Submonoid.powers (pX.map (Quotient.mk (P.comap (C : R →+* R[X])))).leadingCoeff).map
-      (quotientMap P C le_rfl)
-  let φ : R ⧸ P' →+* R[X] ⧸ P := quotientMap P C le_rfl
+      (isQuotientMap P C le_rfl)
+  let φ : R ⧸ P' →+* R[X] ⧸ P := isQuotientMap P C le_rfl
   let φ' : Rₘ →+* Sₘ := IsLocalization.map Sₘ φ M.le_comap_map
   have hφ' : φ.comp (Quotient.mk P') = (Quotient.mk P).comp C := rfl
   intro p
@@ -363,8 +363,8 @@ theorem jacobson_bot_of_integral_localization {R : Type*} [CommRing R] [IsDomain
   haveI : (I.comap φ').IsPrime := comap_isPrime φ' I
   haveI : (⊥ : Ideal (S ⧸ I.comap (algebraMap S Sₘ))).IsPrime := bot_prime
   have hcomm : φ'.comp (algebraMap R Rₘ) = (algebraMap S Sₘ).comp φ := IsLocalization.map_comp _
-  let f := quotientMap (I.comap (algebraMap S Sₘ)) φ le_rfl
-  let g := quotientMap I (algebraMap S Sₘ) le_rfl
+  let f := isQuotientMap (I.comap (algebraMap S Sₘ)) φ le_rfl
+  let g := isQuotientMap I (algebraMap S Sₘ) le_rfl
   have := isMaximal_comap_of_isIntegral_of_isMaximal' φ' hφ' I
   have := ((isMaximal_iff_isMaximal_disjoint Rₘ x _).1 this).left
   have : ((I.comap (algebraMap S Sₘ)).comap φ).IsMaximal := by
@@ -393,7 +393,7 @@ private theorem isJacobson_polynomial_of_domain (R : Type*) [CommRing R] [IsDoma
     obtain ⟨p, pP, p0⟩ := exists_nonzero_mem_of_ne_bot Pb hP
     let x := (Polynomial.map (Quotient.mk P') p).leadingCoeff
     have hx : x ≠ 0 := by rwa [Ne, leadingCoeff_eq_zero]
-    let φ : R ⧸ P' →+* R[X] ⧸ P := Ideal.quotientMap P (C : R →+* R[X]) le_rfl
+    let φ : R ⧸ P' →+* R[X] ⧸ P := Ideal.isQuotientMap P (C : R →+* R[X]) le_rfl
     let hφ : Function.Injective ↑φ := quotientMap_injective
     let Rₘ := Localization.Away x
     let Sₘ := (Localization ((Submonoid.powers x).map φ : Submonoid (R[X] ⧸ P)))
@@ -454,7 +454,7 @@ theorem isMaximal_comap_C_of_isMaximal [IsJacobson R] [Nontrivial R]
     Submodule.nonzero_mem_of_bot_lt (bot_lt_of_maximal P polynomial_not_isField)
   have hm' : m ≠ 0 := by
     simpa [Submodule.coe_eq_zero] using hm
-  let φ : R ⧸ P' →+* R[X] ⧸ P := quotientMap P (C : R →+* R[X]) le_rfl
+  let φ : R ⧸ P' →+* R[X] ⧸ P := isQuotientMap P (C : R →+* R[X]) le_rfl
   let a : R ⧸ P' := (m.map (Quotient.mk P')).leadingCoeff
   let M : Submonoid (R ⧸ P') := Submonoid.powers a
   rw [← bot_quotient_isMaximal_iff]
@@ -498,7 +498,7 @@ private theorem quotient_mk_comp_C_isIntegral_of_jacobson' [Nontrivial R] (hR : 
     exists_nonzero_mem_of_ne_bot (ne_of_lt (bot_lt_of_maximal P polynomial_not_isField)).symm hP'
   let a : R ⧸ P' := (pX.map (Quotient.mk P')).leadingCoeff
   let M : Submonoid (R ⧸ P') := Submonoid.powers a
-  let φ : R ⧸ P' →+* R[X] ⧸ P := quotientMap P C le_rfl
+  let φ : R ⧸ P' →+* R[X] ⧸ P := isQuotientMap P C le_rfl
   haveI hP'_prime : P'.IsPrime := comap_isPrime C P
   have hM : (0 : R ⧸ P') ∉ M := fun ⟨n, hn⟩ => hp0 <| leadingCoeff_eq_zero.mp (pow_eq_zero hn)
   let M' : Submonoid (R[X] ⧸ P) := M.map φ
@@ -633,7 +633,7 @@ private lemma aux_IH {R : Type u} {S : Type v} {T : Type w}
     · apply IH
       apply Polynomial.isMaximal_comap_C_of_isJacobson'
       exact hQ
-    · suffices w'.toRingHom = Ideal.quotientMap Q (Polynomial.C) le_rfl by
+    · suffices w'.toRingHom = Ideal.isQuotientMap Q (Polynomial.C) le_rfl by
         rw [this]
         rw [isIntegral_quotientMap_iff _]
         apply Polynomial.quotient_mk_comp_C_isIntegral_of_jacobson

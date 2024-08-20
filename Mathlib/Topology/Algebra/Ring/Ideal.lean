@@ -57,7 +57,7 @@ theorem QuotientRing.isOpenMap_coe : IsOpenMap (mk N) := by
   rw [quotient_ring_saturate]
   exact isOpen_iUnion fun ⟨n, _⟩ => isOpenMap_add_left n s s_op
 
-theorem QuotientRing.quotientMap_coe_coe : QuotientMap fun p : R × R => (mk N p.1, mk N p.2) :=
+theorem QuotientRing.quotientMap_coe_coe : IsQuotientMap fun p : R × R => (mk N p.1, mk N p.2) :=
   IsOpenMap.to_quotientMap ((QuotientRing.isOpenMap_coe N).prod (QuotientRing.isOpenMap_coe N))
     ((continuous_quot_mk.comp continuous_fst).prod_mk (continuous_quot_mk.comp continuous_snd))
     (by rintro ⟨⟨x⟩, ⟨y⟩⟩; exact ⟨(x, y), rfl⟩)
@@ -67,10 +67,10 @@ instance topologicalRing_quotient : TopologicalRing (R ⧸ N) :=
     { continuous_add :=
         have cont : Continuous (mk N ∘ fun p : R × R => p.fst + p.snd) :=
           continuous_quot_mk.comp continuous_add
-        (QuotientMap.continuous_iff (QuotientRing.quotientMap_coe_coe N)).mpr cont
+        (IsQuotientMap.continuous_iff (QuotientRing.quotientMap_coe_coe N)).mpr cont
       continuous_mul :=
         have cont : Continuous (mk N ∘ fun p : R × R => p.fst * p.snd) :=
           continuous_quot_mk.comp continuous_mul
-        (QuotientMap.continuous_iff (QuotientRing.quotientMap_coe_coe N)).mpr cont }
+        (IsQuotientMap.continuous_iff (QuotientRing.quotientMap_coe_coe N)).mpr cont }
 
 end CommRing

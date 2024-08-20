@@ -254,7 +254,7 @@ theorem comap_injective_of_surjective (f : R →+* S) (hf : Function.Surjective 
 variable (S)
 
 theorem localization_comap_inducing [Algebra R S] (M : Submonoid R) [IsLocalization M S] :
-    Inducing (comap (algebraMap R S)) := by
+    IsInducing (comap (algebraMap R S)) := by
   refine ⟨TopologicalSpace.ext_isClosed fun Z ↦ ?_⟩
   simp_rw [isClosed_induced_iff, isClosed_iff_zeroLocus, @eq_comm _ _ (zeroLocus _),
     exists_exists_eq_and, preimage_comap_zeroLocus]
@@ -292,7 +292,7 @@ theorem localization_comap_range [Algebra R S] (M : Submonoid R) [IsLocalization
 
 open Function RingHom
 
-theorem comap_inducing_of_surjective (hf : Surjective f) : Inducing (comap f) where
+theorem comap_inducing_of_surjective (hf : Surjective f) : IsInducing (comap f) where
   induced := by
     set_option tactic.skipAssignedInstances false in
     simp_rw [TopologicalSpace.ext_iff, ← isClosed_compl_iff,
@@ -364,7 +364,7 @@ theorem isClosed_range_comap_of_surjective (hf : Surjective f) :
   rw [range_comap_of_surjective _ f hf]
   exact isClosed_zeroLocus _
 
-theorem closedEmbedding_comap_of_surjective (hf : Surjective f) : ClosedEmbedding (comap f) :=
+theorem isClosedEmbedding_comap_of_surjective (hf : Surjective f) : IsClosedEmbedding (comap f) :=
   { induced := (comap_inducing_of_surjective S f hf).induced
     inj := comap_injective_of_surjective f hf
     isClosed_range := isClosed_range_comap_of_surjective S f hf }
@@ -389,17 +389,17 @@ noncomputable
 def primeSpectrumProdHomeo :
     PrimeSpectrum (R × S) ≃ₜ PrimeSpectrum R ⊕ PrimeSpectrum S := by
   refine ((primeSpectrumProd R S).symm.toHomeomorphOfInducing ?_).symm
-  refine (closedEmbedding_of_continuous_injective_closed ?_ (Equiv.injective _) ?_).toInducing
+  refine (IsClosedEmbedding.of_continuous_injective_isClosedMap ?_ (Equiv.injective _) ?_).isInducing
   · rw [continuous_sum_dom]
     simp only [Function.comp, primeSpectrumProd_symm_inl, primeSpectrumProd_symm_inr]
     exact ⟨(comap _).2, (comap _).2⟩
   · rw [isClosedMap_sum]
     constructor
     · simp_rw [primeSpectrumProd_symm_inl]
-      refine (closedEmbedding_comap_of_surjective _ _ ?_).isClosedMap
+      refine (isClosedEmbedding_comap_of_surjective _ _ ?_).isClosedMap
       exact Prod.fst_surjective
     · simp_rw [primeSpectrumProd_symm_inr]
-      refine (closedEmbedding_comap_of_surjective _ _ ?_).isClosedMap
+      refine (isClosedEmbedding_comap_of_surjective _ _ ?_).isClosedMap
       exact Prod.snd_surjective
 
 end SpecProd
@@ -495,8 +495,8 @@ theorem localization_away_comap_range (S : Type v) [CommSemiring S] [Algebra R S
   · rintro h₁ _ ⟨⟨n, rfl⟩, h₃⟩
     exact h₁ (x.2.mem_of_pow_mem _ h₃)
 
-theorem localization_away_openEmbedding (S : Type v) [CommSemiring S] [Algebra R S] (r : R)
-    [IsLocalization.Away r S] : OpenEmbedding (comap (algebraMap R S)) :=
+theorem localization_away_isOpenEmbedding (S : Type v) [CommSemiring S] [Algebra R S] (r : R)
+    [IsLocalization.Away r S] : IsOpenEmbedding (comap (algebraMap R S)) :=
   { toEmbedding := localization_comap_embedding S (Submonoid.powers r)
     isOpen_range := by
       rw [localization_away_comap_range S r]

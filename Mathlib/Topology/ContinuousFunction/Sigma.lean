@@ -43,8 +43,8 @@ namespace ContinuousMap
 
 theorem embedding_sigmaMk_comp [Nonempty X] :
     Embedding (fun g : Σ i, C(X, Y i) ↦ (sigmaMk g.1).comp g.2) where
-  toInducing := inducing_sigma.2
-    ⟨fun i ↦ (sigmaMk i).inducing_comp embedding_sigmaMk.toInducing, fun i ↦
+  isInducing := inducing_sigma.2
+    ⟨fun i ↦ (sigmaMk i).inducing_comp IsEmbedding.sigmaMk.isInducing, fun i ↦
       let ⟨x⟩ := ‹Nonempty X›
       ⟨_, (isOpen_sigma_fst_preimage {i}).preimage (continuous_eval_const x), fun _ ↦ Iff.rfl⟩⟩
   inj := by
@@ -78,7 +78,7 @@ def sigmaCodHomeomorph : C(X, Σ i, Y i) ≃ₜ Σ i, C(X, Y i) :=
   .symm <| Equiv.toHomeomorphOfInducing
     (.ofBijective _ ⟨embedding_sigmaMk_comp.inj, fun f ↦
       let ⟨i, g, hg⟩ := f.exists_lift_sigma; ⟨⟨i, g⟩, hg.symm⟩⟩)
-    embedding_sigmaMk_comp.toInducing
+    embedding_sigmaMk_comp.isInducing
 
 end ConnectedSpace
 

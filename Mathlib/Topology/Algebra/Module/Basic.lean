@@ -102,7 +102,7 @@ variable {ι R M₁ M₂ : Type*} [Semiring R] [AddCommMonoid M₁] [AddCommMono
 
 theorem continuousSMul_induced : @ContinuousSMul R M₁ _ u (t.induced f) :=
   let _ : TopologicalSpace M₁ := t.induced f
-  Inducing.continuousSMul ⟨rfl⟩ continuous_id (map_smul f _ _)
+  IsInducing.continuousSMul ⟨rfl⟩ continuous_id (map_smul f _ _)
 
 end LatticeOps
 
@@ -2374,7 +2374,7 @@ instance topologicalAddGroup_quotient [TopologicalAddGroup M] : TopologicalAddGr
 instance continuousSMul_quotient [TopologicalSpace R] [TopologicalAddGroup M] [ContinuousSMul R M] :
     ContinuousSMul R (M ⧸ S) := by
   constructor
-  have quot : QuotientMap fun au : R × M => (au.1, S.mkQ au.2) :=
+  have quot : IsQuotientMap fun au : R × M => (au.1, S.mkQ au.2) :=
     IsOpenMap.to_quotientMap (IsOpenMap.id.prod S.isOpenMap_mkQ)
       (continuous_id.prod_map continuous_quot_mk)
       (Function.surjective_id.prodMap <| surjective_quot_mk _)

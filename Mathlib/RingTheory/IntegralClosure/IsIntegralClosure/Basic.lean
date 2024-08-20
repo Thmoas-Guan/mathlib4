@@ -634,7 +634,7 @@ theorem RingHom.IsIntegral.tower_top (h : (g.comp f).IsIntegral) : g.IsIntegral 
   fun x ↦ RingHom.isIntegralElem.of_comp f g (h x)
 
 theorem RingHom.IsIntegral.quotient {I : Ideal S} (hf : f.IsIntegral) :
-    (Ideal.quotientMap I f le_rfl).IsIntegral := by
+    (Ideal.isQuotientMap I f le_rfl).IsIntegral := by
   rintro ⟨x⟩
   obtain ⟨p, p_monic, hpx⟩ := hf x
   refine ⟨p.map (Ideal.Quotient.mk _), p_monic.map _, ?_⟩
@@ -645,14 +645,14 @@ instance Algebra.IsIntegral.quotient {I : Ideal A} [Algebra.IsIntegral R A] :
   ⟨RingHom.IsIntegral.quotient (algebraMap R A) Algebra.IsIntegral.isIntegral⟩
 
 theorem isIntegral_quotientMap_iff {I : Ideal S} :
-    (Ideal.quotientMap I f le_rfl).IsIntegral ↔
+    (Ideal.isQuotientMap I f le_rfl).IsIntegral ↔
       ((Ideal.Quotient.mk I).comp f : R →+* S ⧸ I).IsIntegral := by
   let g := Ideal.Quotient.mk (I.comap f)
   -- Porting note: added type ascription
-  have : (Ideal.quotientMap I f le_rfl).comp g = (Ideal.Quotient.mk I).comp f :=
+  have : (Ideal.isQuotientMap I f le_rfl).comp g = (Ideal.Quotient.mk I).comp f :=
     Ideal.quotientMap_comp_mk le_rfl
   refine ⟨fun h => ?_, fun h => RingHom.IsIntegral.tower_top g _ (this ▸ h)⟩
-  refine this ▸ RingHom.IsIntegral.trans g (Ideal.quotientMap I f le_rfl) ?_ h
+  refine this ▸ RingHom.IsIntegral.trans g (Ideal.isQuotientMap I f le_rfl) ?_ h
   exact g.isIntegral_of_surjective Ideal.Quotient.mk_surjective
 
 /-- If the integral extension `R → S` is injective, and `S` is a field, then `R` is also a field. -/

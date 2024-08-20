@@ -174,7 +174,7 @@ theorem hasBasis_nhds_zero_of_basis [TopologicalSpace F] [TopologicalAddGroup F]
       fun Si => { f : E →SL[σ] F | ∀ x ∈ Si.1, f x ∈ b Si.2 } := by
   letI : UniformSpace F := TopologicalAddGroup.toUniformSpace F
   haveI : UniformAddGroup F := comm_topologicalAddGroup_is_uniform
-  rw [(embedding_coeFn σ F 𝔖).toInducing.nhds_eq_comap]
+  rw [(embedding_coeFn σ F 𝔖).isInducing.nhds_eq_comap]
   exact (UniformOnFun.hasBasis_nhds_zero_of_basis 𝔖 h𝔖₁ h𝔖₂ h).comap DFunLike.coe
 
 theorem hasBasis_nhds_zero [TopologicalSpace F] [TopologicalAddGroup F]
@@ -188,7 +188,7 @@ instance instUniformContinuousConstSMul (M : Type*)
     [Monoid M] [DistribMulAction M F] [SMulCommClass 𝕜₂ M F]
     [UniformSpace F] [UniformAddGroup F] [UniformContinuousConstSMul M F] (𝔖 : Set (Set E)) :
     UniformContinuousConstSMul M (UniformConvergenceCLM σ F 𝔖) :=
-  (uniformEmbedding_coeFn σ F 𝔖).toUniformInducing.uniformContinuousConstSMul fun _ _ ↦ by rfl
+  (uniformEmbedding_coeFn σ F 𝔖).toIsUniformInducing.uniformContinuousConstSMul fun _ _ ↦ by rfl
 
 instance instContinuousConstSMul (M : Type*)
     [Monoid M] [DistribMulAction M F] [SMulCommClass 𝕜₂ M F]

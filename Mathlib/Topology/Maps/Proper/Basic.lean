@@ -283,12 +283,12 @@ lemma isProperMap_of_isClosedMap_of_inj (f_cont : Continuous f) (f_inj : f.Injec
 @[simp] lemma isProperMap_id : IsProperMap (id : X → X) := (Homeomorph.refl X).isProperMap
 
 /-- A closed embedding is proper. -/
-lemma isProperMap_of_closedEmbedding (hf : ClosedEmbedding f) : IsProperMap f :=
+lemma isProperMap_of_isClosedEmbedding (hf : IsClosedEmbedding f) : IsProperMap f :=
   isProperMap_of_isClosedMap_of_inj hf.continuous hf.inj hf.isClosedMap
 
 /-- The coercion from a closed subset is proper. -/
 lemma isProperMap_subtype_val_of_closed {U : Set X} (hU : IsClosed U) : IsProperMap ((↑) : U → X) :=
-  isProperMap_of_closedEmbedding hU.closedEmbedding_subtype_val
+  isProperMap_of_isClosedEmbedding hU.isClosedEmbedding_subtype_val
 
 /-- The restriction of a proper map to a closed subset is proper. -/
 lemma isProperMap_restr_of_proper_of_closed {U : Set X} (hf : IsProperMap f) (hU : IsClosed U) :

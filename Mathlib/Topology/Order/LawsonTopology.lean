@@ -97,8 +97,8 @@ protected theorem isTopologicalBasis : TopologicalSpace.IsTopologicalBasis (laws
   erw [@topology_eq_lawson α _ _ _]
   rw [lawson]
   apply (congrArg₂ Inf.inf _) _
-  · letI _ := lower α; exact @IsLower.withLowerHomeomorph α ‹_› (lower α) ⟨rfl⟩ |>.inducing.induced
-  letI _ := scott α; exact @IsScott.withScottHomeomorph α _ (scott α) ⟨rfl⟩ |>.inducing.induced
+  · letI _ := lower α; exact @IsLower.withLowerHomeomorph α ‹_› (lower α) ⟨rfl⟩ |>isInducing.induced
+  letI _ := scott α; exact @IsScott.withScottHomeomorph α _ (scott α) ⟨rfl⟩ |>isInducing.induced
 
 end Preorder
 end IsLawson

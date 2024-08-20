@@ -233,8 +233,8 @@ theorem Scheme.map_PrimeSpectrum_basicOpen_of_affine
 theorem isBasis_basicOpen (X : Scheme) [IsAffine X] :
     Opens.IsBasis (Set.range (X.basicOpen : Γ(X, ⊤) → X.Opens)) := by
   delta Opens.IsBasis
-  convert PrimeSpectrum.isBasis_basic_opens.inducing
-    (TopCat.homeoOfIso (Scheme.forgetToTop.mapIso X.isoSpec)).inducing using 1
+  convert PrimeSpectrum.isBasis_basic_opensisInducing
+    (TopCat.homeoOfIso (Scheme.forgetToTop.mapIso X.isoSpec))isInducing using 1
   ext
   simp only [Set.mem_image, exists_exists_eq_and]
   constructor
@@ -253,7 +253,7 @@ variable {X Y : Scheme.{u}} {U : X.Opens} (hU : IsAffineOpen U) (f : Γ(X, U))
 def fromSpec :
     Spec Γ(X, U) ⟶ X :=
   haveI : IsAffine U := hU
-  Spec.map (X.presheaf.map (eqToHom U.openEmbedding_obj_top.symm).op) ≫
+  Spec.map (X.presheaf.map (eqToHom U.isOpenEmbedding_obj_top.symm).op) ≫
     U.toScheme.isoSpec.inv ≫ U.ι
 
 instance isOpenImmersion_fromSpec :
@@ -309,7 +309,7 @@ theorem _root_.AlgebraicGeometry.Scheme.Hom.isAffineOpen_iff_of_isOpenImmersion
     (f : AlgebraicGeometry.Scheme.Hom X Y) [H : IsOpenImmersion f] {U : X.Opens} :
     IsAffineOpen (f ''ᵁ U) ↔ IsAffineOpen U := by
   refine ⟨fun hU => @isAffine_of_isIso _ _
-    (IsOpenImmersion.isoOfRangeEq (X.ofRestrict U.openEmbedding ≫ f) (Y.ofRestrict _) ?_).hom ?_ hU,
+    (IsOpenImmersion.isoOfRangeEq (X.ofRestrict U.isOpenEmbedding ≫ f) (Y.ofRestrict _) ?_).hom ?_ hU,
     fun hU => hU.image_of_isOpenImmersion f⟩
   · erw [Scheme.comp_val_base, coe_comp, Set.range_comp] -- now `erw` after #13170
     dsimp [Opens.coe_inclusion, Scheme.restrict]
@@ -408,7 +408,7 @@ theorem ι_basicOpen_preimage (r : Γ(X, ⊤)) :
     IsAffineOpen ((X.basicOpen r).ι ⁻¹ᵁ U) := by
   apply (X.basicOpen r).ι.isAffineOpen_iff_of_isOpenImmersion.mp
   dsimp [Scheme.Hom.opensFunctor, LocallyRingedSpace.IsOpenImmersion.opensFunctor]
-  rw [Opens.functor_obj_map_obj, Opens.openEmbedding_obj_top, inf_comm,
+  rw [Opens.functor_obj_map_obj, Opens.isOpenEmbedding_obj_top, inf_comm,
     ← Scheme.basicOpen_res _ _ (homOfLE le_top).op]
   exact hU.basicOpen _
 
@@ -421,12 +421,12 @@ theorem exists_basicOpen_le {V : X.Opens} (x : V) (h : ↑x ∈ U) :
       ((Opens.map U.inclusion).obj V).isOpen
   have :
     U.ι ''ᵁ (U.toScheme.basicOpen r) =
-      X.basicOpen (X.presheaf.map (eqToHom U.openEmbedding_obj_top.symm).op r) := by
+      X.basicOpen (X.presheaf.map (eqToHom U.isOpenEmbedding_obj_top.symm).op r) := by
     refine (Scheme.image_basicOpen U.ι r).trans ?_
     rw [Scheme.basicOpen_res_eq]
     simp only [Scheme.Opens.toScheme_presheaf_obj, Scheme.Opens.ι_appIso, Iso.refl_inv,
       CommRingCat.id_apply]
-  use X.presheaf.map (eqToHom U.openEmbedding_obj_top.symm).op r
+  use X.presheaf.map (eqToHom U.isOpenEmbedding_obj_top.symm).op r
   rw [← this]
   exact ⟨Set.image_subset_iff.mpr h₂, ⟨_, h⟩, h₁, rfl⟩
 
@@ -490,7 +490,7 @@ theorem isLocalization_of_eq_basicOpen {V : X.Opens} (i : V ⟶ U) (e : V = X.ba
 instance _root_.AlgebraicGeometry.Γ_restrict_isLocalization
     (X : Scheme.{u}) [IsAffine X] (r : Γ(X, ⊤)) :
     IsLocalization.Away r Γ(X.basicOpen r, ⊤) :=
-  (isAffineOpen_top X).isLocalization_of_eq_basicOpen r _ (Opens.openEmbedding_obj_top _)
+  (isAffineOpen_top X).isLocalization_of_eq_basicOpen r _ (Opens.isOpenEmbedding_obj_top _)
 
 include hU in
 theorem basicOpen_basicOpen_is_basicOpen (g : Γ(X, X.basicOpen f)) :
@@ -524,7 +524,7 @@ theorem _root_.AlgebraicGeometry.exists_basicOpen_le_affine_inter
 noncomputable def primeIdealOf (x : U) :
     PrimeSpectrum Γ(X, U) :=
   ((@Scheme.isoSpec U hU).hom ≫
-    Spec.map (X.presheaf.map (eqToHom U.openEmbedding_obj_top).op)).1.base x
+    Spec.map (X.presheaf.map (eqToHom U.isOpenEmbedding_obj_top).op)).1.base x
 
 theorem fromSpec_primeIdealOf (x : U) :
     hU.fromSpec.val.base (hU.primeIdealOf x) = x.1 := by

@@ -88,8 +88,8 @@ instance [T0Space R] : T0Space C(X, R)₀ := embedding_toContinuousMap.t0Space
 instance [T1Space R] : T1Space C(X, R)₀ := embedding_toContinuousMap.t1Space
 instance [T2Space R] : T2Space C(X, R)₀ := embedding_toContinuousMap.t2Space
 
-lemma closedEmbedding_toContinuousMap [T1Space R] :
-    ClosedEmbedding ((↑) : C(X, R)₀ → C(X, R)) where
+lemma isClosedEmbedding_toContinuousMap [T1Space R] :
+    IsClosedEmbedding ((↑) : C(X, R)₀ → C(X, R)) where
   toEmbedding := embedding_toContinuousMap
   isClosed_range := by
     rw [range_toContinuousMap]
@@ -266,8 +266,8 @@ lemma uniformEmbedding_toContinuousMap :
   inj _ _ h := ext fun x ↦ congr($(h) x)
 
 instance [T1Space R] [CompleteSpace C(X, R)] : CompleteSpace C(X, R)₀ :=
-  completeSpace_iff_isComplete_range uniformEmbedding_toContinuousMap.toUniformInducing
-    |>.mpr closedEmbedding_toContinuousMap.isClosed_range.isComplete
+  completeSpace_iff_isComplete_range uniformEmbedding_toContinuousMap.toIsUniformInducing
+    |>.mpr isClosedEmbedding_toContinuousMap.isClosed_range.isComplete
 
 lemma uniformEmbedding_comp {Y : Type*} [UniformSpace Y] [Zero Y] (g : C(Y, R)₀)
     (hg : UniformEmbedding g) : UniformEmbedding (g.comp · : C(X, Y)₀ → C(X, R)₀) :=

@@ -61,17 +61,17 @@ namespace Metric
 -- instantiate pseudometric space as a topology
 variable {x y z : α} {δ ε ε₁ ε₂ : ℝ} {s : Set α}
 
-nonrec theorem uniformInducing_iff [PseudoMetricSpace β] {f : α → β} :
-    UniformInducing f ↔ UniformContinuous f ∧
+nonrec theorem isUniformInducing_iff [PseudoMetricSpace β] {f : α → β} :
+    IsUniformInducing f ↔ UniformContinuous f ∧
       ∀ δ > 0, ∃ ε > 0, ∀ {a b : α}, dist (f a) (f b) < ε → dist a b < δ :=
-  uniformInducing_iff'.trans <| Iff.rfl.and <|
+  isUniformInducing_iff'.trans <| Iff.rfl.and <|
     ((uniformity_basis_dist.comap _).le_basis_iff uniformity_basis_dist).trans <| by
       simp only [subset_def, Prod.forall, gt_iff_lt, preimage_setOf_eq, Prod.map_apply, mem_setOf]
 
 nonrec theorem uniformEmbedding_iff [PseudoMetricSpace β] {f : α → β} :
     UniformEmbedding f ↔ Function.Injective f ∧ UniformContinuous f ∧
       ∀ δ > 0, ∃ ε > 0, ∀ {a b : α}, dist (f a) (f b) < ε → dist a b < δ := by
-  rw [uniformEmbedding_iff, and_comm, uniformInducing_iff]
+  rw [uniformEmbedding_iff, and_comm, isUniformInducing_iff]
 
 /-- If a map between pseudometric spaces is a uniform embedding then the distance between `f x`
 and `f y` is controlled in terms of the distance between `x` and `y`. -/
@@ -189,18 +189,18 @@ variable {x y z : α} {ε ε₁ ε₂ : ℝ} {s : Set α}
 -- Porting note: `TopologicalSpace.IsSeparable.separableSpace` moved to `EMetricSpace`
 
 /-- The preimage of a separable set by an inducing map is separable. -/
-protected theorem _root_.Inducing.isSeparable_preimage {f : β → α} [TopologicalSpace β]
-    (hf : Inducing f) {s : Set α} (hs : IsSeparable s) : IsSeparable (f ⁻¹' s) := by
+protected theorem _root_.IsInducing.isSeparable_preimage {f : β → α} [TopologicalSpace β]
+    (hf : IsInducing f) {s : Set α} (hs : IsSeparable s) : IsSeparable (f ⁻¹' s) := by
   have : SeparableSpace s := hs.separableSpace
   have : SecondCountableTopology s := UniformSpace.secondCountable_of_separable _
-  have : Inducing ((mapsTo_preimage f s).restrict _ _ _) :=
-    (hf.comp inducing_subtype_val).codRestrict _
+  have : IsInducing ((mapsTo_preimage f s).restrict _ _ _) :=
+    (hf.comp IsInducing.subtypeVal).codRestrict _
   have := this.secondCountableTopology
   exact .of_subtype _
 
 protected theorem _root_.Embedding.isSeparable_preimage {f : β → α} [TopologicalSpace β]
-    (hf : Embedding f) {s : Set α} (hs : IsSeparable s) : IsSeparable (f ⁻¹' s) :=
-  hf.toInducing.isSeparable_preimage hs
+    (hf : IsEmbedding f) {s : Set α} (hs : IsSeparable s) : IsSeparable (f ⁻¹' s) :=
+  hf.isInducing.isSeparable_preimage hs
 
 end Metric
 

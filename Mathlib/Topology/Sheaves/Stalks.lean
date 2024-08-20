@@ -176,7 +176,7 @@ theorem comp (ℱ : X.Presheaf C) (f : X ⟶ Y) (g : Y ⟶ Z) (x : X) :
   ext
   simp [germ, stalkPushforward]
 
-theorem stalkPushforward_iso_of_openEmbedding {f : X ⟶ Y} (hf : OpenEmbedding f) (F : X.Presheaf C)
+theorem stalkPushforward_iso_of_isOpenEmbedding {f : X ⟶ Y} (hf : IsOpenEmbedding f) (F : X.Presheaf C)
     (x : X) : IsIso (F.stalkPushforward _ f x) := by
   haveI := Functor.initial_of_adjunction (hf.isOpenMap.adjunctionNhds x)
   convert

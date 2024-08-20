@@ -82,12 +82,12 @@ lemma starAlgHom_id {a : A} {φ : C(spectrum S a, S) →⋆ₐ[S] A} {f : C(S, R
 variable [TopologicalSpace A] [ContinuousFunctionalCalculus S q]
 variable [CompleteSpace R]
 
-lemma closedEmbedding_starAlgHom {a : A} {φ : C(spectrum S a, S) →⋆ₐ[S] A}
-    (hφ : ClosedEmbedding φ) {f : C(S, R)} (h : SpectrumRestricts a f)
+lemma isClosedEmbedding_starAlgHom {a : A} {φ : C(spectrum S a, S) →⋆ₐ[S] A}
+    (hφ : IsClosedEmbedding φ) {f : C(S, R)} (h : SpectrumRestricts a f)
     (halg : UniformEmbedding (algebraMap R S)) [CompactSpace (spectrum S a)] :
-    ClosedEmbedding (h.starAlgHom φ) :=
+    IsClosedEmbedding (h.starAlgHom φ) :=
   have := h.compactSpace
-  hφ.comp <| UniformEmbedding.toClosedEmbedding <| .comp
+  hφ.comp <| UniformEmbedding.toIsClosedEmbedding <| .comp
     (ContinuousMap.uniformEmbedding_comp _ halg)
     (UniformEquiv.arrowCongr h.homeomorph.symm (.refl _) |>.uniformEmbedding)
 
@@ -101,11 +101,11 @@ protected theorem cfc (f : C(S, R)) (halg : UniformEmbedding (algebraMap R S)) (
   predicate_zero := h0
   exists_cfc_of_predicate a ha := by
     refine ⟨((h a).mp ha).2.starAlgHom (cfcHom ((h a).mp ha).1 (R := S)),
-      ?hom_closedEmbedding, ?hom_id, ?hom_map_spectrum, ?predicate_hom⟩
-    case hom_closedEmbedding =>
+      ?hom_isClosedEmbedding, ?hom_id, ?hom_map_spectrum, ?predicate_hom⟩
+    case hom_isClosedEmbedding =>
       have := h_cpct a ((h a).mp ha).1
-      exact ((h a).mp ha).2.closedEmbedding_starAlgHom
-        (cfcHom_closedEmbedding ((h a).mp ha).1) halg
+      exact ((h a).mp ha).2.isClosedEmbedding_starAlgHom
+        (cfcHom_isClosedEmbedding ((h a).mp ha).1) halg
     case hom_id => exact ((h a).mp ha).2.starAlgHom_id <| cfcHom_id ((h a).mp ha).1
     case hom_map_spectrum =>
       intro g
@@ -139,7 +139,7 @@ lemma cfcHom_eq_restrict (f : C(S, R)) (halg : UniformEmbedding (algebraMap R S)
     {a : A} (hpa : p a) (hqa : q a) (h : SpectrumRestricts a f) [CompactSpace (spectrum S a)] :
     cfcHom hpa = h.starAlgHom (cfcHom hqa) := by
   apply cfcHom_eq_of_continuous_of_map_id
-  · exact h.closedEmbedding_starAlgHom (cfcHom_closedEmbedding hqa) halg |>.continuous
+  · exact h.isClosedEmbedding_starAlgHom (cfcHom_isClosedEmbedding hqa) halg |>.continuous
   · exact h.starAlgHom_id (cfcHom_id hqa)
 
 lemma cfc_eq_restrict (f : C(S, R)) (halg : UniformEmbedding (algebraMap R S)) {a : A} (hpa : p a)
@@ -218,13 +218,13 @@ lemma nonUnitalStarAlgHom_id {a : A} {φ : C(σₙ S a, S)₀ →⋆ₙₐ[S] A}
 variable [TopologicalSpace A] [NonUnitalContinuousFunctionalCalculus S q]
 variable [CompleteSpace R]
 
-lemma closedEmbedding_nonUnitalStarAlgHom {a : A} {φ : C(σₙ S a, S)₀ →⋆ₙₐ[S] A}
-    (hφ : ClosedEmbedding φ) {f : C(S, R)} (h : QuasispectrumRestricts a f)
+lemma isClosedEmbedding_nonUnitalStarAlgHom {a : A} {φ : C(σₙ S a, S)₀ →⋆ₙₐ[S] A}
+    (hφ : IsClosedEmbedding φ) {f : C(S, R)} (h : QuasispectrumRestricts a f)
     (halg : UniformEmbedding (algebraMap R S)) [h_cpct : CompactSpace (σₙ S a)] :
-    ClosedEmbedding (h.nonUnitalStarAlgHom φ) := by
+    IsClosedEmbedding (h.nonUnitalStarAlgHom φ) := by
   have := h.compactSpace
   have : h.homeomorph.symm 0 = 0 := Subtype.ext (map_zero <| algebraMap _ _)
-  refine hφ.comp <| UniformEmbedding.toClosedEmbedding <| .comp
+  refine hφ.comp <| UniformEmbedding.toIsClosedEmbedding <| .comp
     (ContinuousMapZero.uniformEmbedding_comp _ halg)
     (UniformEquiv.arrowCongrLeft₀ h.homeomorph.symm this |>.uniformEmbedding)
 
@@ -240,10 +240,10 @@ protected theorem cfc (f : C(S, R)) (halg : UniformEmbedding (algebraMap R S)) (
   predicate_zero := h0
   exists_cfc_of_predicate a ha := by
     refine ⟨((h a).mp ha).2.nonUnitalStarAlgHom (cfcₙHom ((h a).mp ha).1 (R := S)),
-      ?hom_closedEmbedding, ?hom_id, ?hom_map_spectrum, ?predicate_hom⟩
-    case hom_closedEmbedding =>
-      exact ((h a).mp ha).2.closedEmbedding_nonUnitalStarAlgHom
-        (cfcₙHom_closedEmbedding ((h a).mp ha).1) halg (h_cpct := h_cpct a ((h a).mp ha).1)
+      ?hom_isClosedEmbedding, ?hom_id, ?hom_map_spectrum, ?predicate_hom⟩
+    case hom_isClosedEmbedding =>
+      exact ((h a).mp ha).2.isClosedEmbedding_nonUnitalStarAlgHom
+        (cfcₙHom_isClosedEmbedding ((h a).mp ha).1) halg (h_cpct := h_cpct a ((h a).mp ha).1)
     case hom_id => exact ((h a).mp ha).2.nonUnitalStarAlgHom_id <| cfcₙHom_id ((h a).mp ha).1
     case hom_map_spectrum =>
       intro g
@@ -282,7 +282,7 @@ lemma cfcₙHom_eq_restrict (f : C(S, R)) (halg : UniformEmbedding (algebraMap R
     (hpa : p a) (hqa : q a) (h : QuasispectrumRestricts a f) [CompactSpace (σₙ S a)] :
     cfcₙHom hpa = h.nonUnitalStarAlgHom (cfcₙHom hqa) := by
   apply cfcₙHom_eq_of_continuous_of_map_id
-  · exact h.closedEmbedding_nonUnitalStarAlgHom (cfcₙHom_closedEmbedding hqa) halg |>.continuous
+  · exact h.isClosedEmbedding_nonUnitalStarAlgHom (cfcₙHom_isClosedEmbedding hqa) halg |>.continuous
   · exact h.nonUnitalStarAlgHom_id (cfcₙHom_id hqa)
 
 lemma cfcₙ_eq_restrict (f : C(S, R)) (halg : UniformEmbedding (algebraMap R S)) {a : A} (hpa : p a)

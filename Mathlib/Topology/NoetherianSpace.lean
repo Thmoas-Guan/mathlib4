@@ -65,13 +65,13 @@ protected theorem NoetherianSpace.isCompact [NoetherianSpace α] (s : Set α) : 
   exact ⟨t, hs.trans ht⟩
 
 -- Porting note: fixed NS
-protected theorem _root_.Inducing.noetherianSpace [NoetherianSpace α] {i : β → α}
-    (hi : Inducing i) : NoetherianSpace β :=
+protected theorem _root_.IsInducing.noetherianSpace [NoetherianSpace α] {i : β → α}
+    (hi : IsInducing i) : NoetherianSpace β :=
   (noetherianSpace_iff_opens _).2 fun _ => hi.isCompact_iff.2 (NoetherianSpace.isCompact _)
 
 /-- [Stacks: Lemma 0052 (1)](https://stacks.math.columbia.edu/tag/0052)-/
 instance NoetherianSpace.set [NoetherianSpace α] (s : Set α) : NoetherianSpace s :=
-  inducing_subtype_val.noetherianSpace
+  IsInducing.subtypeVal.noetherianSpace
 
 variable (α)
 
@@ -126,7 +126,7 @@ theorem NoetherianSpace.range [NoetherianSpace α] (f : α → β) (hf : Continu
 
 theorem noetherianSpace_set_iff (s : Set α) :
     NoetherianSpace s ↔ ∀ t, t ⊆ s → IsCompact t := by
-  simp only [noetherianSpace_iff_isCompact, embedding_subtype_val.isCompact_iff,
+  simp only [noetherianSpace_iff_isCompact, IsEmbedding.subtypeVal.isCompact_iff,
     Subtype.forall_set_subtype]
 
 @[simp]

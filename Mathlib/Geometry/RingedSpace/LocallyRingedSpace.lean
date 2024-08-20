@@ -192,7 +192,7 @@ instance is_sheafedSpace_iso {X Y : LocallyRingedSpace.{u}} (f : X ⟶ Y) [IsIso
 /-- The restriction of a locally ringed space along an open embedding.
 -/
 @[simps!]
-def restrict {U : TopCat} (X : LocallyRingedSpace.{u}) {f : U ⟶ X.toTopCat} (h : OpenEmbedding f) :
+def restrict {U : TopCat} (X : LocallyRingedSpace.{u}) {f : U ⟶ X.toTopCat} (h : IsOpenEmbedding f) :
     LocallyRingedSpace where
   localRing := by
     intro x
@@ -203,13 +203,13 @@ def restrict {U : TopCat} (X : LocallyRingedSpace.{u}) {f : U ⟶ X.toTopCat} (h
 
 /-- The canonical map from the restriction to the subspace. -/
 def ofRestrict {U : TopCat} (X : LocallyRingedSpace.{u})
-    {f : U ⟶ X.toTopCat} (h : OpenEmbedding f) : X.restrict h ⟶ X :=
+    {f : U ⟶ X.toTopCat} (h : IsOpenEmbedding f) : X.restrict h ⟶ X :=
   ⟨X.toPresheafedSpace.ofRestrict h, fun _ => inferInstance⟩
 
 /-- The restriction of a locally ringed space `X` to the top subspace is isomorphic to `X` itself.
 -/
 def restrictTopIso (X : LocallyRingedSpace.{u}) :
-    X.restrict (Opens.openEmbedding ⊤) ≅ X :=
+    X.restrict (Opens.isOpenEmbedding ⊤) ≅ X :=
   isoOfSheafedSpaceIso X.toSheafedSpace.restrictTopIso
 
 /-- The global sections, notated Gamma.
@@ -423,7 +423,7 @@ lemma stalkMap_germ'_apply
       X.presheaf.germ (U := (Opens.map f.val.base).obj U) ⟨x, hx⟩ (f.val.c.app (op U) y) :=
   PresheafedSpace.stalkMap_germ_apply f.val U ⟨x, hx⟩ y
 
-variable {U : TopCat} (X : LocallyRingedSpace.{u}) {f : U ⟶ X.toTopCat} (h : OpenEmbedding f)
+variable {U : TopCat} (X : LocallyRingedSpace.{u}) {f : U ⟶ X.toTopCat} (h : IsOpenEmbedding f)
   (V : Opens U) (x : U) (hx : x ∈ V)
 
 /-- For an open embedding `f : U ⟶ X` and a point `x : U`, we get an isomorphism between the stalk

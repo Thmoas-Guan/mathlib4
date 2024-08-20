@@ -44,8 +44,8 @@ instance pseudoMetrizableSpace_prod [PseudoMetrizableSpace X] [PseudoMetrizableS
 
 /-- Given an inducing map of a topological space into a pseudo metrizable space, the source space
 is also pseudo metrizable. -/
-theorem _root_.Inducing.pseudoMetrizableSpace [PseudoMetrizableSpace Y] {f : X → Y}
-    (hf : Inducing f) : PseudoMetrizableSpace X :=
+theorem _root_.IsInducing.pseudoMetrizableSpace [PseudoMetrizableSpace Y] {f : X → Y}
+    (hf : IsInducing f) : PseudoMetrizableSpace X :=
   letI : PseudoMetricSpace Y := pseudoMetrizableSpacePseudoMetric Y
   ⟨⟨hf.comapPseudoMetricSpace, rfl⟩⟩
 
@@ -59,7 +59,7 @@ instance (priority := 100) PseudoMetrizableSpace.firstCountableTopology
 
 instance PseudoMetrizableSpace.subtype [PseudoMetrizableSpace X] (s : Set X) :
     PseudoMetrizableSpace s :=
-  inducing_subtype_val.pseudoMetrizableSpace
+  IsInducing.subtypeVal.pseudoMetrizableSpace
 
 instance pseudoMetrizableSpace_pi [∀ i, PseudoMetrizableSpace (π i)] :
     PseudoMetrizableSpace (∀ i, π i) := by
@@ -98,13 +98,13 @@ instance metrizableSpace_prod [MetrizableSpace X] [MetrizableSpace Y] : Metrizab
 
 /-- Given an embedding of a topological space into a metrizable space, the source space is also
 metrizable. -/
-theorem _root_.Embedding.metrizableSpace [MetrizableSpace Y] {f : X → Y} (hf : Embedding f) :
+theorem _root_.Embedding.metrizableSpace [MetrizableSpace Y] {f : X → Y} (hf : IsEmbedding f) :
     MetrizableSpace X :=
   letI : MetricSpace Y := metrizableSpaceMetric Y
   ⟨⟨hf.comapMetricSpace f, rfl⟩⟩
 
 instance MetrizableSpace.subtype [MetrizableSpace X] (s : Set X) : MetrizableSpace s :=
-  embedding_subtype_val.metrizableSpace
+  IsEmbedding.subtypeVal.metrizableSpace
 
 instance metrizableSpace_pi [∀ i, MetrizableSpace (π i)] : MetrizableSpace (∀ i, π i) := by
   cases nonempty_fintype ι

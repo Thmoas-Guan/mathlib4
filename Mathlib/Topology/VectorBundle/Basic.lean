@@ -756,7 +756,7 @@ structure VectorPrebundle where
   exists_coordChange : ∀ᵉ (e ∈ pretrivializationAtlas) (e' ∈ pretrivializationAtlas),
     ∃ f : B → F →L[R] F, ContinuousOn f (e.baseSet ∩ e'.baseSet) ∧
       ∀ᵉ (b ∈ e.baseSet ∩ e'.baseSet) (v : F), f b v = (e' ⟨b, e.symm b v⟩).2
-  totalSpaceMk_inducing : ∀ b : B, Inducing (pretrivializationAt b ∘ .mk b)
+  totalSpaceMk_inducing : ∀ b : B, IsInducing (pretrivializationAt b ∘ .mk b)
 
 namespace VectorPrebundle
 

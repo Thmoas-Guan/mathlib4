@@ -224,7 +224,7 @@ def Bundle.ContinuousLinearMap.vectorPrebundle :
       (trivializationAt F₂ E₂ b).continuousLinearEquivAt 𝕜₂ b
         (mem_baseSet_trivializationAt _ _ _)
     let φ : (E₁ b →SL[σ] E₂ b) ≃L[𝕜₂] F₁ →SL[σ] F₂ := L₁.arrowCongrSL L₂
-    have : Inducing fun x => (b, φ x) := inducing_const_prod.mpr φ.toHomeomorph.inducing
+    have : IsInducing fun x => (b, φ x) := inducing_const_prod.mpr φ.toHomeomorphisInducing
     convert this
     ext f
     dsimp [Pretrivialization.continuousLinearMap_apply]

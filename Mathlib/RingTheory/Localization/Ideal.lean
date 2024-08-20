@@ -166,12 +166,12 @@ variable {R : Type*} [CommRing R] (M : Submonoid R) (S : Type*) [CommRing S]
 variable [Algebra R S] [IsLocalization M S]
 
 include M in
-/-- `quotientMap` applied to maximal ideals of a localization is `surjective`.
+/-- `isQuotientMap` applied to maximal ideals of a localization is `surjective`.
   The quotient by a maximal ideal is a field, so inverses to elements already exist,
   and the localization necessarily maps the equivalence class of the inverse in the localization -/
 theorem surjective_quotientMap_of_maximal_of_localization {I : Ideal S} [I.IsPrime] {J : Ideal R}
     {H : J ≤ I.comap (algebraMap R S)} (hI : (I.comap (algebraMap R S)).IsMaximal) :
-    Function.Surjective (Ideal.quotientMap I (algebraMap R S) H) := by
+    Function.Surjective (Ideal.isQuotientMap I (algebraMap R S) H) := by
   intro s
   obtain ⟨s, rfl⟩ := Ideal.Quotient.mk_surjective s
   obtain ⟨r, ⟨m, hm⟩, rfl⟩ := mk'_surjective M s
@@ -187,7 +187,7 @@ theorem surjective_quotientMap_of_maximal_of_localization {I : Ideal S} [I.IsPri
     obtain ⟨rn, rfl⟩ := Ideal.Quotient.mk_surjective n
     refine ⟨(Ideal.Quotient.mk J) (r * rn), ?_⟩
     -- The rest of the proof is essentially just algebraic manipulations to prove the equality
-    replace hn := congr_arg (Ideal.quotientMap I (algebraMap R S) le_rfl) hn
+    replace hn := congr_arg (Ideal.isQuotientMap I (algebraMap R S) le_rfl) hn
     rw [RingHom.map_one, RingHom.map_mul] at hn
     rw [Ideal.quotientMap_mk, ← sub_eq_zero, ← RingHom.map_sub, Ideal.Quotient.eq_zero_iff_mem, ←
       Ideal.Quotient.eq_zero_iff_mem, RingHom.map_sub, sub_eq_zero, mk'_eq_mul_mk'_one]

@@ -43,7 +43,7 @@ instance topologicalSpace [t₁ : TopologicalSpace B]
 
 variable [TopologicalSpace B] [TopologicalSpace F]
 
-theorem inducing_toProd : Inducing (TotalSpace.toProd B F) :=
+theorem inducing_toProd : IsInducing (TotalSpace.toProd B F) :=
   ⟨by simp only [instTopologicalSpaceProd, induced_inf, induced_compose]; rfl⟩
 
 /-- Homeomorphism between the total space of the trivial bundle and the Cartesian product. -/
@@ -72,7 +72,7 @@ instance fiberBundle : FiberBundle F (Bundle.Trivial B F) where
   trivializationAt' _ := trivialization B F
   mem_baseSet_trivializationAt' := mem_univ
   trivialization_mem_atlas' _ := mem_singleton _
-  totalSpaceMk_inducing' _ := (homeomorphProd B F).symm.inducing.comp
+  totalSpaceMk_inducing' _ := (homeomorphProd B F).symmisInducing.comp
     (inducing_const_prod.2 inducing_id)
 
 theorem eq_trivialization (e : Trivialization F (π F (Bundle.Trivial B F)))
@@ -102,9 +102,9 @@ instance FiberBundle.Prod.topologicalSpace : TopologicalSpace (TotalSpace (F₁ 
     inferInstance
 
 /-- The diagonal map from the total space of the fiberwise product of two fiber bundles
-`E₁`, `E₂` into `TotalSpace F₁ E₁ × TotalSpace F₂ E₂` is `Inducing`. -/
+`E₁`, `E₂` into `TotalSpace F₁ E₁ × TotalSpace F₂ E₂` is `IsInducing`. -/
 theorem FiberBundle.Prod.inducing_diag :
-    Inducing (fun p ↦ (⟨p.1, p.2.1⟩, ⟨p.1, p.2.2⟩) :
+    IsInducing (fun p ↦ (⟨p.1, p.2.1⟩, ⟨p.1, p.2.2⟩) :
       TotalSpace (F₁ × F₂) (E₁ ×ᵇ E₂) → TotalSpace F₁ E₁ × TotalSpace F₂ E₂) :=
   ⟨rfl⟩
 
@@ -279,7 +279,7 @@ theorem Pullback.continuous_lift (f : B' → B) : Continuous (@Pullback.lift B F
   exact inf_le_right
 
 theorem inducing_pullbackTotalSpaceEmbedding (f : B' → B) :
-    Inducing (@pullbackTotalSpaceEmbedding B F E B' f) := by
+    IsInducing (@pullbackTotalSpaceEmbedding B F E B' f) := by
   constructor
   simp_rw [instTopologicalSpaceProd, induced_inf, induced_compose,
     Pullback.TotalSpace.topologicalSpace, pullbackTopology_def]
@@ -346,8 +346,8 @@ noncomputable def Trivialization.pullback (e : Trivialization F (π F E)) (f : K
 noncomputable instance FiberBundle.pullback [∀ x, TopologicalSpace (E x)] [FiberBundle F E]
     (f : K) : FiberBundle F ((f : B' → B) *ᵖ E) where
   totalSpaceMk_inducing' x :=
-    inducing_of_inducing_compose (Pullback.continuous_totalSpaceMk F E)
-      (Pullback.continuous_lift F E f) (totalSpaceMk_inducing F E (f x))
+    (totalSpaceMk_inducing F E (f x)).of_comp (Pullback.continuous_totalSpaceMk F E)
+      (Pullback.continuous_lift F E f)
   trivializationAtlas' :=
     { ef | ∃ (e : Trivialization F (π F E)) (_ : MemTrivializationAtlas e), ef = e.pullback f }
   trivializationAt' x := (trivializationAt F E (f x)).pullback f

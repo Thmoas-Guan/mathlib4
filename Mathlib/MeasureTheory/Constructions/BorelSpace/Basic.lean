@@ -471,7 +471,7 @@ is ae-measurable. -/
 theorem Continuous.aemeasurable {f : α → γ} (h : Continuous f) {μ : Measure α} : AEMeasurable f μ :=
   h.measurable.aemeasurable
 
-theorem ClosedEmbedding.measurable {f : α → γ} (hf : ClosedEmbedding f) : Measurable f :=
+theorem IsClosedEmbedding.measurable {f : α → γ} (hf : IsClosedEmbedding f) : Measurable f :=
   hf.continuous.measurable
 
 /-- If a function is defined piecewise in terms of functions which are continuous on their
@@ -613,30 +613,30 @@ instance Prod.borelSpace [SecondCountableTopologyEither α β] :
 source space is also a Borel space. -/
 lemma MeasurableEmbedding.borelSpace {α β : Type*} [MeasurableSpace α] [TopologicalSpace α]
     [MeasurableSpace β] [TopologicalSpace β] [hβ : BorelSpace β] {e : α → β}
-    (h'e : MeasurableEmbedding e) (h''e : Inducing e) :
+    (h'e : MeasurableEmbedding e) (h''e : IsInducing e) :
     BorelSpace α := by
   constructor
   have : MeasurableSpace.comap e (borel β) = ‹_› := by simpa [hβ.measurable_eq] using h'e.comap_eq
   rw [← this, ← borel_comap, h''e.induced]
 
 instance _root_.ULift.instBorelSpace : BorelSpace (ULift α) :=
-  MeasurableEquiv.ulift.measurableEmbedding.borelSpace Homeomorph.ulift.inducing
+  MeasurableEquiv.ulift.measurableEmbedding.borelSpace Homeomorph.uliftisInducing
 
 instance DiscreteMeasurableSpace.toBorelSpace {α : Type*} [TopologicalSpace α] [DiscreteTopology α]
     [MeasurableSpace α] [DiscreteMeasurableSpace α] : BorelSpace α := by
   constructor; ext; simp [MeasurableSpace.measurableSet_generateFrom, measurableSet_discrete]
 
-protected theorem Embedding.measurableEmbedding {f : α → β} (h₁ : Embedding f)
+protected theorem Embedding.measurableEmbedding {f : α → β} (h₁ : IsEmbedding f)
     (h₂ : MeasurableSet (range f)) : MeasurableEmbedding f :=
   show MeasurableEmbedding
       (((↑) : range f → β) ∘ (Homeomorph.ofEmbedding f h₁).toMeasurableEquiv) from
     (MeasurableEmbedding.subtype_coe h₂).comp (MeasurableEquiv.measurableEmbedding _)
 
-protected theorem ClosedEmbedding.measurableEmbedding {f : α → β} (h : ClosedEmbedding f) :
+protected theorem IsClosedEmbedding.measurableEmbedding {f : α → β} (h : IsClosedEmbedding f) :
     MeasurableEmbedding f :=
   h.toEmbedding.measurableEmbedding h.isClosed_range.measurableSet
 
-protected theorem OpenEmbedding.measurableEmbedding {f : α → β} (h : OpenEmbedding f) :
+protected theorem IsOpenEmbedding.measurableEmbedding {f : α → β} (h : IsOpenEmbedding f) :
     MeasurableEmbedding f :=
   h.toEmbedding.measurableEmbedding h.isOpen_range.measurableSet
 

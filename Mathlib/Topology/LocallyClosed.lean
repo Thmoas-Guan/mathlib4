@@ -80,7 +80,7 @@ lemma coborder_preimage (hf : IsOpenMap f) (hf' : Continuous f) (s : Set Y) :
   (hf.coborder_preimage_subset s).antisymm (hf'.preimage_coborder_subset s)
 
 protected
-lemma OpenEmbedding.coborder_preimage (hf : OpenEmbedding f) (s : Set Y) :
+lemma IsOpenEmbedding.coborder_preimage (hf : IsOpenEmbedding f) (s : Set Y) :
     coborder (f ⁻¹' s) = f ⁻¹' (coborder s) :=
   coborder_preimage hf.isOpenMap hf.continuous s
 
@@ -107,8 +107,8 @@ lemma IsLocallyClosed.preimage {s : Set Y} (hs : IsLocallyClosed s)
   exact ⟨_, _, hU.preimage hf, hZ.preimage hf, preimage_inter⟩
 
 nonrec
-lemma Inducing.isLocallyClosed_iff {s : Set X}
-    {f : X → Y} (hf : Inducing f) :
+lemma IsInducing.isLocallyClosed_iff {s : Set X}
+    {f : X → Y} (hf : IsInducing f) :
     IsLocallyClosed s ↔ ∃ s' : Set Y, IsLocallyClosed s' ∧ f ⁻¹' s' = s := by
   simp_rw [IsLocallyClosed, hf.isOpen_iff, hf.isClosed_iff]
   constructor
@@ -118,13 +118,13 @@ lemma Inducing.isLocallyClosed_iff {s : Set X}
     exact ⟨_, _, ⟨U, hU, rfl⟩, ⟨Z, hZ, rfl⟩, rfl⟩
 
 lemma Embedding.isLocallyClosed_iff {s : Set X}
-    {f : X → Y} (hf : Embedding f) :
+    {f : X → Y} (hf : IsEmbedding f) :
     IsLocallyClosed s ↔ ∃ s' : Set Y, IsLocallyClosed s' ∧ s' ∩ range f = f '' s := by
-  simp_rw [hf.toInducing.isLocallyClosed_iff,
+  simp_rw [hf.isInducing.isLocallyClosed_iff,
     ← (image_injective.mpr hf.inj).eq_iff, image_preimage_eq_inter_range]
 
 lemma IsLocallyClosed.image {s : Set X} (hs : IsLocallyClosed s)
-    {f : X → Y} (hf : Inducing f) (hf' : IsLocallyClosed (range f)) :
+    {f : X → Y} (hf : IsInducing f) (hf' : IsLocallyClosed (range f)) :
     IsLocallyClosed (f '' s) := by
   obtain ⟨t, ht, rfl⟩ := hf.isLocallyClosed_iff.mp hs
   rw [image_preimage_eq_inter_range]
@@ -172,7 +172,7 @@ lemma isLocallyClosed_tfae (s : Set X) :
     · exact (subset_iUnion₂ _ _ <| hxU x ·)
   tfae_have 5 → 1
   · intro H
-    convert H.isLocallyClosed.image inducing_subtype_val
+    convert H.isLocallyClosed.image IsInducing.subtypeVal
       (by simpa using isClosed_closure.isLocallyClosed)
     simpa using subset_closure
   tfae_finish
