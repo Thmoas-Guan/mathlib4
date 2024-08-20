@@ -20,6 +20,22 @@ theorem ofReal_eval (p : ℝ[X]) (x : ℝ) : (↑(p.eval x) : K) = aeval (↑x) 
 
 end Polynomial
 
+variable (K) in
+theorem RCLike.span_one_I : Submodule.span ℝ (M := K) ({1, I} : Finset K) = ⊤ := by
+  suffices ∀ x : K, ∃ a b : ℝ, a • 1 + b • I = x by
+    simpa [Submodule.eq_top_iff', Submodule.mem_span_pair]
+  exact fun x ↦ ⟨re x, im x, by simp [real_smul_eq_coe_mul]⟩
+
+variable (K) in
+theorem RCLike.finrank_le_two : FiniteDimensional.finrank ℝ K ≤ 2 :=
+  calc
+    _ ≤ Finset.card (Set.toFinset (({1, I} : Finset K) : Set K)) := by
+          convert finrank_span_le_card (R := ℝ) (M := K) ({1, I} : Finset K)
+          rw [span_one_I]
+          simp
+    _ = Finset.card ({1, I} : Finset K) := by simp
+    _ ≤ 2 := Finset.card_le_two
+
 namespace FiniteDimensional
 
 open scoped Classical
@@ -33,11 +49,7 @@ This instance generates a type-class problem with a metavariable `?m` that shoul
 /-- An `RCLike` field is finite-dimensional over `ℝ`, since it is spanned by `{1, I}`. -/
 -- Porting note(#12094): removed nolint; dangerous_instance linter not ported yet
 -- @[nolint dangerous_instance]
-instance rclike_to_real : FiniteDimensional ℝ K :=
-  ⟨{1, I}, by
-    suffices ∀ x : K, ∃ a b : ℝ, a • 1 + b • I = x by
-      simpa [Submodule.eq_top_iff', Submodule.mem_span_pair]
-    exact fun x ↦ ⟨re x, im x, by simp [real_smul_eq_coe_mul]⟩⟩
+instance rclike_to_real : FiniteDimensional ℝ K := ⟨{1, I}, span_one_I K⟩
 
 variable (K E)
 variable [NormedAddCommGroup E] [NormedSpace K E]
