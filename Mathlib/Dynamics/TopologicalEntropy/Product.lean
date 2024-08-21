@@ -51,45 +51,36 @@ theorem UniformityProd_of_uniform_prod {α β : Type*} [UniformSpace α] [Unifor
 theorem dynamical_uni_prod (S : X → X) (T : Y → Y) (U : Set (X × X)) (V : Set (Y × Y)) (n : ℕ) :
     dynEntourage (map S T) (UniformityProd U V) n =
     UniformityProd (dynEntourage S U n) (dynEntourage T V n) := by
-  ext xy
-  rw [mem_dynEntourage]
-  simp only [UniformityProd, mem_setOf_eq]
-  rw [mem_dynEntourage, mem_dynEntourage, ← forall₂_and]
-  refine forall₂_congr fun k _ ↦ ?_
-  simp only [map_iterate, map_fst, map_snd]
-
-/-! ### Map swapping -/
+  ext _
+  rw [UniformityProd, UniformityProd, mem_dynEntourage]
+  simp only [mem_dynEntourage, mem_setOf_eq, map_iterate, map_fst, map_snd]
+  exact forall₂_and
 
 theorem Function.Semiconj.prod_map_swap (S : X → X) (T : Y → Y) :
     Function.Semiconj swap (map S T) (map T S) := by
   rw [Function.semiconj_iff_comp_eq, map_comp_swap]
 
-theorem uniformContinuous_swap [UniformSpace X] [UniformSpace Y] :
-    UniformContinuous (swap : X × Y → Y × X) :=
-  UniformContinuous.prod_mk uniformContinuous_snd uniformContinuous_fst
-
-theorem uniformSpace_comap_swap [UniformSpace X] [UniformSpace Y] :
-    comap swap (@instUniformSpaceProd Y X _ _) = (@instUniformSpaceProd X Y _ _) := by
-  apply le_antisymm _ (uniformContinuous_iff.1 (@uniformContinuous_swap X Y _ _))
-  have := comap_mono (f := swap) (uniformContinuous_iff.1 (@uniformContinuous_swap Y X _ _))
-  simp at this
-  rw [← @comap_comap (X × Y) (Y × X) (X × Y) _ swap swap, swap_swap_eq, uniformSpace_comap_id,
-    id_eq _] at this
-  exact this
-
 /-End of miscellaneae.-/
+
+/-! ### Map swapping -/
 
 theorem coverEntropyInf_prod_swap [UniformSpace X] [UniformSpace Y] (S : X → X) (T : Y → Y)
     (F : Set X) (G : Set Y) :
     coverEntropyInf (map T S) (G ×ˢ F) = coverEntropyInf (map S T) (F ×ˢ G) := by
-  have := coverEntropyInf_image instUniformSpaceProd (Function.Semiconj.prod_map_swap T S) (G ×ˢ F)
-  rw [← uniformSpace_comap_swap, ← this, image_swap_prod G F]
+  rw [← Set.image_swap_prod F G,
+    coverEntropyInf_image instUniformSpaceProd (Function.Semiconj.prod_map_swap S T) (F ×ˢ G)]
+  congr
+  rw [← UniformEquiv.coe_prodComm]
+  exact UniformEquiv.comap_eq (@UniformEquiv.prodComm X Y _ _)
 
 theorem coverEntropySup_prod_swap [UniformSpace X] [UniformSpace Y] (S : X → X) (T : Y → Y)
     (F : Set X) (G : Set Y) :
     coverEntropySup (map T S) (G ×ˢ F) = coverEntropySup (map S T) (F ×ˢ G) := by
-  have := coverEntropySup_image instUniformSpaceProd (Function.Semiconj.prod_map_swap T S) (G ×ˢ F)
-  rw [← uniformSpace_comap_swap, ← this, image_swap_prod G F]
+  rw [← Set.image_swap_prod F G,
+    coverEntropySup_image instUniformSpaceProd (Function.Semiconj.prod_map_swap S T) (F ×ˢ G)]
+  congr
+  rw [← UniformEquiv.coe_prodComm]
+  exact UniformEquiv.comap_eq (@UniformEquiv.prodComm X Y _ _)
 
 /-! ### Entropy of products -/
 
@@ -101,7 +92,7 @@ theorem isDynCoverOf_prod {S : X → X} {T : Y → Y} {F : Set X} {G : Set Y} {U
   intro p p_FG
   specialize hS p_FG.1
   specialize hT p_FG.2
-  simp at hS hT
+  simp only [mem_iUnion, exists_prop] at hS hT
   rcases hS with ⟨x, x_s, p_x⟩
   rcases hT with ⟨y, y_t, p_y⟩
   rw [Set.mem_iUnion₂]

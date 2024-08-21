@@ -362,6 +362,26 @@ lemma coverEntropySup_eq_iSup_netEntropySupUni :
     apply le_trans _ (le_iSup₂ (symmetrizeRel U) (symmetrize_mem_uniformity U_uni))
     exact netEntropySupUni_le_CoverEntropySupUni T F (symmetric_symmetrizeRel U)
 
+lemma coverEntropyInf_eq_iSup_basis_netEntropyInfUni {ι : Sort*} {p : ι → Prop}
+    {s : ι → Set (X × X)} (h : (𝓤 X).HasBasis p s) (T : X → X) (F : Set X) :
+    coverEntropyInf T F = ⨆ (i : ι) (_ : p i), netEntropyInfUni T F (s i) := by
+  rw [coverEntropyInf_eq_iSup_netEntropyInfUni T F]
+  refine le_antisymm (iSup₂_le fun U U_uni ↦ ?_)
+    (iSup₂_mono' fun i h_i ↦ ⟨s i, HasBasis.mem_of_mem h h_i, le_refl _⟩)
+  rcases (HasBasis.mem_iff h).1 U_uni with ⟨i, h_i, si_U⟩
+  exact (netEntropyInfUni_antitone T F si_U).trans
+    (le_iSup₂ (f := fun (i : ι) (_ : p i) ↦ netEntropyInfUni T F (s i)) i h_i)
+
+lemma coverEntropySup_eq_iSup_basis_netEntropySupUni {ι : Sort*} {p : ι → Prop}
+    {s : ι → Set (X × X)} (h : (𝓤 X).HasBasis p s) (T : X → X) (F : Set X) :
+    coverEntropySup T F = ⨆ (i : ι) (_ : p i), netEntropySupUni T F (s i) := by
+  rw [coverEntropySup_eq_iSup_netEntropySupUni T F]
+  refine le_antisymm (iSup₂_le fun U U_uni ↦ ?_)
+    (iSup₂_mono' fun i h_i ↦ ⟨s i, HasBasis.mem_of_mem h h_i, le_refl _⟩)
+  rcases (HasBasis.mem_iff h).1 U_uni with ⟨i, h_i, si_U⟩
+  exact (netEntropySupUni_antitone T F si_U).trans
+    (le_iSup₂ (f := fun (i : ι) (_ : p i) ↦ netEntropySupUni T F (s i)) i h_i)
+
 lemma netEntropyInfUni_le_coverEntropyInf {U : Set (X × X)} (h : U ∈ 𝓤 X) :
     netEntropyInfUni T F U ≤ coverEntropyInf T F := by
   rw [coverEntropyInf_eq_iSup_netEntropyInfUni T F]
