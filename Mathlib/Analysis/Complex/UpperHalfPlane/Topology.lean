@@ -167,5 +167,5 @@ lemma Complex.isConnected_of_lowerHalfPlane {s : Set ℂ} (hs₁ : {z | z.im < 0
   rw [← Equiv.star.surjective.image_preimage s]
   refine IsConnected.image (f := Equiv.star) ?_ continuous_star.continuousOn
   apply Complex.isConnected_of_upperHalfPlane
-  · exact fun z hz ↦ hs₁ <| show star z ∈ _ by simpa
+  · exact fun z hz ↦ hs₁ <| by simpa
   · exact fun z hz ↦ by simpa using show (star z).im ≤ 0 from hs₂ hz
