@@ -46,10 +46,6 @@ example (x y : ℤ) (h1 : 3 * x + 2 * y = 10) (h2 : 2 * x + 5 * y = 3) : -11 * y
 example (x y : ℤ) (h1 : 10 = 3 * x + 2 * y) (h2 : 3 = 2 * x + 5 * y) : 11 + 1 - 1 = -11 * y := by
   linear_combination 2 * h1 - 3 * h2
 
--- example (a b : ℤ) (h : a = 1) : a = 2 := by
---   linear_combination h
--- FIXME it ought not to be possible to continue after an error internal to `linear_combination`
-
 /-! ### More complicated cases with two equations -/
 
 example (x y : ℤ) (h1 : x + 2 = -3) (h2 : y = 10) : -y + 2 * x + 4 = -16 := by
