@@ -382,10 +382,6 @@ def elabLinearCombination (tk : Syntax)
   | some e =>
     match ← expandLinearCombo ty e with
     | .const _ => throwError "To run 'linear_combination' without hypotheses, call it without input"
-<<<<<<< HEAD
-    | .proof p => pure p
-  let norm := norm?.getD (Unhygienic.run <| withRef tk `(tactic| ring1))
-=======
     | .proof hypRel p => pure (hypRel, p)
   let defaultTac : Unhygienic Syntax.Tactic :=
     match goalRel with
@@ -394,7 +390,6 @@ def elabLinearCombination (tk : Syntax)
     | Le => `(tactic | ((conv_lhs => ring1); all_goals nonpos_rawcast))
     | Lt => `(tactic | ((conv_lhs => ring1); all_goals neg_rawcast))
   let norm := norm?.getD (Unhygienic.run <| withRef tk defaultTac)
->>>>>>> 6ca04b6e62 (wip)
   Term.withoutErrToSorry <| Tactic.evalTactic <| ← withFreshMacroScope <|
   let exp1 :=
     match hypRel.relImpRelData goalRel with
