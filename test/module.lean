@@ -1,4 +1,9 @@
-import Mathlib
+import Mathlib.Tactic.Abel
+import Mathlib.Tactic.CongrM
+import Mathlib.Tactic.FieldSimp
+import Mathlib.Tactic.LinearCombination
+import Mathlib.Tactic.Module
+import Mathlib.Tactic.Positivity
 
 open Mathlib.Tactic.LinearCombination
 
@@ -13,8 +18,31 @@ variable {V : Type*} [AddCommGroup V] {K : Type*}
 section
 variable [CommRing K] [Module K V]
 
+example : x + y = y + x := by
+  match_coeffs
+  congrm List.sum (List.map _ [(?_, _), (?_, _)])
+  · guard_target = 1 = 1
+    ring
+  · guard_target = 1 = 1
+    ring
+
+example : x + 2 • x = 2 • x + x := by
+  match_coeffs
+  congrm List.sum (List.map _ [(?_, _)])
+  guard_target = 1 + 2 • 1 = 2 • 1 + 1
+  ring
+
+example (h : a = b) : a • x = b • x := by
+  -- match_coeffs
+  sorry
+
+example : a • x + b • x = (a + b) • x := by
+  -- match_coeffs
+  sorry
+
 example (h : a ^ 2 + b ^ 2 = 1) :
     a • (a • x - b • y) + (b • a • y + b • b • x) = x := by
+  -- match_coeffs
   -- `linear_combination h • x`
   apply eq_of_add (congr($h • x):)
   module
@@ -80,6 +108,7 @@ example [Field K] [CharZero K] [Module K V]
     (h₁ : t - u = -(v - w))
     (h₂ : t + u = v + w) :
     t = w := by
+  -- match_coeffs
   -- `linear_combination 2⁻¹ • h₁ + 2⁻¹ • h₂`
   apply eq_of_add (congr((2:K)⁻¹ • $h₁ + (2:K)⁻¹ • $h₂):)
   trans ((1:K) - 2⁻¹ - 2⁻¹) • t + (-(1:K) + 2⁻¹ + 2⁻¹) • w + ((2:K)⁻¹ - 2⁻¹) • v + ((2:K)⁻¹ - 2⁻¹) • u

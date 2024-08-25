@@ -2,7 +2,8 @@ import Mathlib.Algebra.Algebra.Basic
 import Mathlib.GroupTheory.GroupAction.BigOperators
 import Mathlib.Util.AtomM
 
-open Lean Qq Mathlib.Tactic
+open Lean hiding Module
+open Meta Elab Qq Mathlib.Tactic
 
 abbrev smulAndSum {R : Type*} {M : Type*} [SMul R M] [Add M] [Zero M] (l : List (R × M)) : M :=
   (l.map (fun (⟨r, x⟩ : R × M) ↦ r • x)).sum
@@ -50,13 +51,13 @@ def foo {v : Level} {α : Q(Type v)} : List (Q($α)) → Q(List $α)
   | [] => q([])
   | e :: t => q($e :: $(foo t))
 
-partial def parse {v : Level} (M : Q(Type v)) (i : Q(AddCommMonoid $M)) (x : Q($M)) :
-    AtomM (Σ R : Q(Type), Σ _ : Q(Semiring $R), Σ _ : Q(Module $R $M),
+partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
+    AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
       Σ e : List (Q($R × $M) × ℕ), Q($x = smulAndSum $(foo (e.map Prod.fst)))) := do
   match x with
   | ~q($x₁ + $x₂) =>
-    let ⟨R₁, i₁, i₁', l₁, pf₁⟩ ← parse M i x₁
-    let ⟨R₂, i₂, i₂', l₂, pf₂⟩ ← parse M i x₂
+    let ⟨R₁, i₁, i₁', l₁, pf₁⟩ ← parse M iM x₁
+    let ⟨R₂, i₂, i₂', l₂, pf₂⟩ ← parse M iM x₂
     match ← isDefEqQ R₁ R₂ with
     | .defEq (_ : $R₁ =Q $R₂) =>
       let l₂' : List (Q($R₁ × $M) × ℕ) := l₂
@@ -77,7 +78,7 @@ partial def parse {v : Level} (M : Q(Type v)) (i : Q(AddCommMonoid $M)) (x : Q($
       let l₂' : List (Q($R₁ × $M) × ℕ) := l₂.onFst (fun p ↦ q(considerFstAs $R₁ $p))
       pure ⟨R₁, i₁, i₁', combine (cob i₁) l₁ l₂', q(sorry)⟩
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s $y) =>
-    let ⟨R, iR, iR', l, pf⟩ ← parse M i y
+    let ⟨R, iR, iR', l, pf⟩ ← parse M iM y
     let i₁ ← synthInstanceQ q(Semiring $S)
     let i₂ ← synthInstanceQ q(Module $S $M)
     assumeInstancesCommute
@@ -96,3 +97,33 @@ partial def parse {v : Level} (M : Q(Type v)) (i : Q(AddCommMonoid $M)) (x : Q($
   | _ =>
     let k : ℕ ← AtomM.addAtom x
     pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [(q((1, $x)), k)], q(one_pf $x)⟩
+
+def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
+  let eqData := (← g.getType).consumeMData.eq?.get!
+  let .sort u ← whnf (← inferType eqData.1) | unreachable!
+  let some v := u.dec | throwError "goal cannot be an equality in Sort"
+  let ((M : Q(Type v)), (lhs : Q($M)), (rhs :Q($M))) := eqData
+  let iM ← synthInstanceQ q(AddCommMonoid.{v} $M)
+  let e₁ ← parse M iM lhs
+  have R₁ : Q(Type) := e₁.fst
+  have iR₁ : Q(Semiring.{0} $R₁) := e₁.snd.fst
+  let _i₁ ← synthInstanceQ q(SMul $R₁ $M) -- would be better to do the following, but doesn't work?
+  -- have iMR₁ : Q(@Module.{0, v} $R₁ $M $iR₁ $iM) := e.snd.snd.fst
+  assumeInstancesCommute
+  have l₁ : List (Q($R₁ × $M) × ℕ) := e₁.snd.snd.snd.fst
+  let ll₁ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₁)
+  let pf₁ : Q($lhs = smulAndSum $ll₁) := e₁.snd.snd.snd.snd
+  -- for now let's assume that LHS and RHS scalars have the same type
+  let e₂ ← parse M iM rhs
+  have l₂ : List (Q($R₁ × $M) × ℕ) := e₂.snd.snd.snd.fst
+  let ll₂ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₂)
+  let pf₂ : Q($rhs = smulAndSum $ll₂) := e₂.snd.snd.snd.snd
+  -- start to rig up the collection of goals we will reduce to
+  let mvar : Q(smulAndSum $ll₁ = smulAndSum $ll₂)
+    ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $ll₂)
+  g.assign q(Eq.trans (Eq.trans $pf₁ $mvar) (Eq.symm $pf₂))
+  pure [mvar.mvarId!]
+
+def matchCoeffs (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchCoeffsAux g)
+
+elab "match_coeffs" : tactic => Tactic.liftMetaTactic matchCoeffs
