@@ -360,7 +360,7 @@ theorem smul_toNNReal (a : ℝ≥0) (b : ℝ≥0∞) : (a • b).toNNReal = a * 
 /-- `ENNReal.toNNReal` as a `MonoidHom`. -/
 def toNNRealHom : ℝ≥0∞ →* ℝ≥0 where
   toFun := ENNReal.toNNReal
-  map_one' := toNNReal_coe
+  map_one' := toNNReal_coe _
   map_mul' _ _ := toNNReal_mul
 
 @[simp]
