@@ -383,7 +383,7 @@ instance prod.instIsFiniteMeasure {α β : Type*} {mα : MeasurableSpace α} {m�
     IsFiniteMeasure (μ.prod ν) := by
   constructor
   rw [← univ_prod_univ, prod_prod]
-  exact mul_lt_top (measure_lt_top _ _).ne (measure_lt_top _ _).ne
+  exact mul_lt_top (measure_lt_top _ _) (measure_lt_top _ _)
 
 instance {α β : Type*} [MeasureSpace α] [MeasureSpace β] [IsFiniteMeasure (volume : Measure α)]
     [IsFiniteMeasure (volume : Measure β)] : IsFiniteMeasure (volume : Measure (α × β)) :=
@@ -412,7 +412,7 @@ instance prod.instIsFiniteMeasureOnCompacts {α β : Type*} [TopologicalSpace α
     exact ⟨⟨y, hxy⟩, ⟨x, hxy⟩⟩
   apply lt_of_le_of_lt (measure_mono this)
   rw [hL, prod_prod]
-  exact mul_lt_top (hK.image continuous_fst).measure_ne_top (hK.image continuous_snd).measure_ne_top
+  exact mul_lt_top (hK.image continuous_fst).measure_lt_top (hK.image continuous_snd).measure_lt_top
 
 instance {X Y : Type*}
     [TopologicalSpace X] [MeasureSpace X] [IsFiniteMeasureOnCompacts (volume : Measure X)]
