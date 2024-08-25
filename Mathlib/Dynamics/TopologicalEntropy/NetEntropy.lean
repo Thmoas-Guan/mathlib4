@@ -31,7 +31,7 @@ We relate in this file `CoverEntropy` and `NetEntropy`. This file is downstream 
 ## Main definitions
 - `IsDynNetOf`: property that dynamical balls centered on a subset `s` of `F` are disjoint.
 - `netMaxcard`: maximal cardinal of a dynamical net. Takes values in `ℕ∞`.
-- `netEntropyInfUni`/`netEntropySupUni`: exponential growth of `netMaxcard`. The former is
+- `netEntropyInfEnt`/`netEntropyEnt`: exponential growth of `netMaxcard`. The former is
 defined with a `liminf`, the later with a `limsup`. Take values in `EReal`.
 
 ## Tags
@@ -74,7 +74,7 @@ lemma isDynNetOf_singleton (T : X → X) {F : Set X} (U : Set (X × X)) (n : ℕ
 
 /-- Given an entourage `U` and a time `n`, a dynamical net has a smaller cardinal than a dynamical
   cover. This lemma is the first of two key results to compare two versions topological entropy:
-  with cover and with nets, the second being `coverMincard_comp_le_netMaxcard`.-/
+  with cover and with nets, the second being `coverMincard_le_netMaxcard`.-/
 lemma isDynNetOf_card_le_isDynCoverOf_card {T : X → X} {F : Set X} {U : Set (X × X)}
     (U_symm : SymmetricRel U) {n : ℕ} {s t : Finset X} (hs : IsDynNetOf T F U n s)
     (ht : IsDynCoverOf T F U n t) :
@@ -85,7 +85,7 @@ lemma isDynNetOf_card_le_isDynCoverOf_card {T : X → X} {F : Set X} {U : Set (X
     exact ht
   choose! F s_t using this
   simp only [mem_ball_symmetry (U_symm.dynEntourage T n)] at s_t
-  apply Finset.card_le_card_of_injOn F (fun x x_s ↦ (s_t x x_s).1)
+  apply Finset.card_le_card_of_injOn F fun x x_s ↦ (s_t x x_s).1
   intro x x_s y y_s Fx_Fy
   exact PairwiseDisjoint.elim_set hs.2 x_s y_s (F x) (s_t x x_s).2 (Fx_Fy ▸ (s_t y y_s).2)
 
@@ -162,27 +162,27 @@ lemma netMaxcard_zero_iff (T : X → X) (F : Set X) (U : Set (X × X)) (n : ℕ)
   rw [Finset.card_singleton, Nat.cast_one, h] at key
   exact not_lt_of_le key zero_lt_one
 
-lemma netMaxcard_pos_iff (T : X → X) (F : Set X) (U : Set (X × X)) (n : ℕ) :
+lemma one_le_netMaxcard_iff (T : X → X) (F : Set X) (U : Set (X × X)) (n : ℕ) :
     1 ≤ netMaxcard T F U n ↔ F.Nonempty := by
   rw [ENat.one_le_iff_ne_zero, nonempty_iff_ne_empty]
   exact not_iff_not.2 (netMaxcard_zero_iff T F U n)
 
 lemma netMaxcard_time_zero (T : X → X) {F : Set X} (h : F.Nonempty) (U : Set (X × X)) :
     netMaxcard T F U 0 = 1 := by
-  apply le_antisymm (iSup₂_le _) ((netMaxcard_pos_iff T F U 0).2 h)
+  apply (iSup₂_le _).antisymm ((one_le_netMaxcard_iff T F U 0).2 h)
   intro s ⟨_, s_net⟩
   simp only [ball, dynEntourage_zero, preimage_univ] at s_net
   norm_cast
-  refine Finset.card_le_one.2 (fun x x_s y y_s ↦ ?_)
+  refine Finset.card_le_one.2 fun x x_s y y_s ↦ ?_
   exact PairwiseDisjoint.elim_set s_net x_s y_s x (mem_univ x) (mem_univ x)
 
 lemma netMaxcard_univ (T : X → X) {F : Set X} (h : F.Nonempty) (n : ℕ) :
     netMaxcard T F univ n = 1 := by
-  apply le_antisymm (iSup₂_le _) ((netMaxcard_pos_iff T F univ n).2 h)
+  apply (iSup₂_le _).antisymm ((one_le_netMaxcard_iff T F univ n).2 h)
   intro s ⟨_, s_net⟩
   simp only [ball, dynEntourage_univ, preimage_univ] at s_net
   norm_cast
-  refine Finset.card_le_one.2 (fun x x_s y y_s ↦ ?_)
+  refine Finset.card_le_one.2 fun x x_s y y_s ↦ ?_
   exact PairwiseDisjoint.elim_set s_net x_s y_s x (mem_univ x) (mem_univ x)
 
 lemma netMaxcard_infinite_iff (T : X → X) (F : Set X) (U : Set (X × X)) (n : ℕ) :
@@ -199,7 +199,7 @@ lemma netMaxcard_infinite_iff (T : X → X) (F : Set X) (U : Set (X × X)) (n : 
     rcases h with ⟨s, s_net, s_card⟩
     apply lt_of_lt_of_le _ (card_le_netMaxcard s_net)
     rw [ENat.some_eq_coe, Nat.cast_lt]
-    exact lt_of_lt_of_le (lt_add_one k) s_card
+    exact (lt_add_one k).trans_le s_card
 
 lemma netMaxcard_le_coverMincard (T : X → X) (F : Set X) {U : Set (X × X)} (h : SymmetricRel U)
     (n : ℕ) :
@@ -214,31 +214,31 @@ lemma netMaxcard_le_coverMincard (T : X → X) (F : Set X) {U : Set (X × X)} (h
 /-- Given an entourage `U` and a time `n`, a minimal dynamical cover by `U ○ U` has a smaller
   cardinal than a maximal dynamical net by `U`. This lemma is the second of two key results to
   compare two versions topological entropy: with cover and with nets.-/
-lemma coverMincard_comp_le_netMaxcard (T : X → X) (F : Set X) {U : Set (X × X)}
-    (U_rfl : idRel ⊆ U) (U_symm : SymmetricRel U) (n : ℕ) :
+lemma coverMincard_le_netMaxcard (T : X → X) (F : Set X) {U : Set (X × X)} (U_rfl : idRel ⊆ U)
+    (U_symm : SymmetricRel U) (n : ℕ) :
     coverMincard T F (U ○ U) n ≤ netMaxcard T F U n := by
   classical
   rcases (eq_top_or_lt_top (netMaxcard T F U n)) with h | h
   · exact h ▸ le_top
-  · rcases ((netMaxcard_finite_iff T F U n).1 h) with ⟨s, s_net, s_netMaxcard⟩
-    rw [← s_netMaxcard]
-    apply coverMincard_le_card
-    by_contra h
-    rcases not_subset.1 h with ⟨x, x_F, x_uncov⟩
-    simp only [Finset.mem_coe, mem_iUnion, exists_prop, not_exists, not_and] at x_uncov
-    have larger_net : IsDynNetOf T F U n (insert x s) := by
-      apply And.intro (insert_subset x_F s_net.1)
-      refine pairwiseDisjoint_insert.2 (And.intro s_net.2 (fun y y_s _ ↦ ?_))
-      refine disjoint_left.2 (fun z z_x z_y ↦ x_uncov y y_s ?_)
-      exact mem_ball_dynEntourage_comp T n U_symm x y (nonempty_of_mem ⟨z_x, z_y⟩)
-    rw [← Finset.coe_insert x s] at larger_net
-    apply not_le_of_lt _ (card_le_netMaxcard larger_net)
-    rw [← s_netMaxcard, Nat.cast_lt]
-    refine lt_of_lt_of_eq (lt_add_one s.card) (Finset.card_insert_of_not_mem fun x_s ↦ ?_).symm
-    apply x_uncov x x_s
-    apply ball_mono (dynEntourage_monotone T n (subset_comp_self U_rfl)) x
-    apply ball_mono (idRel_subset_dynEntourage T U_rfl n) x
-    simp only [ball, mem_preimage, mem_idRel]
+  rcases ((netMaxcard_finite_iff T F U n).1 h) with ⟨s, s_net, s_netMaxcard⟩
+  rw [← s_netMaxcard]
+  apply coverMincard_le_card
+  by_contra h
+  rcases not_subset.1 h with ⟨x, x_F, x_uncov⟩
+  simp only [Finset.mem_coe, mem_iUnion, exists_prop, not_exists, not_and] at x_uncov
+  have larger_net : IsDynNetOf T F U n (insert x s) := by
+    apply And.intro (insert_subset x_F s_net.1)
+    refine pairwiseDisjoint_insert.2 (And.intro s_net.2 (fun y y_s _ ↦ ?_))
+    refine disjoint_left.2 (fun z z_x z_y ↦ x_uncov y y_s ?_)
+    exact mem_ball_dynEntourage_comp T n U_symm x y (nonempty_of_mem ⟨z_x, z_y⟩)
+  rw [← Finset.coe_insert x s] at larger_net
+  apply not_le_of_lt _ (card_le_netMaxcard larger_net)
+  rw [← s_netMaxcard, Nat.cast_lt]
+  refine lt_of_lt_of_eq (lt_add_one s.card) (Finset.card_insert_of_not_mem fun x_s ↦ ?_).symm
+  apply x_uncov x x_s
+  apply ball_mono (dynEntourage_monotone T n (subset_comp_self U_rfl)) x
+  apply ball_mono (idRel_subset_dynEntourage T U_rfl n) x
+  simp only [ball, mem_preimage, mem_idRel]
 
 open ENNReal EReal
 
@@ -246,151 +246,148 @@ lemma log_netMaxcard_nonneg (T : X → X) {F : Set X} (h : F.Nonempty) (U : Set 
     0 ≤ log (netMaxcard T F U n) := by
   apply zero_le_log_iff.2
   rw [← ENat.toENNReal_one, ENat.toENNReal_le]
-  exact (netMaxcard_pos_iff T F U n).2 h
+  exact (one_le_netMaxcard_iff T F U n).2 h
 
 /-! ### Net entropy of entourages -/
 
 open Filter
 
-/--The entropy of an entourage `U`, defined as the exponential rate of growth of the size of the
-largest `(n, U)`-dynamical net of `F`. Takes values in the space of extended real numbers
-`[-∞,+∞]`. This version uses a `liminf`.-/
-noncomputable def netEntropyInfUni (T : X → X) (F : Set X) (U : Set (X × X)) :=
-  atTop.liminf fun n : ℕ ↦ log (netMaxcard T F U n) / n
-
-/--The entropy of an entourage `U`, defined as the exponential rate of growth of the size of the
+/-- The entropy of an entourage `U`, defined as the exponential rate of growth of the size of the
 largest `(n, U)`-dynamical net of `F`. Takes values in the space of extended real numbers
 `[-∞,+∞]`. This version uses a `limsup`.-/
-noncomputable def netEntropySupUni (T : X → X) (F : Set X) (U : Set (X × X)) :=
+noncomputable def netEntropyEnt (T : X → X) (F : Set X) (U : Set (X × X)) :=
   atTop.limsup fun n : ℕ ↦ log (netMaxcard T F U n) / n
 
-lemma netEntropyInfUni_antitone (T : X → X) (F : Set X) :
-    Antitone (fun U : Set (X × X) ↦ netEntropyInfUni T F U) :=
+/-- The entropy of an entourage `U`, defined as the exponential rate of growth of the size of the
+largest `(n, U)`-dynamical net of `F`. Takes values in the space of extended real numbers
+`[-∞,+∞]`. This version uses a `liminf`.-/
+noncomputable def netEntropyInfEnt (T : X → X) (F : Set X) (U : Set (X × X)) :=
+  atTop.liminf fun n : ℕ ↦ log (netMaxcard T F U n) / n
+
+lemma netEntropyInfEnt_antitone (T : X → X) (F : Set X) :
+    Antitone (fun U : Set (X × X) ↦ netEntropyInfEnt T F U) :=
   fun _ _ U_V ↦ (liminf_le_liminf) <| Eventually.of_forall
     fun n ↦ EReal.monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
     <| log_monotone (ENat.toENNReal_mono (netMaxcard_antitone T F n U_V))
 
-lemma netEntropySupUni_antitone (T : X → X) (F : Set X) :
-    Antitone (fun U : Set (X × X) ↦ netEntropySupUni T F U) :=
+lemma netEntropyEnt_antitone (T : X → X) (F : Set X) :
+    Antitone (fun U : Set (X × X) ↦ netEntropyEnt T F U) :=
   fun _ _ U_V ↦ (limsup_le_limsup) <| Eventually.of_forall
     fun n ↦ EReal.monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
     <| log_monotone (ENat.toENNReal_mono (netMaxcard_antitone T F n U_V))
 
-lemma netEntropyInfUni_le_netEntropySupUni (T : X → X) (F : Set X) (U : Set (X × X)) :
-    netEntropyInfUni T F U ≤ netEntropySupUni T F U :=
-  liminf_le_limsup
+lemma netEntropyInfEnt_le_netEntropyEnt (T : X → X) (F : Set X) (U : Set (X × X)) :
+    netEntropyInfEnt T F U ≤ netEntropyEnt T F U := liminf_le_limsup
 
 @[simp]
-lemma netEntropySupUni_bot {T : X → X} {U : Set (X × X)} : netEntropySupUni T ∅ U = ⊥ := by
+lemma netEntropyEnt_bot {T : X → X} {U : Set (X × X)} : netEntropyEnt T ∅ U = ⊥ := by
   suffices h : ∀ᶠ n : ℕ in atTop, log (netMaxcard T ∅ U n) / n = ⊥ by
-    rw [netEntropySupUni, limsup_congr h]
+    rw [netEntropyEnt, limsup_congr h]
     exact limsup_const ⊥
-  · simp only [netMaxcard_zero, ENat.toENNReal_zero, log_zero, eventually_atTop]
-    use 1
-    exact fun n n_pos ↦ bot_div_of_pos_ne_top (Nat.cast_pos'.2 n_pos) (natCast_ne_top n)
+  simp only [netMaxcard_zero, ENat.toENNReal_zero, log_zero, eventually_atTop]
+  use 1
+  exact fun n n_pos ↦ bot_div_of_pos_ne_top (Nat.cast_pos'.2 n_pos) (natCast_ne_top n)
 
 @[simp]
-lemma netEntropyInfUni_bot {T : X → X} {U : Set (X × X)} : netEntropyInfUni T ∅ U = ⊥ :=
-  eq_bot_mono (netEntropyInfUni_le_netEntropySupUni T ∅ U) netEntropySupUni_bot
+lemma netEntropyInfEnt_bot {T : X → X} {U : Set (X × X)} : netEntropyInfEnt T ∅ U = ⊥ :=
+  eq_bot_mono (netEntropyInfEnt_le_netEntropyEnt T ∅ U) netEntropyEnt_bot
 
-lemma netEntropyInfUni_nonneg (T : X → X) {F : Set X} (h : F.Nonempty) (U : Set (X × X)) :
-    0 ≤ netEntropyInfUni T F U :=
+lemma netEntropyInfEnt_nonneg (T : X → X) {F : Set X} (h : F.Nonempty) (U : Set (X × X)) :
+    0 ≤ netEntropyInfEnt T F U :=
   le_trans (le_iInf fun n ↦ EReal.div_nonneg (log_netMaxcard_nonneg T h U n)
     (Nat.cast_nonneg' n)) iInf_le_liminf
 
-lemma netEntropySupUni_nonneg (T : X → X) {F : Set X} (h : F.Nonempty) (U : Set (X × X)) :
-    0 ≤ netEntropySupUni T F U :=
-  le_trans (netEntropyInfUni_nonneg T h U) (netEntropyInfUni_le_netEntropySupUni T F U)
+lemma netEntropyEnt_nonneg (T : X → X) {F : Set X} (h : F.Nonempty) (U : Set (X × X)) :
+    0 ≤ netEntropyEnt T F U :=
+  le_trans (netEntropyInfEnt_nonneg T h U) (netEntropyInfEnt_le_netEntropyEnt T F U)
 
-lemma netEntropyInfUni_univ (T : X → X) {F : Set X} (h : F.Nonempty) :
-    netEntropyInfUni T F univ = 0 := by
-  simp [netEntropyInfUni, netMaxcard_univ T h]
+lemma netEntropyInfEnt_univ (T : X → X) {F : Set X} (h : F.Nonempty) :
+    netEntropyInfEnt T F univ = 0 := by simp [netEntropyInfEnt, netMaxcard_univ T h]
 
-lemma netEntropySupUni_univ (T : X → X) {F : Set X} (h : F.Nonempty) :
-    netEntropySupUni T F univ = 0 := by
-  simp [netEntropySupUni, netMaxcard_univ T h]
+lemma netEntropyEnt_univ (T : X → X) {F : Set X} (h : F.Nonempty) :
+    netEntropyEnt T F univ = 0 := by simp [netEntropyEnt, netMaxcard_univ T h]
 
-lemma netEntropyInfUni_le_CoverEntropyInfUni (T : X → X) (F : Set X) {U : Set (X × X)}
+lemma netEntropyInfEnt_le_CoverEntropyInfEnt (T : X → X) (F : Set X) {U : Set (X × X)}
     (h : SymmetricRel U) :
-    netEntropyInfUni T F U ≤ coverEntropyInfUni T F U := by
+    netEntropyInfEnt T F U ≤ coverEntropyInfEnt T F U := by
   refine (liminf_le_liminf) (Eventually.of_forall fun n ↦ ?_)
   apply div_le_div_right_of_nonneg (Nat.cast_nonneg' n) (log_monotone _)
   exact ENat.toENNReal_le.2 (netMaxcard_le_coverMincard T F h n)
 
-lemma CoverEntropyInfUni_comp_le_netEntropyInfUni (T : X → X) (F : Set X) {U : Set (X × X)}
+lemma CoverEntropyInfEnt_le_netEntropyInfEnt (T : X → X) (F : Set X) {U : Set (X × X)}
     (U_rfl : idRel ⊆ U) (U_symm : SymmetricRel U) :
-    coverEntropyInfUni T F (U ○ U) ≤ netEntropyInfUni T F U := by
+    coverEntropyInfEnt T F (U ○ U) ≤ netEntropyInfEnt T F U := by
   refine (liminf_le_liminf) (Eventually.of_forall fun n ↦ ?_)
   apply div_le_div_right_of_nonneg (Nat.cast_nonneg' n) (log_monotone _)
-  exact ENat.toENNReal_le.2 (coverMincard_comp_le_netMaxcard T F U_rfl U_symm n)
+  exact ENat.toENNReal_le.2 (coverMincard_le_netMaxcard T F U_rfl U_symm n)
 
-lemma netEntropySupUni_le_CoverEntropySupUni (T : X → X) (F : Set X) {U : Set (X × X)}
+lemma netEntropyEnt_le_CoverEntropyEnt (T : X → X) (F : Set X) {U : Set (X × X)}
     (h : SymmetricRel U) :
-    netEntropySupUni T F U ≤ coverEntropySupUni T F U := by
+    netEntropyEnt T F U ≤ coverEntropyEnt T F U := by
   refine (limsup_le_limsup) (Eventually.of_forall fun n ↦ ?_)
   apply div_le_div_right_of_nonneg (Nat.cast_nonneg' n) (log_monotone _)
   exact ENat.toENNReal_le.2 (netMaxcard_le_coverMincard T F h n)
 
-lemma CoverEntropySupUni_comp_le_netEntropySupUni (T : X → X) (F : Set X) {U : Set (X × X)}
-    (U_rfl : idRel ⊆ U) (U_symm : SymmetricRel U) :
-    coverEntropySupUni T F (U ○ U) ≤ netEntropySupUni T F U := by
+lemma CoverEntropyEnt_le_netEntropyEnt (T : X → X) (F : Set X) {U : Set (X × X)} (U_rfl : idRel ⊆ U)
+    (U_symm : SymmetricRel U) :
+    coverEntropyEnt T F (U ○ U) ≤ netEntropyEnt T F U := by
   refine (limsup_le_limsup) (Eventually.of_forall fun n ↦ ?_)
   apply div_le_div_right_of_nonneg (Nat.cast_nonneg' n) (log_monotone _)
-  exact ENat.toENNReal_le.2 (coverMincard_comp_le_netMaxcard T F U_rfl U_symm n)
+  exact ENat.toENNReal_le.2 (coverMincard_le_netMaxcard T F U_rfl U_symm n)
 
 /-! ### Relationship with cover entropy -/
 
 variable [UniformSpace X] (T : X → X) (F : Set X)
 
-lemma coverEntropyInf_eq_iSup_netEntropyInfUni :
-    coverEntropyInf T F = ⨆ U ∈ 𝓤 X, netEntropyInfUni T F U := by
+lemma coverEntropyInf_eq_iSup_netEntropyInfEnt :
+    coverEntropyInf T F = ⨆ U ∈ 𝓤 X, netEntropyInfEnt T F U := by
   apply le_antisymm <;> refine iSup₂_le fun U U_uni ↦ ?_
   · rcases (comp_symm_mem_uniformity_sets U_uni) with ⟨V, V_uni, V_symm, V_comp_U⟩
-    apply (coverEntropyInfUni_antitone T F V_comp_U).trans (le_iSup₂_of_le V V_uni _)
-    exact CoverEntropyInfUni_comp_le_netEntropyInfUni T F (refl_le_uniformity V_uni) V_symm
-  · apply (netEntropyInfUni_antitone T F (symmetrizeRel_subset_self U)).trans
+    apply (coverEntropyInfEnt_antitone T F V_comp_U).trans (le_iSup₂_of_le V V_uni _)
+    exact CoverEntropyInfEnt_le_netEntropyInfEnt T F (refl_le_uniformity V_uni) V_symm
+  · apply (netEntropyInfEnt_antitone T F (symmetrizeRel_subset_self U)).trans
     apply le_trans _ (le_iSup₂ (symmetrizeRel U) (symmetrize_mem_uniformity U_uni))
-    exact netEntropyInfUni_le_CoverEntropyInfUni T F (symmetric_symmetrizeRel U)
+    exact netEntropyInfEnt_le_CoverEntropyInfEnt T F (symmetric_symmetrizeRel U)
 
-lemma coverEntropySup_eq_iSup_netEntropySupUni :
-    coverEntropySup T F = ⨆ U ∈ 𝓤 X, netEntropySupUni T F U := by
+lemma coverEntropy_eq_iSup_netEntropyEnt :
+    coverEntropy T F = ⨆ U ∈ 𝓤 X, netEntropyEnt T F U := by
   apply le_antisymm <;> refine iSup₂_le fun U U_uni ↦ ?_
   · rcases (comp_symm_mem_uniformity_sets U_uni) with ⟨V, V_uni, V_symm, V_comp_U⟩
-    exact (coverEntropySupUni_antitone T F V_comp_U).trans <| le_iSup₂_of_le V V_uni
-      <| CoverEntropySupUni_comp_le_netEntropySupUni T F (refl_le_uniformity V_uni) V_symm
-  · apply (netEntropySupUni_antitone T F (symmetrizeRel_subset_self U)).trans
+    exact (coverEntropyEnt_antitone T F V_comp_U).trans <| le_iSup₂_of_le V V_uni
+      <| CoverEntropyEnt_le_netEntropyEnt T F (refl_le_uniformity V_uni) V_symm
+  · apply (netEntropyEnt_antitone T F (symmetrizeRel_subset_self U)).trans
     apply le_trans _ (le_iSup₂ (symmetrizeRel U) (symmetrize_mem_uniformity U_uni))
-    exact netEntropySupUni_le_CoverEntropySupUni T F (symmetric_symmetrizeRel U)
+    exact netEntropyEnt_le_CoverEntropyEnt T F (symmetric_symmetrizeRel U)
 
-lemma coverEntropyInf_eq_iSup_basis_netEntropyInfUni {ι : Sort*} {p : ι → Prop}
+lemma coverEntropyInf_eq_iSup_basis_netEntropyInfEnt {ι : Sort*} {p : ι → Prop}
     {s : ι → Set (X × X)} (h : (𝓤 X).HasBasis p s) (T : X → X) (F : Set X) :
-    coverEntropyInf T F = ⨆ (i : ι) (_ : p i), netEntropyInfUni T F (s i) := by
-  rw [coverEntropyInf_eq_iSup_netEntropyInfUni T F]
+    coverEntropyInf T F = ⨆ (i : ι) (_ : p i), netEntropyInfEnt T F (s i) := by
+  rw [coverEntropyInf_eq_iSup_netEntropyInfEnt T F]
   refine le_antisymm (iSup₂_le fun U U_uni ↦ ?_)
     (iSup₂_mono' fun i h_i ↦ ⟨s i, HasBasis.mem_of_mem h h_i, le_refl _⟩)
   rcases (HasBasis.mem_iff h).1 U_uni with ⟨i, h_i, si_U⟩
-  exact (netEntropyInfUni_antitone T F si_U).trans
-    (le_iSup₂ (f := fun (i : ι) (_ : p i) ↦ netEntropyInfUni T F (s i)) i h_i)
+  exact (netEntropyInfEnt_antitone T F si_U).trans
+    (le_iSup₂ (f := fun (i : ι) (_ : p i) ↦ netEntropyInfEnt T F (s i)) i h_i)
 
-lemma coverEntropySup_eq_iSup_basis_netEntropySupUni {ι : Sort*} {p : ι → Prop}
+lemma coverEntropy_eq_iSup_basis_netEntropyEnt {ι : Sort*} {p : ι → Prop}
     {s : ι → Set (X × X)} (h : (𝓤 X).HasBasis p s) (T : X → X) (F : Set X) :
-    coverEntropySup T F = ⨆ (i : ι) (_ : p i), netEntropySupUni T F (s i) := by
-  rw [coverEntropySup_eq_iSup_netEntropySupUni T F]
+    coverEntropy T F = ⨆ (i : ι) (_ : p i), netEntropyEnt T F (s i) := by
+  rw [coverEntropy_eq_iSup_netEntropyEnt T F]
   refine le_antisymm (iSup₂_le fun U U_uni ↦ ?_)
     (iSup₂_mono' fun i h_i ↦ ⟨s i, HasBasis.mem_of_mem h h_i, le_refl _⟩)
   rcases (HasBasis.mem_iff h).1 U_uni with ⟨i, h_i, si_U⟩
-  exact (netEntropySupUni_antitone T F si_U).trans
-    (le_iSup₂ (f := fun (i : ι) (_ : p i) ↦ netEntropySupUni T F (s i)) i h_i)
+  exact (netEntropyEnt_antitone T F si_U).trans
+    (le_iSup₂ (f := fun (i : ι) (_ : p i) ↦ netEntropyEnt T F (s i)) i h_i)
 
-lemma netEntropyInfUni_le_coverEntropyInf {U : Set (X × X)} (h : U ∈ 𝓤 X) :
-    netEntropyInfUni T F U ≤ coverEntropyInf T F := by
-  rw [coverEntropyInf_eq_iSup_netEntropyInfUni T F]
-  exact le_iSup₂ (f := fun (U : Set (X × X)) (_ : U ∈ 𝓤 X) ↦ netEntropyInfUni T F U) U h
+lemma netEntropyInfEnt_le_coverEntropyInf {U : Set (X × X)} (h : U ∈ 𝓤 X) :
+    netEntropyInfEnt T F U ≤ coverEntropyInf T F := by
+  rw [coverEntropyInf_eq_iSup_netEntropyInfEnt T F]
+  exact le_iSup₂ (f := fun (U : Set (X × X)) (_ : U ∈ 𝓤 X) ↦ netEntropyInfEnt T F U) U h
 
-lemma netEntropySupUni_le_coverEntropySup {U : Set (X × X)} (h : U ∈ 𝓤 X) :
-    netEntropySupUni T F U ≤ coverEntropySup T F := by
-  rw [coverEntropySup_eq_iSup_netEntropySupUni T F]
-  exact le_iSup₂ (f := fun (U : Set (X × X)) (_ : U ∈ 𝓤 X) ↦ netEntropySupUni T F U) U h
+lemma netEntropyEnt_le_coverEntropy {U : Set (X × X)} (h : U ∈ 𝓤 X) :
+    netEntropyEnt T F U ≤ coverEntropy T F := by
+  rw [coverEntropy_eq_iSup_netEntropyEnt T F]
+  exact le_iSup₂ (f := fun (U : Set (X × X)) (_ : U ∈ 𝓤 X) ↦ netEntropyEnt T F U) U h
 
 end Dynamics
 

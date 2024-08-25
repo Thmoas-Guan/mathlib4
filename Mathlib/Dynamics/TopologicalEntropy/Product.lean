@@ -56,10 +56,6 @@ theorem dynamical_uni_prod (S : X → X) (T : Y → Y) (U : Set (X × X)) (V : S
   simp only [mem_dynEntourage, mem_setOf_eq, map_iterate, map_fst, map_snd]
   exact forall₂_and
 
-theorem Function.Semiconj.prod_map_swap (S : X → X) (T : Y → Y) :
-    Function.Semiconj swap (map S T) (map T S) := by
-  rw [Function.semiconj_iff_comp_eq, map_comp_swap]
-
 /-End of miscellaneae.-/
 
 /-! ### Map swapping -/
@@ -68,16 +64,16 @@ theorem coverEntropyInf_prod_swap [UniformSpace X] [UniformSpace Y] (S : X → X
     (F : Set X) (G : Set Y) :
     coverEntropyInf (map T S) (G ×ˢ F) = coverEntropyInf (map S T) (F ×ˢ G) := by
   rw [← Set.image_swap_prod F G,
-    coverEntropyInf_image instUniformSpaceProd (Function.Semiconj.prod_map_swap S T) (F ×ˢ G)]
+    coverEntropyInf_image instUniformSpaceProd (Function.Semiconj.swap_map S T) (F ×ˢ G)]
   congr
   rw [← UniformEquiv.coe_prodComm]
   exact UniformEquiv.comap_eq (@UniformEquiv.prodComm X Y _ _)
 
 theorem coverEntropySup_prod_swap [UniformSpace X] [UniformSpace Y] (S : X → X) (T : Y → Y)
     (F : Set X) (G : Set Y) :
-    coverEntropySup (map T S) (G ×ˢ F) = coverEntropySup (map S T) (F ×ˢ G) := by
+    coverEntropy (map T S) (G ×ˢ F) = coverEntropy (map S T) (F ×ˢ G) := by
   rw [← Set.image_swap_prod F G,
-    coverEntropySup_image instUniformSpaceProd (Function.Semiconj.prod_map_swap S T) (F ×ˢ G)]
+    coverEntropy_image instUniformSpaceProd (Function.Semiconj.swap_map S T) (F ×ˢ G)]
   congr
   rw [← UniformEquiv.coe_prodComm]
   exact UniformEquiv.comap_eq (@UniformEquiv.prodComm X Y _ _)
@@ -109,7 +105,7 @@ theorem isDynNetOf_prod {S : X → X} {T : Y → Y} {F : Set X} {G : Set Y} {U :
   simp only [ball_prod]
   exact PairwiseDisjoint.prod hS.2 hT.2
 
-theorem coverMincard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U : Set (X × X))
+theorem coverMincard_prod_le (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U : Set (X × X))
     (V : Set (Y × Y)) (n : ℕ) :
     coverMincard (map S T) (F ×ˢ G) (UniformityProd U V) n ≤
     coverMincard S F U n * coverMincard T G V n := by
@@ -121,12 +117,12 @@ theorem coverMincard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U
   · rw [h₁]
     apply le_of_le_of_eq le_top (Eq.symm _)
     rw [WithTop.top_mul]
-    exact ENat.one_le_iff_ne_zero.1 ((coverMincard_pos_iff T G V n).2 G_nemp)
+    exact ENat.one_le_iff_ne_zero.1 ((one_le_coverMincard_iff T G V n).2 G_nemp)
   rcases eq_top_or_lt_top (coverMincard T G V n) with (h₂ | h₂)
   · rw [h₂]
     apply le_of_le_of_eq le_top (Eq.symm _)
     rw [WithTop.mul_top]
-    exact ENat.one_le_iff_ne_zero.1 ((coverMincard_pos_iff S F U n).2 F_nemp)
+    exact ENat.one_le_iff_ne_zero.1 ((one_le_coverMincard_iff S F U n).2 F_nemp)
   rcases (coverMincard_finite_iff S F U n).1 h₁ with ⟨s, s_cover, s_card⟩
   rcases (coverMincard_finite_iff T G V n).1 h₂ with ⟨t, t_cover, t_card⟩
   rw [← s_card, ← t_card, ← Nat.cast_mul, ← Finset.card_product s t]
@@ -134,7 +130,7 @@ theorem coverMincard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U
   rw [Finset.coe_product]
   exact isDynCoverOf_prod s_cover t_cover
 
-theorem netMaxcard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U : Set (X × X))
+theorem le_netMaxcard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U : Set (X × X))
     (V : Set (Y × Y)) (n : ℕ) :
     netMaxcard S F U n * netMaxcard T G V n
     ≤ netMaxcard (map S T) (F ×ˢ G) (UniformityProd U V) n := by
@@ -156,7 +152,7 @@ theorem netMaxcard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U :
       rw [Finset.coe_singleton]
       exact isDynNetOf_singleton T V n y_G
     · rw [Finset.card_product s ({y} : Finset Y), Finset.card_singleton y, mul_one]
-      exact le_of_lt s_card
+      exact s_card.le
   rcases eq_top_or_lt_top (netMaxcard T G V n) with h₂ | h₂
   · refine le_of_le_of_eq le_top ((netMaxcard_infinite_iff _ _ _ n).2 fun k ↦ ?_).symm
     rw [netMaxcard, iSup_subtype', iSup_eq_top] at h₂
@@ -181,28 +177,28 @@ theorem netMaxcard_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) (U :
 
 open ENNReal EReal Filter
 
-theorem coverEntropySupUni_prod_le (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y)
+theorem coverEntropyEnt_prod_le (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y)
     (U : Set (X × X)) (V : Set (Y × Y)) :
-    coverEntropySupUni (map S T) (F ×ˢ G) (UniformityProd U V)
-    ≤ (coverEntropySupUni S F U) + (coverEntropySupUni T G V) := by
+    coverEntropyEnt (map S T) (F ×ˢ G) (UniformityProd U V)
+    ≤ (coverEntropyEnt S F U) + (coverEntropyEnt T G V) := by
   rcases F.eq_empty_or_nonempty with rfl | F_nemp
   · simp
   rcases G.eq_empty_or_nonempty with rfl | G_nemp
   · simp
   apply le_trans _ <| limsup_add_le_add_limsup
-    (Or.inl <| ne_of_gt <| lt_of_lt_of_le bot_lt_zero (coverEntropySupUni_nonneg S F_nemp U))
-    (Or.inr <| ne_of_gt <| lt_of_lt_of_le bot_lt_zero (coverEntropySupUni_nonneg T G_nemp V))
+    (Or.inl <| ne_of_gt <| bot_lt_zero.trans_le (coverEntropyEnt_nonneg S F_nemp U))
+    (Or.inr <| ne_of_gt <| bot_lt_zero.trans_le (coverEntropyEnt_nonneg T G_nemp V))
   refine (limsup_le_limsup) (Eventually.of_forall fun n ↦ ?_)
   simp only [Pi.add_apply]
   rw [← div_right_distrib_of_nonneg (log_coverMincard_nonneg S F_nemp U n)
     (log_coverMincard_nonneg T G_nemp V n), ← ENNReal.log_mul_add, ← ENat.toENNReal_mul]
   apply monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
-  exact log_monotone (ENat.toENNReal_le.2 (coverMincard_prod S T F G U V n))
+  exact log_monotone (ENat.toENNReal_le.2 (coverMincard_prod_le S T F G U V n))
 
-theorem le_netEntropyInfUni_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y)
+theorem le_netEntropyInfEnt_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y)
     (U : Set (X × X)) (V : Set (Y × Y)) :
-    (netEntropyInfUni S F U) + (netEntropyInfUni T G V)
-    ≤ netEntropyInfUni (map S T) (F ×ˢ G) (UniformityProd U V) := by
+    (netEntropyInfEnt S F U) + (netEntropyInfEnt T G V)
+    ≤ netEntropyInfEnt (map S T) (F ×ˢ G) (UniformityProd U V) := by
   rcases F.eq_empty_or_nonempty with rfl | F_nemp
   · simp
   rcases G.eq_empty_or_nonempty with rfl | G_nemp
@@ -211,19 +207,19 @@ theorem le_netEntropyInfUni_prod (S : X → X) (T : Y → Y) (F : Set X) (G : Se
   simp only [Pi.add_apply]
   rw [← div_right_distrib_of_nonneg (log_netMaxcard_nonneg S F_nemp U n)
     (log_netMaxcard_nonneg T G_nemp V n), ← log_mul_add, ← ENat.toENNReal_mul]
-  apply monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
-  exact log_monotone (ENat.toENNReal_le.2 (netMaxcard_prod S T F G U V n))
+  exact monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
+    <| log_monotone (ENat.toENNReal_le.2 (le_netMaxcard_prod S T F G U V n))
 
 variable [UniformSpace X] [UniformSpace Y]
 
-theorem coverEntropySup_prod_le (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) :
-    coverEntropySup (map S T) (F ×ˢ G) ≤ (coverEntropySup S F) + (coverEntropySup T G) := by
+theorem coverEntropy_prod_le (S : X → X) (T : Y → Y) (F : Set X) (G : Set Y) :
+    coverEntropy (map S T) (F ×ˢ G) ≤ (coverEntropy S F) + (coverEntropy T G) := by
   refine iSup₂_le fun W W_uni ↦ ?_
   rcases UniformityProd_of_uniform_prod W_uni with ⟨U, U_uni, V, V_uni, UV_W⟩
-  apply (coverEntropySupUni_antitone (map S T) (F ×ˢ G) UV_W).trans
-  apply (coverEntropySupUni_prod_le S T F G U V).trans
-  exact add_le_add (coverEntropySupUni_le_coverEntropySup S F U_uni)
-    (coverEntropySupUni_le_coverEntropySup T G V_uni)
+  exact (coverEntropyEnt_antitone (map S T) (F ×ˢ G) UV_W).trans
+    <| (coverEntropyEnt_prod_le S T F G U V).trans
+    <| add_le_add (coverEntropyEnt_le_coverEntropy S F U_uni)
+    <| coverEntropyEnt_le_coverEntropy T G V_uni
 
 end Dynamics
 
