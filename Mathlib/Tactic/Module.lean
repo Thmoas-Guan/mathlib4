@@ -37,6 +37,8 @@ theorem smulLeftFst_pf {R S M : Type*} [AddMonoid M] [SMul R S] [DistribSMul S M
 theorem one_pf {M : Type*} [AddMonoid M] (x : M) : x = smulAndSum [((1:ℕ), x)] := by
   simp [smulAndSum]
 
+theorem zero_pf (M : Type*) [AddMonoid M] : (0:M) = smulAndSum (R := Nat) [] := by simp [smulAndSum]
+
 partial def parse {v : Level} (M : Q(Type v)) (i : Q(AddMonoid $M)) (x : Q($M)) :
     MetaM (Σ R : Q(Type), Σ _ : Q(SMul $R $M), Σ e : Q(List ($R × $M)), Q($x = smulAndSum $e)) := do
   match x with
@@ -70,5 +72,5 @@ partial def parse {v : Level} (M : Q(Type v)) (i : Q(AddMonoid $M)) (x : Q($M)) 
       let l' : Q(List ($S × $M)) := q(smulLeftFst $l $s)
       let pf' : Q($s • $y = smulAndSum $l') := q(smulLeftFst_pf $pf $s)
       pure ⟨S, iS, l', pf'⟩
-  | _ =>
-    pure ⟨q(Nat), q(AddMonoid.toNatSMul), q([(1, $x)]), q(one_pf $x)⟩
+  | ~q(0) => pure ⟨q(Nat), q(AddMonoid.toNatSMul), q([]), q(zero_pf $M)⟩
+  | _ => pure ⟨q(Nat), q(AddMonoid.toNatSMul), q([(1, $x)]), q(one_pf $x)⟩
