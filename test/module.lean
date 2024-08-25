@@ -10,7 +10,7 @@ open Mathlib.Tactic.LinearCombination
 macro "module" : tactic =>
   `(tactic | (try simp only [← mul_smul, smul_add, add_smul, smul_sub, sub_smul, mul_add, add_mul, sub_mul, mul_sub, smul_zero, zero_smul, one_smul]; ring_nf; abel))
 
-variable {V : Type*} [AddCommGroup V] {K : Type*}
+variable {V : Type*} [AddCommGroup V] {K : Type} -- TODO generalize universes
   {t u v w x y : V} {a b c μ ν ρ : K}
 
 /-! # Commutative ring -/
@@ -33,12 +33,17 @@ example : x + 2 • x = 2 • x + x := by
   ring
 
 example (h : a = b) : a • x = b • x := by
-  -- match_coeffs
-  sorry
+  match_coeffs
+  congrm List.sum (List.map _ [(?_, _)])
+  guard_target = 1 • a = 1 • b
+  linear_combination h
 
 example : a • x + b • x = (a + b) • x := by
-  -- match_coeffs
-  sorry
+  match_coeffs
+  congrm List.sum (List.map _ [(?_, _)])
+  dsimp only
+  guard_target = 1 • a + 1 • b = 1 • (a + b)
+  ring
 
 example (h : a ^ 2 + b ^ 2 = 1) :
     a • (a • x - b • y) + (b • a • y + b • b • x) = x := by

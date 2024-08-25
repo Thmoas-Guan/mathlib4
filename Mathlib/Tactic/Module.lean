@@ -78,20 +78,28 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
       let l₂' : List (Q($R₁ × $M) × ℕ) := l₂.onFst (fun p ↦ q(considerFstAs $R₁ $p))
       pure ⟨R₁, i₁, i₁', combine (cob i₁) l₁ l₂', q(sorry)⟩
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s $y) =>
+    trace[debug] "parsing scalar multiplication of {y} by {s}, scalar type is {S}"
     let ⟨R, iR, iR', l, pf⟩ ← parse M iM y
     let i₁ ← synthInstanceQ q(Semiring $S)
     let i₂ ← synthInstanceQ q(Module $S $M)
+    trace[debug] "found semiring and module instances for {S}"
     assumeInstancesCommute
     try
+      trace[debug] "trying first branch"
       let _i₃ ← synthInstanceQ q(SMul $S $R)
       let _i₄ ← synthInstanceQ q(IsScalarTower $S $R $M)
+      trace[debug] "found that {S} is a valid scalar type for {R}"
       let l' : List (Q($R × $M) × ℕ) := l.onFst (fun p ↦ q(smulRightFst $s $p))
+      trace[debug] "sending back the list {l'} now"
       pure ⟨R, iR, iR', l', q(sorry)⟩
     catch _ =>
+      trace[debug] "trying second branch"
       let _i₃ ← synthInstanceQ q(SMul $R $S)
       let _i₄ ← synthInstanceQ q(IsScalarTower $R $S $M)
       let _i₅ ← synthInstanceQ q(SMulCommClass $S $R $M)
+      trace[debug] "found that {R} is a valid scalar type for {S}"
       let l' : List (Q($S × $M) × ℕ) := l.onFst (fun p ↦ q(smulLeftFst $s $p))
+      trace[debug] "sending back the list {l'} now"
       pure ⟨S, i₁, i₂, l', q(sorry)⟩
   | ~q(0) => pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
   | _ =>
@@ -104,8 +112,10 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
   let some v := u.dec | throwError "goal cannot be an equality in Sort"
   let ((M : Q(Type v)), (lhs : Q($M)), (rhs :Q($M))) := eqData
   let iM ← synthInstanceQ q(AddCommMonoid.{v} $M)
+  trace[debug] "parsing LHS, {lhs}"
   let e₁ ← parse M iM lhs
   have R₁ : Q(Type) := e₁.fst
+  trace[debug] "got back some stuff over the semiring {R₁}"
   have iR₁ : Q(Semiring.{0} $R₁) := e₁.snd.fst
   let _i₁ ← synthInstanceQ q(SMul $R₁ $M) -- would be better to do the following, but doesn't work?
   -- have iMR₁ : Q(@Module.{0, v} $R₁ $M $iR₁ $iM) := e.snd.snd.fst
@@ -113,11 +123,14 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
   have l₁ : List (Q($R₁ × $M) × ℕ) := e₁.snd.snd.snd.fst
   let ll₁ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₁)
   let pf₁ : Q($lhs = smulAndSum $ll₁) := e₁.snd.snd.snd.snd
+  trace[debug] "unpacked the LHS parse successfully"
   -- for now let's assume that LHS and RHS scalars have the same type
+  trace[debug] "parsing RHS, {rhs}"
   let e₂ ← parse M iM rhs
   have l₂ : List (Q($R₁ × $M) × ℕ) := e₂.snd.snd.snd.fst
   let ll₂ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₂)
   let pf₂ : Q($rhs = smulAndSum $ll₂) := e₂.snd.snd.snd.snd
+  trace[debug] "unpacked the RHS parse successfully"
   -- start to rig up the collection of goals we will reduce to
   let mvar : Q(smulAndSum $ll₁ = smulAndSum $ll₂)
     ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $ll₂)
