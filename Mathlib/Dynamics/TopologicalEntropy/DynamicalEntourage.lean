@@ -125,4 +125,13 @@ lemma _root_.Function.Semiconj.preimage_dynEntourage {Y : Type*} {S : X → X} {
   rw [← preimage_comp, ← preimage_comp, map_iterate S S k, map_iterate T T k, map_comp_map,
     map_comp_map, (Function.Semiconj.iterate_right h k).comp_eq]
 
+lemma dynEntourage_entourageProd {Y : Type*} (S : X → X) (T : Y → Y) (U : Set (X × X))
+    (V : Set (Y × Y)) (n : ℕ) :
+    dynEntourage (map S T) (entourageProd U V) n =
+    entourageProd (dynEntourage S U n) (dynEntourage T V n) := by
+  ext x
+  rw [entourageProd, entourageProd, mem_dynEntourage]
+  simp only [mem_dynEntourage, mem_setOf_eq, map_iterate, map_fst, map_snd]
+  exact forall₂_and
+
 end Dynamics

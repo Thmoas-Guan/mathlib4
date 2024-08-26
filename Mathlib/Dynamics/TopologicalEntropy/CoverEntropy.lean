@@ -234,8 +234,8 @@ lemma exists_isDynCoverOf_of_isCompact_invariant [UniformSpace X] {T : X → X} 
 noncomputable def coverMincard (T : X → X) (F : Set X) (U : Set (X × X)) (n : ℕ) : ℕ∞ :=
   ⨅ (s : Finset X) (_ : IsDynCoverOf T F U n s), (s.card : ℕ∞)
 
-lemma coverMincard_le_card {T : X → X} {F : Set X} {U : Set (X × X)} {n : ℕ} {s : Finset X}
-    (h : IsDynCoverOf T F U n s) :
+lemma IsDynCoverOf.coverMincard_le_card {T : X → X} {F : Set X} {U : Set (X × X)} {n : ℕ}
+    {s : Finset X} (h : IsDynCoverOf T F U n s) :
     coverMincard T F U n ≤ s.card := iInf₂_le s h
 
 lemma coverMincard_monotone_time (T : X → X) (F : Set X) (U : Set (X × X)) :
@@ -290,7 +290,7 @@ lemma coverMincard_zero (T : X → X) {F : Set X} (h : F.Nonempty) (U : Set (X �
   rcases h with ⟨x, _⟩
   have := isDynCoverOf_zero T F U (singleton_nonempty x)
   rw [← Finset.coe_singleton] at this
-  apply le_of_le_of_eq (coverMincard_le_card this)
+  apply this.coverMincard_le_card.trans_eq
   rw [Finset.card_singleton, Nat.cast_one]
 
 lemma coverMincard_univ (T : X → X) {F : Set X} (h : F.Nonempty) (n : ℕ) :
@@ -299,7 +299,7 @@ lemma coverMincard_univ (T : X → X) {F : Set X} (h : F.Nonempty) (n : ℕ) :
   rcases h with ⟨x, _⟩
   have := isDynCoverOf_univ T F n (singleton_nonempty x)
   rw [← Finset.coe_singleton] at this
-  apply le_of_le_of_eq (coverMincard_le_card this)
+  apply this.coverMincard_le_card.trans_eq
   rw [Finset.card_singleton, Nat.cast_one]
 
 lemma coverMincard_mul_le_pow {T : X → X} {F : Set X} (F_inv : MapsTo T F F) {U : Set (X × X)}
@@ -310,16 +310,16 @@ lemma coverMincard_mul_le_pow {T : X → X} {F : Set X} (F_inv : MapsTo T F F) {
   rcases n.eq_zero_or_pos with rfl | n_pos
   · rw [mul_zero, coverMincard_zero T F_nonempty (U ○ U), pow_zero]
   rcases eq_top_or_lt_top (coverMincard T F U m) with h | h
-  · exact h ▸ le_of_le_of_eq (le_top (α := ℕ∞)) (ENat.top_pow n_pos).symm
+  · exact h ▸ (le_top (α := ℕ∞)).trans_eq (ENat.top_pow n_pos).symm
   · rcases (coverMincard_finite_iff T F U m).1 h with ⟨s, s_cover, s_coverMincard⟩
     rcases s_cover.iterate_le_pow F_inv U_symm n with ⟨t, t_cover, t_le_sn⟩
     rw [← s_coverMincard]
-    exact (coverMincard_le_card t_cover).trans (WithTop.coe_le_coe.2 t_le_sn)
+    exact t_cover.coverMincard_le_card.trans (WithTop.coe_le_coe.2 t_le_sn)
 
 lemma coverMincard_le_pow {T : X → X} {F : Set X} (F_inv : MapsTo T F F) {U : Set (X × X)}
     (U_symm : SymmetricRel U) {m : ℕ} (m_pos : 0 < m) (n : ℕ) :
     coverMincard T F (U ○ U) n ≤ coverMincard T F U m ^ (n / m + 1) :=
-  (coverMincard_monotone_time T F (U ○ U) (le_of_lt (Nat.lt_mul_div_succ n m_pos))).trans
+  (coverMincard_monotone_time T F (U ○ U) (Nat.lt_mul_div_succ n m_pos).le).trans
     (coverMincard_mul_le_pow F_inv U_symm m (n / m + 1))
 
 lemma coverMincard_finite_of_isCompact_uniformContinuous [UniformSpace X] {T : X → X}
@@ -327,13 +327,13 @@ lemma coverMincard_finite_of_isCompact_uniformContinuous [UniformSpace X] {T : X
     (n : ℕ) :
     coverMincard T F U n < ⊤ := by
   rcases exists_isDynCoverOf_of_isCompact_uniformContinuous F_comp h U_uni n with ⟨s, s_cover⟩
-  exact (coverMincard_le_card s_cover).trans_lt (WithTop.coe_lt_top s.card)
+  exact s_cover.coverMincard_le_card.trans_lt (WithTop.coe_lt_top s.card)
 
 lemma coverMincard_finite_of_isCompact_invariant [UniformSpace X] {T : X → X} {F : Set X}
     (F_comp : IsCompact F) (F_inv : MapsTo T F F) {U : Set (X × X)} (U_uni : U ∈ 𝓤 X) (n : ℕ) :
     coverMincard T F U n < ⊤ := by
   rcases exists_isDynCoverOf_of_isCompact_invariant F_comp F_inv U_uni n with ⟨s, s_cover⟩
-  exact (coverMincard_le_card s_cover).trans_lt (WithTop.coe_lt_top s.card)
+  exact s_cover.coverMincard_le_card.trans_lt (WithTop.coe_lt_top s.card)
 
 /-- All dynamical balls of a minimal dynamical cover of `F` intersect `F`. This lemma is the key
   to relate Bowen-Dinaburg's definition of topological entropy with covers and their definition
@@ -356,7 +356,7 @@ lemma nonempty_inter_of_coverMincard {T : X → X} {F : Set X} {U : Set (X × X)
     rw [← ball_empt]
     rw [z_x] at hz
     exact mem_inter y_F hz
-  apply not_lt_of_le (coverMincard_le_card smaller_cover)
+  apply smaller_cover.coverMincard_le_card.not_lt
   rw [← h']
   exact_mod_cast Finset.card_erase_lt_of_mem x_s
 
@@ -391,14 +391,14 @@ lemma log_coverMincard_le_add {T : X → X} {F : Set X} (F_inv : MapsTo T F F)
   have h_nm : (0 : EReal) ≤ (n / m : ℕ) := Nat.cast_nonneg' (n / m)
   have h_log := log_coverMincard_nonneg T F_nemp U m
   have n_div_n := EReal.div_self (natCast_ne_bot n) (natCast_ne_top n)
-    (ne_of_gt (Nat.cast_pos'.2 n_pos))
+    (Nat.cast_pos'.2 n_pos).ne.symm
   apply le_trans <| div_le_div_right_of_nonneg (Nat.cast_pos'.2 n_pos).le
     (log_monotone (ENat.toENNReal_le.2 (coverMincard_le_pow F_inv U_symm m_pos n)))
   rw [ENat.toENNReal_pow, log_pow, Nat.cast_add, Nat.cast_one, right_distrib_of_nonneg h_nm
     zero_le_one, one_mul, div_right_distrib_of_nonneg (Left.mul_nonneg h_nm h_log) h_log, mul_comm,
     ← EReal.mul_div, div_eq_mul_inv _ (m : EReal)]
   apply add_le_add_right (mul_le_mul_of_nonneg_left _ h_log)
-  apply le_of_le_of_eq <| div_le_div_right_of_nonneg (Nat.cast_pos'.2 n_pos).le (natCast_div_le n m)
+  apply (div_le_div_right_of_nonneg (Nat.cast_pos'.2 n_pos).le (natCast_div_le n m)).trans_eq
   rw [EReal.div_div, mul_comm, ← EReal.div_div, n_div_n, one_div (m : EReal)]
 
 /-! ### Cover entropy of entourages -/
@@ -487,7 +487,7 @@ lemma coverEntropyEnt_le_log_coverMincard_div {T : X → X} {F : Set X} (F_inv :
     have := @limsup_add_le_add_limsup ℕ atTop u v
     rw [h, add_zero] at this
     specialize this (Or.inr EReal.zero_ne_top) (Or.inr EReal.zero_ne_bot)
-    exact le_of_le_of_eq this (limsup_const (log (coverMincard T F U n) / n))
+    exact this.trans_eq (limsup_const (log (coverMincard T F U n) / n))
   exact Tendsto.limsup_eq (EReal.tendsto_const_div_atTop_nhds_zero_nat logm_nneg logm_fin)
 
 lemma IsDynCoverOf.coverEntropyEnt_le_log_card_div {T : X → X} {F : Set X} (F_inv : MapsTo T F F)
@@ -579,8 +579,7 @@ lemma coverEntropyInf_empty {T : X → X} : coverEntropyInf T ∅ = ⊥ := by
 
 lemma coverEntropyInf_nonneg (T : X → X) {F : Set X} (h : F.Nonempty) :
     0 ≤ coverEntropyInf T F :=
-  le_of_eq_of_le (coverEntropyInfEnt_univ T h).symm
-    (coverEntropyInfEnt_le_coverEntropyInf T F univ_mem)
+  (coverEntropyInfEnt_le_coverEntropyInf T F univ_mem).trans_eq' (coverEntropyInfEnt_univ T h).symm
 
 lemma coverEntropy_nonneg (T : X → X) {F : Set X} (h : F.Nonempty) :
     0 ≤ coverEntropy T F :=

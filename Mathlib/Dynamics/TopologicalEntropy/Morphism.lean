@@ -45,7 +45,7 @@ lemma IsDynCoverOf.preimage (h : Semiconj φ S T) {F : Set X} {V : Set (Y × Y)}
   rcases h'.nonempty_inter with ⟨s, s_cover, s_card, s_inter⟩
   replace s_inter := fun (x : Y) (h : x ∈ s) ↦ nonempty_def.1 (s_inter x h)
   choose! g gs_cover using s_inter
-  have : ∀ y ∈ φ '' F, ∃ x ∈ F, φ x = y := fun y a ↦ a
+  have (y : Y) (a : y ∈ φ '' F) : ∃ x ∈ F, φ x = y := a
   choose! f f_section using this
   use Finset.image f (Finset.image g s)
   refine And.intro (fun x x_F ↦ ?_) (Finset.card_image_le.trans (Finset.card_image_le.trans s_card))
@@ -67,9 +67,9 @@ lemma IsDynNetOf.preimage (h : Semiconj φ S T) {F : Set X} {V : Set (Y × Y)} {
   classical
   rcases t.eq_empty_or_nonempty with rfl | t_nemp
   · use ∅
-    simp [isDynNetOf_empty S F ((Prod.map φ φ) ⁻¹' V) n]
+    simp [isDynNetOf_empty]
   have _ : Nonempty X := Nonempty.to_type (Nonempty.of_image (Nonempty.mono h'.1 t_nemp))
-  have : ∀ y ∈ t, ∃ x ∈ F, φ x = y := fun y y_t ↦ h'.1 y_t
+  have (y : Y) (y_t : y ∈ t) : ∃ x ∈ F, φ x = y := h'.1 y_t
   choose! f f_section using this
   use Finset.image f t
   split_ands
@@ -107,7 +107,7 @@ lemma le_coverMincard_image (h : Semiconj φ S T) (F : Set X) {V : Set (Y × Y)}
   rcases (coverMincard_finite_iff T (φ '' F) V n).1 h' with ⟨t, t_cover, t_card⟩
   rcases t_cover.preimage h V_symm with ⟨s, s_cover, s_card⟩
   rw [← t_card]
-  exact (coverMincard_le_card s_cover).trans (WithTop.coe_le_coe.2 s_card)
+  exact s_cover.coverMincard_le_card.trans (WithTop.coe_le_coe.2 s_card)
 
 lemma netMaxcard_image_le (h : Semiconj φ S T) (F : Set X) (V : Set (Y × Y)) (n : ℕ) :
     netMaxcard T (φ '' F) V n ≤ netMaxcard S F ((Prod.map φ φ) ⁻¹' V) n := by
@@ -115,58 +115,58 @@ lemma netMaxcard_image_le (h : Semiconj φ S T) (F : Set X) (V : Set (Y × Y)) (
   · rcases (netMaxcard_finite_iff T (φ '' F) V n).1 h' with ⟨t, t_net, t_card⟩
     rcases t_net.preimage h with ⟨s, s_net, s_card⟩
     rw [← t_card]
-    exact (WithTop.coe_le_coe.2 s_card).trans (card_le_netMaxcard s_net)
-  · apply le_of_le_of_eq le_top (Eq.symm _)
-    refine (netMaxcard_infinite_iff S F ((Prod.map φ φ) ⁻¹' V) n).2 fun k ↦ ?_
+    exact (WithTop.coe_le_coe.2 s_card).trans s_net.card_le_netMaxcard
+  · apply le_top.trans_eq (Eq.symm _)
+    refine (netMaxcard_infinite_iff S F ((Prod.map φ φ) ⁻¹' V) n).2 (fun k ↦ ?_)
     rcases (netMaxcard_infinite_iff T (φ '' F) V n).1 h' k with ⟨t, t_net, t_card⟩
     rcases t_net.preimage h with ⟨s, s_net, s_card⟩
     exact ⟨s, s_net, t_card.trans s_card⟩
 
-open ENNReal Filter
+open ENNReal EReal Filter
 
 lemma le_coverEntropyEnt_image (h : Semiconj φ S T) (F : Set X) {V : Set (Y × Y)}
     (V_symm : SymmetricRel V) :
-    coverEntropyEnt S F ((Prod.map φ φ) ⁻¹' (V ○ V)) ≤ coverEntropyEnt T (φ '' F) V :=
-  limsup_le_limsup <| Eventually.of_forall
-    fun n ↦ EReal.monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
-    <| log_monotone (ENat.toENNReal_mono (le_coverMincard_image h F V_symm n))
+    coverEntropyEnt S F ((Prod.map φ φ) ⁻¹' (V ○ V)) ≤ coverEntropyEnt T (φ '' F) V := by
+  refine (limsup_le_limsup) (Eventually.of_forall fun n ↦ ?_)
+  apply monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
+  exact log_monotone (ENat.toENNReal_mono (le_coverMincard_image h F V_symm n))
 
 lemma le_coverEntropyInfEnt_image (h : Semiconj φ S T) (F : Set X) {V : Set (Y × Y)}
     (V_symm : SymmetricRel V) :
-    coverEntropyInfEnt S F ((Prod.map φ φ) ⁻¹' (V ○ V)) ≤ coverEntropyInfEnt T (φ '' F) V :=
-  liminf_le_liminf <| Eventually.of_forall
-    fun n ↦ EReal.monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
-    <| log_monotone (ENat.toENNReal_mono (le_coverMincard_image h F V_symm n))
+    coverEntropyInfEnt S F ((Prod.map φ φ) ⁻¹' (V ○ V)) ≤ coverEntropyInfEnt T (φ '' F) V := by
+  refine (liminf_le_liminf) (Eventually.of_forall fun n ↦ ?_)
+  apply monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
+  exact log_monotone (ENat.toENNReal_mono (le_coverMincard_image h F V_symm n))
 
 lemma netEntropyEnt_image_le (h : Semiconj φ S T) (F : Set X) (V : Set (Y × Y)) :
-    netEntropyEnt T (φ '' F) V ≤ netEntropyEnt S F ((Prod.map φ φ) ⁻¹' V) :=
-  limsup_le_limsup <| Eventually.of_forall
-    fun n ↦ EReal.monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
-    <| log_monotone (ENat.toENNReal_mono (netMaxcard_image_le h F V n))
+    netEntropyEnt T (φ '' F) V ≤ netEntropyEnt S F ((Prod.map φ φ) ⁻¹' V) := by
+  refine (limsup_le_limsup) (Eventually.of_forall fun n ↦ ?_)
+  apply monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
+  exact log_monotone (ENat.toENNReal_mono (netMaxcard_image_le h F V n))
 
 lemma netEntropyInfEnt_image_le (h : Semiconj φ S T) (F : Set X) (V : Set (Y × Y)) :
-    netEntropyInfEnt T (φ '' F) V ≤ netEntropyInfEnt S F ((Prod.map φ φ) ⁻¹' V) :=
-  liminf_le_liminf <| Eventually.of_forall
-    fun n ↦ EReal.monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
-    <| log_monotone (ENat.toENNReal_mono (netMaxcard_image_le h F V n))
+    netEntropyInfEnt T (φ '' F) V ≤ netEntropyInfEnt S F ((Prod.map φ φ) ⁻¹' V) := by
+  refine (liminf_le_liminf) (Eventually.of_forall fun n ↦ ?_)
+  apply monotone_div_right_of_nonneg (Nat.cast_nonneg' n)
+  exact log_monotone (ENat.toENNReal_mono (netMaxcard_image_le h F V n))
 
 theorem coverEntropy_image (u : UniformSpace Y) {S : X → X} {T : Y → Y} {φ : X → Y}
     (h : Semiconj φ S T) (F : Set X) :
     coverEntropy T (φ '' F) = @coverEntropy X (comap φ u) S F := by
   apply le_antisymm
   · rw [coverEntropy_eq_iSup_netEntropyEnt T (φ '' F)]
-    refine iSup₂_le fun V V_uni ↦ ?_
+    refine iSup₂_le (fun V V_uni ↦ ?_)
     apply (netEntropyEnt_image_le h F V).trans
     apply @netEntropyEnt_le_coverEntropy X (comap φ u) S F
     rw [uniformity_comap φ, mem_comap]
     exact ⟨V, V_uni, Set.Subset.refl _⟩
-  · refine iSup₂_le fun U U_uni ↦ ?_
+  · refine iSup₂_le (fun U U_uni ↦ ?_)
     simp only [uniformity_comap φ, mem_comap] at U_uni
     rcases U_uni with ⟨V, V_uni, V_sub⟩
     rcases comp_symm_mem_uniformity_sets V_uni with ⟨W, W_uni, W_symm, W_V⟩
-    exact (coverEntropyEnt_antitone S F ((preimage_mono W_V).trans V_sub)).trans
-      <| (le_coverEntropyEnt_image h F W_symm).trans
-      <| coverEntropyEnt_le_coverEntropy T (φ '' F) W_uni
+    apply (coverEntropyEnt_antitone S F ((preimage_mono W_V).trans V_sub)).trans
+    apply (le_coverEntropyEnt_image h F W_symm).trans
+    exact coverEntropyEnt_le_coverEntropy T (φ '' F) W_uni
 
 theorem coverEntropyInf_image (u : UniformSpace Y) {S : X → X} {T : Y → Y} {φ : X → Y}
     (h : Semiconj φ S T) (F : Set X) :
@@ -178,13 +178,13 @@ theorem coverEntropyInf_image (u : UniformSpace Y) {S : X → X} {T : Y → Y} {
     apply @netEntropyInfEnt_le_coverEntropyInf X (comap φ u) S F
     rw [uniformity_comap φ, mem_comap]
     exact ⟨V, V_uni, Set.Subset.refl _⟩
-  · refine iSup₂_le fun U U_uni ↦ ?_
+  · refine iSup₂_le (fun U U_uni ↦ ?_)
     simp only [uniformity_comap φ, mem_comap] at U_uni
     rcases U_uni with ⟨V, V_uni, V_sub⟩
     rcases comp_symm_mem_uniformity_sets V_uni with ⟨W, W_uni, W_symm, W_V⟩
-    exact (coverEntropyInfEnt_antitone S F ((preimage_mono W_V).trans V_sub)).trans
-      <| (le_coverEntropyInfEnt_image h F W_symm).trans
-      <| coverEntropyInfEnt_le_coverEntropyInf T (φ '' F) W_uni
+    apply (coverEntropyInfEnt_antitone S F ((preimage_mono W_V).trans V_sub)).trans
+    apply (le_coverEntropyInfEnt_image h F W_symm).trans
+    exact coverEntropyInfEnt_le_coverEntropyInf T (φ '' F) W_uni
 
 lemma coverEntropy_image_le_of_uniformContinuous [UniformSpace X] [UniformSpace Y] {S : X → X}
     {T : Y → Y} {φ : X → Y} (h : Semiconj φ S T) (h' : UniformContinuous φ) (F : Set X) :
