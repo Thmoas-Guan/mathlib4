@@ -3,7 +3,7 @@ import Mathlib.Data.Finite.Card
 import Mathlib.RingTheory.Finiteness
 import Mathlib.Topology.Algebra.Module.Basic
 
-/-
+/-!
 # The module topology
 
 If `R` is a topological ring and `M` is an `R`-module, the *module topology* on `M` is
