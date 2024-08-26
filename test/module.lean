@@ -15,7 +15,7 @@ open Mathlib.Tactic.LinearCombination
 variable {V : Type*} {K : Type} -- TODO generalize universes
   {t u v w x y z : V} {a b c d e f μ ν ρ : K}
 
-/-! # `ℕ` (tests copied from the `abel` tactic) -/
+/-! ### `ℕ` (tests copied from the `abel` tactic) -/
 
 section Nat
 variable [AddCommMonoid V]
@@ -34,7 +34,7 @@ example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 3 • x �
 
 end Nat
 
-/-! # `ℤ` (most tests copied from the `abel` tactic) -/
+/-! ### `ℤ` (most tests copied from the `abel` tactic) -/
 
 variable [AddCommGroup V]
 
@@ -88,7 +88,7 @@ example : y = x + z - (x - y + z) := by
 -- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/abel.20bug.3F/near/368707560
 example : -y + (z - x) = z - y - x := by module
 
-/-! # Commutative ring -/
+/-! ### Commutative ring -/
 
 section CommRing
 variable [CommRing K] [Module K V]
@@ -185,7 +185,7 @@ example : 2 • a • x = 2 • x := by module
 
 end CommRing
 
-/-! # Characteristic-zero field -/
+/-! ### Characteristic-zero field -/
 
 section CharZeroField
 variable [Field K] [CharZero K] [Module K V]
@@ -199,7 +199,7 @@ example (h₁ : t - u = -(v - w)) (h₂ : t + u = v + w) : t = w := by
 
 end CharZeroField
 
-/-! # Linearly ordered field -/
+/-! ### Linearly ordered field -/
 
 section LinearOrderedField
 variable [LinearOrderedField K] [Module K V]
