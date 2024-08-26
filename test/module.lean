@@ -23,6 +23,8 @@ example : a • x - b • x = (a - b) • x := by module
 
 example : a • x - b • y = a • x + (-b) • y := by module
 
+example : -x + x = 0 := by module
+
 -- from https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/linear_combination.20for.20groups/near/437042918
 example : (1 + a ^ 2) • (v + w) - a • (a • v - w) = v + (1 + a + a ^ 2) • w := by module
 
@@ -76,9 +78,7 @@ example
     (h3 : a • μ • μ • x + b • ν • ν • y + c • ρ • ρ • z = 0) :
     (μ - ν) • (ν - ρ) • b • y = 0 := by
   apply eq_of_add (congr(- $h3 + (μ + ρ) • $h2 - μ • ρ • $h1):)
-  sorry
-  -- match_coeffs
-  -- module
+  module
 
 example
     (h1 : a • x + b • y + c • z = 0)

@@ -160,7 +160,7 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let iZ ← synthInstanceQ q(Semiring ℤ)
     let iMZ ← synthInstanceQ q(Module ℤ $M)
     let ⟨R', iR', iMR', l', pf'⟩ ← liftRing M iM x iMR l pf q(ℤ) iZ iMZ
-    let iR' ← synthInstanceQ q(Ring $R')
+    let iR'' ← synthInstanceQ q(Ring $R')
     let negL := l'.onFst fun (p : Q($R' × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
     -- trace[debug] "finished parsing the negation of {x}"
     pure ⟨R', iR', iMR', negL, q(sorry)⟩
