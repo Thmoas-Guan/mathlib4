@@ -12,26 +12,90 @@ import Mathlib.Tactic.Positivity
 
 open Mathlib.Tactic.LinearCombination
 
-variable {V : Type*} [AddCommGroup V] {K : Type} -- TODO generalize universes
-  {t u v w x y : V} {a b c μ ν ρ : K}
+variable {V : Type*} {K : Type} -- TODO generalize universes
+  {t u v w x y z : V} {a b c μ ν ρ : K}
+
+/-! # `ℕ` (tests copied from the `abel` tactic) -/
+
+section Nat
+variable [AddCommMonoid V]
+
+example : x + (y + x) = x + x + y := by module
+example : (3 : ℕ) • x = x + (2 : ℕ) • x := by module
+example : x + (y + x) = x + x + y := by module
+example : (3 : ℕ) • x = x + (2 : ℕ) • x := by module
+example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 4 • x := by module
+
+-- Make sure we fail on some non-equalities.
+example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 3 • x ∨ True := by
+  fail_if_success
+    left; module
+  right; trivial
+
+end Nat
+
+/-! # `ℤ` (most tests copied from the `abel` tactic) -/
+
+variable [AddCommGroup V]
+
+example : (x + y) - ((y + x) + x) = -x := by module
+example : x - 0 = x := by module
+example : (3 : ℤ) • x = x + (2 : ℤ) • x := by module
+example : x - 2 • y = x - 2 • y := by module
+example : (x + y) - ((y + x) + x) = -x := by module
+example : x - 0 = x := by module
+example : (3 : ℤ) • x = x + (2 : ℤ) • x := by module
+example : x - 2 • y = x - 2 • y := by module
+example : 0 + x = x := by module
+example (n : ℕ) : n • x = n • x := by module
+example (n : ℕ) : 0 + n • x = n • x := by module
+example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 4 • x := by module
+example : x + y + (z + w - x) = y + z + w := by module
+example : x + y + z + (z - x - x) = (-1) • x + y + 2 • z := by module
+example : x + y = y + x := by module
+example : x + 2 • x = 2 • x + x := by module
+example : -x + x = 0 := by module
+
+-- Make sure we fail on some non-equalities.
+
+example : x + (y + (x + (z + (x + (d + (x + v)))))) = v + u + z + y + 3 • x ∨ True := by
+  fail_if_success
+    left; module
+  right; trivial
+
+example : x + y + (z + w - x) = y + z - w ∨ True := by
+  fail_if_success
+    left; module
+  right; trivial
+
+example : x + y + z + (z - x - x) = (-1) • x + y + z ∨ True := by
+  fail_if_success
+    left; module
+  right; trivial
+
+-- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/Interaction.20of.20abel.20with.20casting/near/319895001
+example : True := by
+  have : ∀ (p q r s : V), s + p - q = s - r - (q - r - p) := by
+    intro p q r s
+    module
+  trivial
+
+-- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/Interaction.20of.20abel.20with.20casting/near/319897374
+example : y = x + z - (x - y + z) := by
+  have : True := trivial
+  module
+
+-- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/abel.20bug.3F/near/368707560
+example : -y + (z - x) = z - y - x := by module
 
 /-! # Commutative ring -/
 
-section
+section CommRing
 variable [CommRing K] [Module K V]
 
-example : x + y = y + x := by module
-
-example : x + 2 • x = 2 • x + x := by module
-
 example : a • x + b • x = (a + b) • x := by module
-
 example : a • x - b • x = (a - b) • x := by module
-
 example : a • x - b • y = a • x + (-b) • y := by module
-
-example : -x + x = 0 := by module
-
 example : 2 • a • x = a • 2 • x := by module
 
 -- from https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/linear_combination.20for.20groups/near/437042918
@@ -108,10 +172,10 @@ example
 /--
 error: unsolved goals
 V : Type u_1
-inst✝² : AddCommGroup V
 K : Type
-t u v w x y : V
+t u v w x y z : V
 a b c μ ν ρ : K
+inst✝² : AddCommGroup V
 inst✝¹ : CommRing K
 inst✝ : Module K V
 ⊢ 2 * (a * 1) = 2
@@ -119,24 +183,28 @@ inst✝ : Module K V
 #guard_msgs in
 example : 2 • a • x = 2 • x := by module
 
-end
+end CommRing
 
 /-! # Characteristic-zero field -/
 
-example [Field K] [CharZero K] [Module K V] : (2:K)⁻¹ • x + (3:K)⁻¹ • x + (6:K)⁻¹ • x = x := by
-  module
+section CharZeroField
+variable [Field K] [CharZero K] [Module K V]
 
-example [Field K] [CharZero K] [Module K V]
-    (h₁ : t - u = -(v - w))
-    (h₂ : t + u = v + w) :
-    t = w := by
+example : (2:K)⁻¹ • x + (3:K)⁻¹ • x + (6:K)⁻¹ • x = x := by module
+
+example (h₁ : t - u = -(v - w)) (h₂ : t + u = v + w) : t = w := by
   -- `linear_combination 2⁻¹ • h₁ + 2⁻¹ • h₂`
   apply eq_of_add (congr((2:K)⁻¹ • $h₁ + (2:K)⁻¹ • $h₂):)
   module
 
+end CharZeroField
+
 /-! # Linearly ordered field -/
 
-example [LinearOrderedField K] [Module K V] (ha : 0 ≤ a) (hb : 0 < b) :
+section LinearOrderedField
+variable [LinearOrderedField K] [Module K V]
+
+example (ha : 0 ≤ a) (hb : 0 < b) :
     x = (a / (a + b)) • y + (b / (a + b)) • (x + (a / b) • (x - y)) := by
   match_scalars
   · field_simp
@@ -144,9 +212,7 @@ example [LinearOrderedField K] [Module K V] (ha : 0 ≤ a) (hb : 0 < b) :
   · field_simp
     ring
 
-example [LinearOrderedField K] [Module K V]
-    (h₁ : 1 = a ^ 2 + b ^ 2)
-    (h₂ : 1 - a ≠ 0) :
+example (h₁ : 1 = a ^ 2 + b ^ 2) (h₂ : 1 - a ≠ 0) :
     ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • (4:K) • ((2 / (1 - a)) • y)
     + ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • ((2 / (1 - a)) ^ 2 * b ^ 2 - 4) • x
     = a • x + y := by
@@ -158,9 +224,7 @@ example [LinearOrderedField K] [Module K V]
   · field_simp
     ring
 
-example [LinearOrderedField K] [Module K V]
-    (h₁ : 1 = a ^ 2 + b ^ 2)
-    (h₂ : 1 - a ≠ 0) :
+example (h₁ : 1 = a ^ 2 + b ^ 2) (h₂ : 1 - a ≠ 0) :
     ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • (4:K) • ((2 / (1 - a)) • y)
     + ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • ((2 / (1 - a)) ^ 2 * b ^ 2 - 4) • x
     = a • x + y := by
@@ -169,3 +233,5 @@ example [LinearOrderedField K] [Module K V]
     linear_combination 4 * (1 - a) * h₁
   · field_simp
     linear_combination 4 * (a - 1) ^ 3 * h₁
+
+end LinearOrderedField
