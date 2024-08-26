@@ -15,7 +15,7 @@ continuous.
 open FiniteDimensional Metric Set List Bornology
 open scoped Topology
 
-variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E]
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
   {C : Set E} {f : E → ℝ} {x₀ : E} {ε r : ℝ}
 
 lemma ConvexOn.exists_lipschitzOnWith_of_isBounded (hf : ConvexOn ℝ (ball x₀ r) f) (hε : 0 < ε)
@@ -66,8 +66,9 @@ lemma ConvexOn.exists_lipschitzOnWith_of_isBounded (hf : ConvexOn ℝ (ball x₀
   exact ⟨oneside hx hy, norm_sub_rev x _ ▸ oneside hy hx⟩
 
 lemma ConcaveOn.exists_lipschitzOnWith_of_isBounded (hf : ConcaveOn ℝ (ball x₀ r) f) (hε : 0 < ε)
-    (hf' : IsBounded (f '' ball x₀ r)) : ∃ K, LipschitzOnWith K f (ball x₀ (r - ε)) :=
-  hf.dual.exists_lipschitzOnWith_of_isBounded hε hf'
+    (hf' : IsBounded (f '' ball x₀ r)) : ∃ K, LipschitzOnWith K f (ball x₀ (r - ε)) := by
+  replace hf' : IsBounded ((-f) '' ball x₀ r) := by convert hf'.neg; ext; simp [neg_eq_iff_eq_neg]
+  simpa using hf.neg.exists_lipschitzOnWith_of_isBounded hε hf'
 
 lemma ConvexOn.continuousOn_tfae (hC : IsOpen C) (hC' : C.Nonempty) (hf : ConvexOn ℝ C f) :
     TFAE [LocallyLipschitzOn C f, ContinuousOn f C, ∃ x₀ ∈ C, ContinuousAt f x₀,
@@ -103,8 +104,7 @@ lemma ConvexOn.continuousOn_tfae (hC : IsOpen C) (hC' : C.Nonempty) (hf : Convex
       simpa [w, ← hx₀', dist_smul₀, abs_of_nonneg, hδ₀.le, inv_mul_lt_iff', hδ₀]
     calc
       f z ≤ max (f w) (f y) :=
-        (hf.subset (hf.1.segment_subset (hr hw).2 hy) (convex_segment ..)).le_max_of_mem_segment
-          ⟨_, _, hδ₀.le, sub_nonneg.2 hδ₁.le, by simp, hwyz⟩
+        hf.le_max_of_mem_segment (hr hw).2 hy ⟨_, _, hδ₀.le, sub_nonneg.2 hδ₁.le, by simp, hwyz⟩
       _ ≤ max r (f y) := by gcongr; exact (hr hw).1
   tfae_have 5 → 6
   · rintro h x₀ hx₀
@@ -155,6 +155,8 @@ lemma ConvexOn.locallyLipschitzOn_iff_continuousOn (hC : IsOpen C) (hf : ConvexO
 lemma ConcaveOn.locallyLipschitzOn_iff_continuousOn (hC : IsOpen C) (hf : ConcaveOn ℝ C f) :
     LocallyLipschitzOn C f ↔ ContinuousOn f C := by
   simpa using hf.neg.locallyLipschitzOn_iff_continuousOn hC
+
+variable [FiniteDimensional ℝ E]
 
 protected lemma ConvexOn.locallyLipschitzOn (hC : IsOpen C) (hf : ConvexOn ℝ C f) :
     LocallyLipschitzOn C f := by
