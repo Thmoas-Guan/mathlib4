@@ -13,7 +13,7 @@ import Mathlib.Tactic.Positivity
 open Mathlib.Tactic.LinearCombination
 
 variable {V : Type*} {K : Type} -- TODO generalize universes
-  {t u v w x y z : V} {a b c μ ν ρ : K}
+  {t u v w x y z : V} {a b c d e f μ ν ρ : K}
 
 /-! # `ℕ` (tests copied from the `abel` tactic) -/
 
@@ -58,7 +58,7 @@ example : -x + x = 0 := by module
 
 -- Make sure we fail on some non-equalities.
 
-example : x + (y + (x + (z + (x + (d + (x + v)))))) = v + u + z + y + 3 • x ∨ True := by
+example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 3 • x ∨ True := by
   fail_if_success
     left; module
   right; trivial
@@ -174,7 +174,7 @@ error: unsolved goals
 V : Type u_1
 K : Type
 t u v w x y z : V
-a b c μ ν ρ : K
+a b c d e f μ ν ρ : K
 inst✝² : AddCommGroup V
 inst✝¹ : CommRing K
 inst✝ : Module K V
