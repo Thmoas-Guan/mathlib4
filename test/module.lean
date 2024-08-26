@@ -15,7 +15,7 @@ open Mathlib.Tactic.LinearCombination
 variable {V : Type*} {K : Type} -- TODO generalize universes
   {t u v w x y z : V} {a b c d e f μ ν ρ : K}
 
-/-! ### `ℕ` (tests copied from the `abel` tactic) -/
+/-! ### `ℕ` (most tests copied from the `abel` tactic) -/
 
 section Nat
 variable [AddCommMonoid V]
@@ -30,11 +30,23 @@ example : x + (y + x) = x + x + y ∨ False := by
   left
   module
 
--- Make sure we fail on some non-equalities.
-example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 3 • x ∨ True := by
-  fail_if_success
-    left; module
-  right; trivial
+/--
+error: unsolved goals
+V : Type u_1
+K : Type
+t u v w x y z : V
+a b c d e f μ ν ρ : K
+inst✝ : AddCommMonoid V
+⊢ False
+-/
+#guard_msgs in
+example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 3 • x:= by
+  module
+
+/-- error: goal x ≠ y is not an equality -/
+#guard_msgs in
+example : x ≠ y := by
+  module
 
 end Nat
 
@@ -59,23 +71,6 @@ example : x + y + z + (z - x - x) = (-1) • x + y + 2 • z := by module
 example : x + y = y + x := by module
 example : x + 2 • x = 2 • x + x := by module
 example : -x + x = 0 := by match_scalars
-
--- Make sure we fail on some non-equalities.
-
-example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 3 • x ∨ True := by
-  fail_if_success
-    left; module
-  right; trivial
-
-example : x + y + (z + w - x) = y + z - w ∨ True := by
-  fail_if_success
-    left; module
-  right; trivial
-
-example : x + y + z + (z - x - x) = (-1) • x + y + z ∨ True := by
-  fail_if_success
-    left; module
-  right; trivial
 
 -- https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/Interaction.20of.20abel.20with.20casting/near/319895001
 example : True := by

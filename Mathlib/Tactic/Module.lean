@@ -177,12 +177,11 @@ def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (
         = $(foo ((l.map (fun ⟨p, k⟩ ↦ (q((- Prod.fst $p, Prod.snd $p)), k))).map Prod.fst)))
   | [] => pure q(rfl)
   | (e, _) :: l => do
-    let qneg' : Q($R × $M) → Q($R × $M) := fun p ↦ q((- Prod.fst $p, Prod.snd $p))
-    let qneg : Q($R × $M) × ℕ → Q($R × $M) × ℕ := fun ⟨p, k⟩ ↦ (qneg' p, k)
-    let pf' : Q(List.map (fun p ↦ (-p.1, p.2)) ($(foo (l.map Prod.fst)))
-      = $(foo ((l.map qneg).map Prod.fst))) := ← asdfa iM iR iMR l
-    let pf : Q($(qneg' e) :: List.map (fun p ↦ (-p.1, p.2)) ($(foo (l.map Prod.fst)))
-      = $(qneg' e) :: $(foo ((l.map qneg).map Prod.fst))) := q(congrArg _ $pf')
+    let r : Q($R) := q(Prod.fst $e)
+    let m : Q($M) := q(Prod.snd $e)
+    let pf : Q((-$r, $m) :: List.map (fun p ↦ (-p.1, p.2)) $(foo (l.map Prod.fst)) = (-$r, $m)
+        :: $(foo ((l.map (fun ⟨p, k⟩ ↦ (q((- Prod.fst $p, Prod.snd $p)), k))).map Prod.fst))) :=
+      q(congrArg _ $(← asdfa iM iR iMR l))
     pure pf
 
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
