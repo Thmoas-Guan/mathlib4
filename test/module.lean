@@ -33,28 +33,40 @@ example : x + 2 • x = 2 • x + x := by
 
 example (h : a = b) : a • x = b • x := by
   match_coeffs
-  dsimp only
+  dsimp only [eq_natCast, eq_intCast, eq_ratCast]
   guard_target = 1 • a = 1 • b
   linear_combination h
 
 example : a • x + b • x = (a + b) • x := by
   match_coeffs
-  dsimp only
   guard_target = 1 • a + 1 • b = 1 • (a + b)
   ring
 
-example : a • x = b • y := by
-  match_coeffs <;> dsimp only <;> sorry
+example : a • x - b • x = (a - b) • x := by
+  match_coeffs
+  guard_target = 1 • a - 1 • b = 1 • (a - b)
+  ring
 
-example (h : a ^ 2 + b ^ 2 = 1) :
-    a • (a • x - b • y) + (b • a • y + b • b • x) = x := by
-  -- match_coeffs
+example : a • x - b • y = a • x + (-b) • y := by
+  match_coeffs
+  · guard_target = (1 • a) = (1 • a)
+    ring
+  · dsimp only
+    guard_target = -(1 • b) = (1:ℕ) • (- b)
+    ring
+
+example (h : a ^ 2 + b ^ 2 = 1) : a • (a • x - b • y) + (b • a • y + b • b • x) = x := by
   -- `linear_combination h • x`
   apply eq_of_add (congr($h • x):)
-  module
+  match_coeffs <;> simp only [eq_natCast, eq_intCast, eq_ratCast, smul_eq_mul]
+  · ring
+  · ring
 
 -- from https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/linear_combination.20for.20groups/near/437042918
-example : (1 + a ^ 2) • (v + w) - a • (a • v - w) = v + (1 + a + a ^ 2) • w := by module
+example : (1 + a ^ 2) • (v + w) - a • (a • v - w) = v + (1 + a + a ^ 2) • w := by
+  match_coeffs <;> simp only [eq_natCast, eq_intCast, eq_ratCast, smul_eq_mul]
+  · ring
+  · ring
 
 -- from https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/smul.20diamond/near/457163013
 example : (4 : ℤ) • v = (4 : K) • v := by sorry -- module
@@ -136,21 +148,8 @@ example [LinearOrderedField K] [Module K V]
     = a • x + y := by
   -- `linear_combination (h₁ * (b ^ 2 + (1 - a) ^ 2)⁻¹) • (y + (a - 1) • x)`
   apply eq_of_add (congr(($h₁ * (b ^ 2 + (1 - a) ^ 2)⁻¹) • (y + (a - 1) • x)):)
-  trans
-        ((((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ * (4 * (2 / (1 - a)))) - 1
-      + (a ^ 2 + b ^ 2 - 1) * (b ^ 2 + (1 - a) ^ 2)⁻¹) • y
-      + ((((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ * ((2 / (1 - a)) ^ 2 * b ^ 2))
-      - (((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ * 4)
-      - a
-      + ((a ^ 2 + b ^ 2 - 1) * (b ^ 2 + (1 - a) ^ 2)⁻¹ * (a - 1))) • x
-  · simp only [mul_add, add_mul, mul_sub, sub_mul, neg_mul, mul_neg, smul_add, add_smul, smul_sub,
-      sub_smul, ← mul_smul, one_smul, one_mul, mul_one]
-    abel
-  trans (0:K) • y + (0:K) • x
-  · congrm ?_ • _ + ?_ • _
-    · field_simp
-      ring
-    · field_simp
-      ring
-  · simp only [zero_smul]
-    abel
+  match_coeffs <;> simp only [eq_natCast, eq_intCast, eq_ratCast, smul_eq_mul]
+  · field_simp
+    ring
+  · field_simp
+    ring

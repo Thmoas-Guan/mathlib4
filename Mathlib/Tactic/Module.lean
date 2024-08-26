@@ -16,16 +16,17 @@ abbrev considerFstAs {S M : Type*} (R : Type*) [CommSemiring S] [Semiring R] [Al
     (S × M) → (R × M) :=
   fun ⟨s, x⟩ ↦ (algebraMap S R s, x)
 
-abbrev combine {α : Type*} (f : α → α → α) : List (α × ℕ) → List (α × ℕ) → List (α × ℕ)
+abbrev combine {α : Type*} (f : α → α → α) (fL : α → α) (fR : α → α) :
+    List (α × ℕ) → List (α × ℕ) → List (α × ℕ)
   | [], l => l
   | l, [] => l
   | (a₁, k₁) :: t₁, (a₂, k₂) :: t₂ =>
     if k₁ < k₂ then
-      (a₁, k₁) :: (a₂, k₂) :: combine f t₁ t₂
+      (fL a₁, k₁) :: (fR a₂, k₂) :: combine f fL fR t₁ t₂
     else if k₁ = k₂ then
-      (f a₁ a₂, k₁) :: combine f t₁ t₂
+      (f a₁ a₂, k₁) :: combine f fL fR t₁ t₂
     else
-      (a₂, k₂) :: (a₁, k₁) :: combine f t₁ t₂
+      (fR a₂, k₂) :: (fL a₁, k₁) :: combine f fL fR t₁ t₂
 
 abbrev cob' {M : Type*} {R : Type} [Semiring R] (p₁ p₂ : R × M) : R × M :=
   let r₁ := Prod.fst p₁
@@ -36,6 +37,27 @@ abbrev cob' {M : Type*} {R : Type} [Semiring R] (p₁ p₂ : R × M) : R × M :=
 abbrev cob {v : Level} {M : Q(Type v)} {R : Q(Type)} (_i₂ : Q(Semiring $R)) (p₁ p₂ : Q($R × $M)) :
     Q($R × $M) :=
   q(cob' $p₁ $p₂)
+
+abbrev boc' {M : Type*} {R : Type} [Ring R] (p₁ p₂ : R × M) : R × M :=
+  let r₁ := Prod.fst p₁
+  let r₂ := Prod.fst p₂
+  let m₁ := Prod.snd p₁
+  (r₁ - r₂, m₁)
+
+abbrev boc {v : Level} {M : Q(Type v)} {R : Q(Type)} (_i₂ : Q(Ring $R))
+    (p₁ p₂ : Q($R × $M)) :
+    Q($R × $M) :=
+  q(boc' $p₁ $p₂)
+
+abbrev bco' {M : Type*} {R : Type} [Ring R] (p : R × M) : R × M :=
+  let r := Prod.fst p
+  let m := Prod.snd p
+  (- r, m)
+
+abbrev bco {v : Level} {M : Q(Type v)} {R : Q(Type)} (_i₂ : Q(Ring $R))
+    (p : Q($R × $M)) :
+    Q($R × $M) :=
+  q(bco' $p)
 
 abbrev smulRightFst {R S M : Type*} [SMul S R] [SMul S M] (s : S) : R × M → R × M :=
   fun ⟨r, x⟩ ↦ (s • r, x)
@@ -79,6 +101,29 @@ def matchRings {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ x₂
     let l₂' : List (Q($R₁ × $M) × ℕ) := l₂.onFst (fun p ↦ q(considerFstAs $R₁ $p))
     pure ⟨R₁, iR₁, iMR₁, l₁, l₂', pf₁, q(sorry)⟩
 
+def liftRing {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ : Q($M))
+    {R₁ : Q(Type)} {iR₁ : Q(Semiring $R₁)} (iMR₁ : Q(@Module $R₁ $M $iR₁ $iM))
+    (l₁ : List (Q($R₁ × $M) × ℕ)) (pf₁ : Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst))))
+    (R₂ : Q(Type)) (iR₂ : Q(Semiring $R₂)) (iMR₂ : Q(@Module $R₂ $M $iR₂ $iM)) :
+    MetaM <| Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
+      Σ l₁ : List (Q($R × $M) × ℕ), Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst))) := do
+  try
+    let _i₁ ← synthInstanceQ q(CommSemiring $R₂)
+    let _i₃ ← synthInstanceQ q(Algebra $R₂ $R₁)
+    let _i₄ ← synthInstanceQ q(IsScalarTower $R₂ $R₁ $M)
+    assumeInstancesCommute
+    pure ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩
+  catch _ =>
+    let _i₁ ← synthInstanceQ q(CommSemiring $R₁)
+    let _i₃ ← synthInstanceQ q(Algebra $R₁ $R₂)
+    let _i₄ ← synthInstanceQ q(IsScalarTower $R₁ $R₂ $M)
+    assumeInstancesCommute
+    let l₁' : List (Q($R₂ × $M) × ℕ) := l₁.onFst (fun p ↦ q(considerFstAs $R₂ $p))
+    pure ⟨R₂, iR₂, iMR₂, l₁', q(sorry)⟩
+
+variable {M : Type*} [AddCommGroup M] in
+#synth Module ℤ M
+
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
       Σ e : List (Q($R × $M) × ℕ), Q($x = smulAndSum $(foo (e.map Prod.fst)))) := do
@@ -87,7 +132,17 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁
     let ⟨R₂, iR₂, iMR₂, l₂, pf₂⟩ ← parse M iM x₂
     let ⟨R, iR, iMR, l₁', l₂', pf₁', pf₂'⟩ ← matchRings M iM x₁ x₂ iMR₁ l₁ pf₁ iMR₂ l₂ pf₂
-    pure ⟨R, iR, iMR, combine (cob iR) l₁' l₂', q(sorry)⟩
+    pure ⟨R, iR, iMR, combine (cob iR) id id l₁' l₂', q(sorry)⟩
+  | ~q(@HSub.hSub _ _ _ (@instHSub _ $iM') $x₁ $x₂) =>
+    let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁
+    let ⟨R₂, iR₂, iMR₂, l₂, pf₂⟩ ← parse M iM x₂
+    let iZ ← synthInstanceQ q(Semiring ℤ)
+    let iMZ ← synthInstanceQ q(Module ℤ $M)
+    let ⟨R₁', iR₁', iMR₁', l₁', pf₁'⟩ ← liftRing M iM x₁ iMR₁ l₁ pf₁ q(ℤ) iZ iMZ
+    let ⟨R₂', iR₂', iMR₂', l₂', pf₂'⟩ ← liftRing M iM x₂ iMR₂ l₂ pf₂ q(ℤ) iZ iMZ
+    let ⟨R, iR, iMR, l₁'', l₂'', pf₁'', pf₂''⟩ ← matchRings M iM x₁ x₂ iMR₁' l₁' pf₁' iMR₂' l₂' pf₂'
+    let iR' ← synthInstanceQ q(Ring $R)
+    pure ⟨R, iR, iMR, combine (boc iR') id (bco iR') l₁'' l₂'', q(sorry)⟩
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s $y) =>
     trace[debug] "parsing scalar multiplication of {y} by {s}, scalar type is {S}"
     let ⟨R, iR, iR', l, pf⟩ ← parse M iM y
@@ -231,7 +286,7 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
   let mvar : Q(smulAndSum $ll₁' = smulAndSum $ll₂')
     ← mkFreshExprMVar q(smulAndSum $ll₁' = smulAndSum $ll₂')
   g.assign q(Eq.trans (Eq.trans $pf₁' $mvar) (Eq.symm $pf₂'))
-  reduceCoefficientwise iM iR iMR l₁ l₂ mvar.mvarId!
+  reduceCoefficientwise iM iR iMR l₁' l₂' mvar.mvarId!
 
 def matchCoeffs (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchCoeffsAux g)
 
