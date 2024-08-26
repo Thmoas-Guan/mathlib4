@@ -129,6 +129,15 @@ example [Field K] [CharZero K] [Module K V]
 /-! # Linearly ordered field -/
 
 example [LinearOrderedField K] [Module K V]
+    {x y : V} {ε D : K} (hε : 0 ≤ ε) (hD : 0 < D) :
+    x = (ε / (ε + D)) • y + (D / (ε + D)) • (x + (ε / D) • (x - y)) := by
+  match_coeffs
+  · field_simp
+    ring
+  · field_simp
+    ring
+
+example [LinearOrderedField K] [Module K V]
     (h₁ : 1 = a ^ 2 + b ^ 2)
     (h₂ : 1 - a ≠ 0) :
     ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • (4:K) • ((2 / (1 - a)) • y)

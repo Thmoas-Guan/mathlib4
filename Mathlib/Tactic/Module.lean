@@ -329,6 +329,10 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
 
 def matchCoeffs (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchCoeffsAux g)
 
+/- Do we also want to import `Mathlib.Data.Complex.Module`, so that the `ℝ`-to-`ℂ` algebra map can
+be added to the list of algebra-maps which get special-cased here?  (The lemma would be
+`Complex.coe_algebraMap`.)-/
+
 elab "match_coeffs" : tactic => Tactic.focus do
   Tactic.liftMetaTactic matchCoeffs
   Tactic.allGoals <|
