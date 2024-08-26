@@ -18,12 +18,12 @@ open scoped Topology
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E]
   {C : Set E} {f : E → ℝ} {x₀ : E} {ε r : ℝ}
 
-lemma exists_lipschitzOnWith_of_isBounded (hf : ConvexOn ℝ (ball x₀ r) f) (hε : 0 < ε)
-    (f_bounded : IsBounded (f '' ball x₀ r)) : ∃ K, LipschitzOnWith K f (ball x₀ (r - ε)) := by
-  rw [isBounded_iff_subset_ball 0] at f_bounded
+lemma ConvexOn.exists_lipschitzOnWith_of_isBounded (hf : ConvexOn ℝ (ball x₀ r) f) (hε : 0 < ε)
+    (hf' : IsBounded (f '' ball x₀ r)) : ∃ K, LipschitzOnWith K f (ball x₀ (r - ε)) := by
+  rw [isBounded_iff_subset_ball 0] at hf'
   simp only [Set.subset_def, mem_image, mem_ball, dist_zero_right, Real.norm_eq_abs,
-    forall_exists_index, and_imp, forall_apply_eq_imp_iff₂] at f_bounded
-  obtain ⟨M, hM⟩ := f_bounded
+    forall_exists_index, and_imp, forall_apply_eq_imp_iff₂] at hf'
+  obtain ⟨M, hM⟩ := hf'
   set K := 2 * M / ε with hK
   have oneside {x y : E} (hx : x ∈ ball x₀ (r - ε)) (hy : y ∈ ball x₀ (r - ε)) :
       f x - f y ≤ K * ‖x - y‖ := by
@@ -64,6 +64,10 @@ lemma exists_lipschitzOnWith_of_isBounded (hf : ConvexOn ℝ (ball x₀ r) f) (h
   refine ⟨K.toNNReal, .of_dist_le' fun x hx y hy ↦ ?_⟩
   simp_rw [dist_eq_norm_sub, Real.norm_eq_abs, abs_sub_le_iff]
   exact ⟨oneside hx hy, norm_sub_rev x _ ▸ oneside hy hx⟩
+
+lemma ConcaveOn.exists_lipschitzOnWith_of_isBounded (hf : ConcaveOn ℝ (ball x₀ r) f) (hε : 0 < ε)
+    (hf' : IsBounded (f '' ball x₀ r)) : ∃ K, LipschitzOnWith K f (ball x₀ (r - ε)) :=
+  hf.dual.exists_lipschitzOnWith_of_isBounded hε hf'
 
 lemma ConvexOn.continuousOn_tfae (hC : IsOpen C) (hC' : C.Nonempty) (hf : ConvexOn ℝ C f) :
     TFAE [LocallyLipschitzOn C f, ContinuousOn f C, ∃ x₀ ∈ C, ContinuousAt f x₀,
