@@ -54,7 +54,7 @@ example : x + y + (z + w - x) = y + z + w := by module
 example : x + y + z + (z - x - x) = (-1) • x + y + 2 • z := by module
 example : x + y = y + x := by module
 example : x + 2 • x = 2 • x + x := by module
-example : -x + x = 0 := by module
+example : -x + x = 0 := by match_scalars
 
 -- Make sure we fail on some non-equalities.
 

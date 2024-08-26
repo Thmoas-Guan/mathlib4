@@ -156,10 +156,25 @@ def liftRing {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ : Q($M
     let l₁' : List (Q($R₂ × $M) × ℕ) := l₁.onFst (fun p ↦ q(considerFstAs $R₂ $p))
     pure ⟨R₂, iR₂, iMR₂, l₁', q(sorry)⟩
 
+theorem fasdasdfdf {M : Type*} [AddCommGroup M] {R : Type*} [Ring R] [Module R M]
+    {l : List (R × M)} {x : M} (h : x = smulAndSum l) :
+    - x = smulAndSum (l.onFst Neg.neg) := by
+  unfold smulAndSum at h ⊢
+  simp only [List.map_map, h, List.sum_neg]
+  congr
+  ext p
+  simp
+
 theorem fasddf {M : Type*} [AddCommMonoid M] {R : Type*} [Semiring R] [Module R M]
     {l : List (R × M)} {x : M} (h : x = smulAndSum l) (r : R) :
     r • x = smulAndSum (l.onFst (r * ·)) :=
   sorry
+
+def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (iR : Q(Ring $R))
+    (iMR : Q(@Module $R $M Ring.toSemiring $iM)) (l : List (Q($R × $M) × ℕ)) :
+    let qneg : Q($R × $M) → Q($R × $M) := fun (p : Q($R × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
+    MetaM Q(List.onFst $(foo (l.map Prod.fst)) Neg.neg = $(foo ((l.onFst qneg).map Prod.fst))) := do
+  pure q(sorry)
 
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
@@ -180,14 +195,21 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let ⟨R, iR, iMR, l₁'', l₂'', pf₁'', pf₂''⟩ ← matchRings M iM x₁ x₂ iMR₁' l₁' pf₁' iMR₂' l₂' pf₂'
     let iR' ← synthInstanceQ q(Ring $R)
     pure ⟨R, iR, iMR, combine (boc iR') id (bco iR') l₁'' l₂'', q(sorry)⟩
-  | ~q(@Neg.neg _ $iM' $x) =>
-    let ⟨R, iR, iMR, l, pf⟩ ← parse M iM x
+  | ~q(@Neg.neg _ $iM' $y) =>
+    let ⟨R, iR, iMR, l, pf⟩ ← parse M iM y
     let iZ ← synthInstanceQ q(Semiring ℤ)
+    let _i ← synthInstanceQ q(AddCommGroup $M)
     let iMZ ← synthInstanceQ q(Module ℤ $M)
-    let ⟨R', iR', iMR', l', pf'⟩ ← liftRing M iM x iMR l pf q(ℤ) iZ iMZ
+    let ⟨R', iR', iMR', l', pf'⟩ ← liftRing M iM y iMR l pf q(ℤ) iZ iMZ
     let iR'' ← synthInstanceQ q(Ring $R')
-    let negL := l'.onFst fun (p : Q($R' × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
-    pure ⟨R', iR', iMR', negL, q(sorry)⟩
+    assumeInstancesCommute
+    let qneg : Q($R' × $M) → Q($R' × $M) := fun (p : Q($R' × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
+    have pf'' :
+        Q(List.onFst $(foo (l'.map Prod.fst)) Neg.neg = $(foo ((l'.onFst qneg).map Prod.fst))) :=
+      ← asdfa iM iR'' iMR' l'
+    have pf''' : Q(-$y = smulAndSum (R := $R') (List.onFst $(foo (l'.map Prod.fst)) Neg.neg)) :=
+      q(fasdasdfdf $pf')
+    pure ⟨R', iR', iMR', l'.onFst qneg, q(Eq.trans $pf''' (congrArg smulAndSum $pf''))⟩
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s $y) =>
     let ⟨R, iR, iMR, l, pf⟩ ← parse M iM y
     let i₁ ← synthInstanceQ q(Semiring $S)
