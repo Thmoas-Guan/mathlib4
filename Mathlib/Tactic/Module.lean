@@ -52,32 +52,42 @@ def foo {v : Level} {α : Q(Type v)} : List (Q($α)) → Q(List $α)
   | [] => q([])
   | e :: t => q($e :: $(foo t))
 
+def matchRings {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ x₂ : Q($M))
+    {R₁ : Q(Type)} {iR₁ : Q(Semiring $R₁)} (iMR₁ : Q(@Module $R₁ $M $iR₁ $iM))
+    (l₁ : List (Q($R₁ × $M) × ℕ)) (pf₁ : Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst))))
+    {R₂ : Q(Type)} {iR₂ : Q(Semiring $R₂)} (iMR₂ : Q(@Module $R₂ $M $iR₂ $iM))
+    (l₂ : List (Q($R₂ × $M) × ℕ)) (pf₂ : Q($x₂ = smulAndSum $(foo (l₂.map Prod.fst)))) :
+    MetaM <| Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
+      Σ l₁ l₂ : List (Q($R × $M) × ℕ),
+      Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst)))
+        × Q($x₂ = smulAndSum $(foo (l₂.map Prod.fst))) := do
+  match ← isDefEqQ R₁ R₂ with
+  | .defEq (_ : $R₁ =Q $R₂) => pure ⟨R₁, iR₁, iMR₁, l₁, l₂, pf₁, pf₂⟩
+  | _ =>
+  try
+    let _i₁ ← synthInstanceQ q(CommSemiring $R₁)
+    let _i₃ ← synthInstanceQ q(Algebra $R₁ $R₂)
+    let _i₄ ← synthInstanceQ q(IsScalarTower $R₁ $R₂ $M)
+    assumeInstancesCommute
+    let l₁' : List (Q($R₂ × $M) × ℕ) := l₁.onFst (fun p ↦ q(considerFstAs $R₂ $p))
+    pure ⟨R₂, iR₂, iMR₂, l₁', l₂, q(sorry), pf₂⟩
+  catch _ =>
+    let _i₁ ← synthInstanceQ q(CommSemiring $R₂)
+    let _i₃ ← synthInstanceQ q(Algebra $R₂ $R₁)
+    let _i₄ ← synthInstanceQ q(IsScalarTower $R₂ $R₁ $M)
+    assumeInstancesCommute
+    let l₂' : List (Q($R₁ × $M) × ℕ) := l₂.onFst (fun p ↦ q(considerFstAs $R₁ $p))
+    pure ⟨R₁, iR₁, iMR₁, l₁, l₂', pf₁, q(sorry)⟩
+
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
       Σ e : List (Q($R × $M) × ℕ), Q($x = smulAndSum $(foo (e.map Prod.fst)))) := do
   match x with
   | ~q($x₁ + $x₂) =>
-    let ⟨R₁, i₁, i₁', l₁, pf₁⟩ ← parse M iM x₁
-    let ⟨R₂, i₂, i₂', l₂, pf₂⟩ ← parse M iM x₂
-    match ← isDefEqQ R₁ R₂ with
-    | .defEq (_ : $R₁ =Q $R₂) =>
-      let l₂' : List (Q($R₁ × $M) × ℕ) := l₂
-      pure ⟨R₁, i₁, i₁', combine (cob i₁) l₁ l₂, q(sorry)⟩
-    | _ =>
-    try
-      let _i₁ ← synthInstanceQ q(CommSemiring $R₁)
-      let _i₃ ← synthInstanceQ q(Algebra $R₁ $R₂)
-      let _i₄ ← synthInstanceQ q(IsScalarTower $R₁ $R₂ $M)
-      assumeInstancesCommute
-      let l₁' : List (Q($R₂ × $M) × ℕ) := l₁.onFst (fun p ↦ q(considerFstAs $R₂ $p))
-      pure ⟨R₂, i₂, i₂', combine (cob i₂) l₁' l₂, q(sorry)⟩
-    catch _ =>
-      let _i₁ ← synthInstanceQ q(CommSemiring $R₂)
-      let _i₃ ← synthInstanceQ q(Algebra $R₂ $R₁)
-      let _i₄ ← synthInstanceQ q(IsScalarTower $R₂ $R₁ $M)
-      assumeInstancesCommute
-      let l₂' : List (Q($R₁ × $M) × ℕ) := l₂.onFst (fun p ↦ q(considerFstAs $R₁ $p))
-      pure ⟨R₁, i₁, i₁', combine (cob i₁) l₁ l₂', q(sorry)⟩
+    let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁
+    let ⟨R₂, iR₂, iMR₂, l₂, pf₂⟩ ← parse M iM x₂
+    let ⟨R, iR, iMR, l₁', l₂', pf₁', pf₂'⟩ ← matchRings M iM x₁ x₂ iMR₁ l₁ pf₁ iMR₂ l₂ pf₂
+    pure ⟨R, iR, iMR, combine (cob iR) l₁' l₂', q(sorry)⟩
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s $y) =>
     trace[debug] "parsing scalar multiplication of {y} by {s}, scalar type is {S}"
     let ⟨R, iR, iR', l, pf⟩ ← parse M iM y
@@ -122,8 +132,9 @@ theorem eq_const_cons {R : Type*} {M : Type*} [AddMonoid M] [Zero R] [SMul R M] 
     n = smulAndSum ((r, m) :: l) := by
   sorry
 
-partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
-    (iM : Q(AddCommMonoid $M)) (iRM : Q(SMul $R $M)) (l₁ l₂ : List (Q($R × $M) × ℕ)) (g : MVarId) :
+partial def reduceCoefficientwise {v : Level} {R : Q(Type)} {M : Q(Type v)}
+    (iM : Q(AddCommMonoid $M)) (iR : Q(Semiring $R)) (iRM : Q(Module $R $M))
+    (l₁ l₂ : List (Q($R × $M) × ℕ)) (g : MVarId) :
     MetaM (List MVarId) := do
   trace[debug] "creating goals to compare {l₁} and {l₂}"
   let _i ← synthInstanceQ q(Zero $R)
@@ -132,7 +143,8 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
   trace[debug] "current goal is {← g.getType}"
   let t : Q(Prop) := q(smulAndSum $ll₁ = smulAndSum $ll₂)
   trace[debug] "checking that this is the same as {t} ..."
-  guard (← isDefEq (← g.getType) t)
+  trace[debug] "we'll be inspecting {← isDefEq (← g.getType).consumeMData t}"
+  guard (← isDefEq (← g.getType).consumeMData t)
   trace[debug] "... ok"
   match l₁, l₂ with
   | [], [] =>
@@ -145,14 +157,14 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
     let mvar₁ : Q((0:$R) = Prod.fst $e) ← mkFreshExprMVar q((0:$R) = Prod.fst $e)
     let ll : Q(List ($R × $M)) := foo (List.map Prod.fst l)
     let mvar₂ : Q((0:$M) = smulAndSum $ll) ← mkFreshExprMVar q((0:$M) = smulAndSum $ll)
-    let mvars ← reduceCoefficientwise M iM iRM [] l mvar₂.mvarId!
+    let mvars ← reduceCoefficientwise iM iR iRM [] l mvar₂.mvarId!
     g.assign q(eq_const_cons (Prod.snd $e) $mvar₁ $mvar₂)
     pure (mvar₁.mvarId! :: mvars)
   | (e, _) :: l, [] =>
     let mvar₁ : Q(Prod.fst $e = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e = (0:$R))
     let ll : Q(List ($R × $M)) := foo (List.map Prod.fst l)
     let mvar₂ : Q(smulAndSum $ll = (0:$M)) ← mkFreshExprMVar q(smulAndSum $ll = (0:$M))
-    let mvars ← reduceCoefficientwise M iM iRM l [] mvar₂.mvarId!
+    let mvars ← reduceCoefficientwise iM iR iRM l [] mvar₂.mvarId!
     g.assign q(eq_cons_const (Prod.snd $e) $mvar₁ $mvar₂)
     pure (mvar₁.mvarId! :: mvars)
   | L₁@((e₁, k₁) :: l₁), L₂@((e₂, k₂) :: l₂) =>
@@ -164,21 +176,21 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
       let mvar₁ : Q(Prod.fst $e₁ = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e₁ = (0:$R))
       let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $LL₂)
         ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $LL₂)
-      let mvars ← reduceCoefficientwise M iM iRM l₁ L₂ mvar₂.mvarId!
+      let mvars ← reduceCoefficientwise iM iR iRM l₁ L₂ mvar₂.mvarId!
       g.assign q(eq_cons_const (Prod.snd $e₁) $mvar₁ $mvar₂)
       pure (mvar₁.mvarId! :: mvars)
     else if k₁ = k₂ then
       let mvar₁ : Q(Prod.fst $e₁ = Prod.fst $e₂) ← mkFreshExprMVar q(Prod.fst $e₁ = Prod.fst $e₂)
       let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $ll₂)
         ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $ll₂)
-      let mvars ← reduceCoefficientwise M iM iRM l₁ l₂ mvar₂.mvarId!
+      let mvars ← reduceCoefficientwise iM iR iRM l₁ l₂ mvar₂.mvarId!
       g.assign q(eq_cons_cons (Prod.snd $e₁) $mvar₁ $mvar₂)
       pure (mvar₁.mvarId! :: mvars)
     else
       let mvar₁ : Q((0:$R) = Prod.fst $e₂) ← mkFreshExprMVar q((0:$R) = Prod.fst $e₂)
       let mvar₂ : Q(smulAndSum $LL₁ = smulAndSum $ll₂)
         ← mkFreshExprMVar q(smulAndSum $LL₁ = smulAndSum $ll₂)
-      let mvars ← reduceCoefficientwise M iM iRM L₁ l₂ mvar₂.mvarId!
+      let mvars ← reduceCoefficientwise iM iRM iR L₁ l₂ mvar₂.mvarId!
       g.assign q(eq_const_cons (Prod.snd $e₂) $mvar₁ $mvar₂)
       pure (mvar₁.mvarId! :: mvars)
 
@@ -192,8 +204,9 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
   let e₁ ← parse M iM lhs
   have R₁ : Q(Type) := e₁.fst
   trace[debug] "got back some stuff over the semiring {R₁}"
-  have iR₁ : Q(Semiring.{0} $R₁) := e₁.snd.fst
-  let _i₁ ← synthInstanceQ q(SMul $R₁ $M) -- would be better to do the following, but doesn't work?
+  have _iR₁ : Q(Semiring.{0} $R₁) := e₁.snd.fst
+  let iMR₁ ← synthInstanceQ q(Module $R₁ $M)
+  -- would be better to do the following, but doesn't work?
   -- have iMR₁ : Q(@Module.{0, v} $R₁ $M $iR₁ $iM) := e.snd.snd.fst
   assumeInstancesCommute
   have l₁ : List (Q($R₁ × $M) × ℕ) := e₁.snd.snd.snd.fst
@@ -203,15 +216,22 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
   -- for now let's assume that LHS and RHS scalars have the same type
   trace[debug] "parsing RHS, {rhs}"
   let e₂ ← parse M iM rhs
+  have R₂ : Q(Type) := e₂.fst
+  have _iR₂ : Q(Semiring.{0} $R₂) := e₂.snd.fst
+  let iMR₂ ← synthInstanceQ q(Module $R₂ $M)
   have l₂ : List (Q($R₁ × $M) × ℕ) := e₂.snd.snd.snd.fst
   let ll₂ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₂)
   let pf₂ : Q($rhs = smulAndSum $ll₂) := e₂.snd.snd.snd.snd
   trace[debug] "unpacked the RHS parse successfully"
+  -- lift LHS and RHS to same scalar ring
+  let ⟨R, iR, iMR, l₁', l₂', pf₁', pf₂'⟩ ← matchRings M iM lhs rhs iMR₁ l₁ pf₁ iMR₂ l₂ pf₂
   -- start to rig up the collection of goals we will reduce to
-  let mvar : Q(smulAndSum $ll₁ = smulAndSum $ll₂)
-    ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $ll₂)
-  g.assign q(Eq.trans (Eq.trans $pf₁ $mvar) (Eq.symm $pf₂))
-  reduceCoefficientwise M iM _i₁ l₁ l₂ mvar.mvarId!
+  let ll₁' : Q(List ($R × $M)) := foo (List.map Prod.fst l₁')
+  let ll₂' : Q(List ($R × $M)) := foo (List.map Prod.fst l₂')
+  let mvar : Q(smulAndSum $ll₁' = smulAndSum $ll₂')
+    ← mkFreshExprMVar q(smulAndSum $ll₁' = smulAndSum $ll₂')
+  g.assign q(Eq.trans (Eq.trans $pf₁' $mvar) (Eq.symm $pf₂'))
+  reduceCoefficientwise iM iR iMR l₁ l₂ mvar.mvarId!
 
 def matchCoeffs (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchCoeffsAux g)
 
