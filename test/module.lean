@@ -212,6 +212,18 @@ example (ha : 0 ≤ a) (hb : 0 < b) :
   · field_simp
     ring
 
+-- From Analysis.Convex.StoneSeparation
+example (hab : 0 < a * b + c * d) :
+    (a * b / (a * b + c * d) * e) • u + (c * d / (a * b + c * d) * f) • v +
+      ((a * b / (a * b + c * d)) • d • x + (c * d / (a * b + c * d)) • b • y) =
+      (a * b + c * d)⁻¹ • ((a * b * e) • u + ((c * d * f) • v +
+        ((a * b) • d • x + (c * d) • b • y))) := by
+  match_scalars
+  · field_simp
+  · field_simp
+  · field_simp
+  · field_simp
+
 example (h₁ : 1 = a ^ 2 + b ^ 2) (h₂ : 1 - a ≠ 0) :
     ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • (4:K) • ((2 / (1 - a)) • y)
     + ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • ((2 / (1 - a)) ^ 2 * b ^ 2 - 4) • x
