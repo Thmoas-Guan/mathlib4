@@ -133,7 +133,7 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
   let t : Q(Prop) := q(smulAndSum $ll₁ = smulAndSum $ll₂)
   trace[debug] "checking that this is the same as {t} ..."
   guard (← isDefEq (← g.getType) t)
-  trace[debug] "ok"
+  trace[debug] "... ok"
   match l₁, l₂ with
   | [], [] =>
     trace[debug] "we've reached the bottom; goal is {g}"
@@ -156,10 +156,12 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
     g.assign q(eq_cons_const (Prod.snd $e) $mvar₁ $mvar₂)
     pure (mvar₁.mvarId! :: mvars)
   | L₁@((e₁, k₁) :: l₁), L₂@((e₂, k₂) :: l₂) =>
+    let ll₁ : Q(List ($R × $M)) := foo (l₁.map Prod.fst)
+    let ll₂ : Q(List ($R × $M)) := foo (l₂.map Prod.fst)
+    let LL₁ : Q(List ($R × $M)) := foo (L₁.map Prod.fst)
+    let LL₂ : Q(List ($R × $M)) := foo (L₂.map Prod.fst)
     if k₁ < k₂ then
       let mvar₁ : Q(Prod.fst $e₁ = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e₁ = (0:$R))
-      let ll₁ : Q(List ($R × $M)) := foo (List.map Prod.fst l₁)
-      let LL₂ : Q(List ($R × $M)) := foo (List.map Prod.fst L₂)
       let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $LL₂)
         ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $LL₂)
       let mvars ← reduceCoefficientwise M iM iRM l₁ L₂ mvar₂.mvarId!
@@ -167,8 +169,6 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
       pure (mvar₁.mvarId! :: mvars)
     else if k₁ = k₂ then
       let mvar₁ : Q(Prod.fst $e₁ = Prod.fst $e₂) ← mkFreshExprMVar q(Prod.fst $e₁ = Prod.fst $e₂)
-      let ll₁ : Q(List ($R × $M)) := foo (List.map Prod.fst l₁)
-      let ll₂ : Q(List ($R × $M)) := foo (List.map Prod.fst l₂)
       let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $ll₂)
         ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $ll₂)
       let mvars ← reduceCoefficientwise M iM iRM l₁ l₂ mvar₂.mvarId!
@@ -176,8 +176,6 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
       pure (mvar₁.mvarId! :: mvars)
     else
       let mvar₁ : Q((0:$R) = Prod.fst $e₂) ← mkFreshExprMVar q((0:$R) = Prod.fst $e₂)
-      let ll₂ : Q(List ($R × $M)) := foo (List.map Prod.fst l₂)
-      let LL₁ : Q(List ($R × $M)) := foo (List.map Prod.fst L₁)
       let mvar₂ : Q(smulAndSum $LL₁ = smulAndSum $ll₂)
         ← mkFreshExprMVar q(smulAndSum $LL₁ = smulAndSum $ll₂)
       let mvars ← reduceCoefficientwise M iM iRM L₁ l₂ mvar₂.mvarId!
