@@ -288,7 +288,7 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} {M : Q(Type v)}
       g.assign q(eq_const_cons (Prod.snd $e₂) $mvar₁ $mvar₂)
       pure (mvar₁.mvarId! :: mvars)
 
-def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
+def matchScalarsAux (g : MVarId) : AtomM (List MVarId) := do
   let eqData := (← g.getType).consumeMData.eq?.get!
   let .sort u ← whnf (← inferType eqData.1) | unreachable!
   let some v := u.dec | throwError "goal cannot be an equality in Sort"
@@ -327,19 +327,19 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
   g.assign q(Eq.trans (Eq.trans $pf₁' $mvar) (Eq.symm $pf₂'))
   reduceCoefficientwise iM iR iMR l₁' l₂' mvar.mvarId!
 
-def matchCoeffs (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchCoeffsAux g)
+def matchScalars (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchScalarsAux g)
 
 /- Do we also want to import `Mathlib.Data.Complex.Module`, so that the `ℝ`-to-`ℂ` algebra map can
 be added to the list of algebra-maps which get special-cased here?  (The lemma would be
 `Complex.coe_algebraMap`.)-/
 
-elab "match_coeffs" : tactic => Tactic.focus do
-  Tactic.liftMetaTactic matchCoeffs
+elab "match_scalars" : tactic => Tactic.focus do
+  Tactic.liftMetaTactic matchScalars
   Tactic.allGoals <|
     Tactic.evalTactic <| ← `(tactic | push_cast [eq_natCast, eq_intCast, eq_ratCast])
 
 elab "module" : tactic => Tactic.focus do
-  Tactic.liftMetaTactic matchCoeffs
+  Tactic.liftMetaTactic matchScalars
   Tactic.allGoals <| do
     Tactic.evalTactic <|
       ← `(tactic | (push_cast [eq_natCast, eq_intCast, eq_ratCast]; try ring1))

@@ -131,7 +131,7 @@ example [Field K] [CharZero K] [Module K V]
 example [LinearOrderedField K] [Module K V]
     {x y : V} {ε D : K} (hε : 0 ≤ ε) (hD : 0 < D) :
     x = (ε / (ε + D)) • y + (D / (ε + D)) • (x + (ε / D) • (x - y)) := by
-  match_coeffs
+  match_scalars
   · field_simp
     ring
   · field_simp
@@ -145,7 +145,7 @@ example [LinearOrderedField K] [Module K V]
     = a • x + y := by
   -- `linear_combination (h₁ * (b ^ 2 + (1 - a) ^ 2)⁻¹) • (y + (a - 1) • x)`
   apply eq_of_add (congr(($h₁ * (b ^ 2 + (1 - a) ^ 2)⁻¹) • (y + (a - 1) • x)):)
-  match_coeffs
+  match_scalars
   · field_simp
     ring
   · field_simp
@@ -157,7 +157,7 @@ example [LinearOrderedField K] [Module K V]
     ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • (4:K) • ((2 / (1 - a)) • y)
     + ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • ((2 / (1 - a)) ^ 2 * b ^ 2 - 4) • x
     = a • x + y := by
-  match_coeffs
+  match_scalars
   · linear_combination (norm := skip) h₁ / (b ^ 2 + (1 - a) ^ 2)
     field_simp
     ring
