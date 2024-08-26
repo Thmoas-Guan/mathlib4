@@ -38,9 +38,18 @@ example : 2 • a • x = a • 2 • x := by module
 example : (1 + a ^ 2) • (v + w) - a • (a • v - w) = v + (1 + a + a ^ 2) • w := by module
 
 example (h : a = b) : a • x = b • x := by
+  match_scalars
+  linear_combination h
+
+example (h : a = b) : a • x = b • x := by
   -- `linear_combination h • x`
   apply eq_of_add (congr($h • x):)
   module
+
+example (h : a ^ 2 + b ^ 2 = 1) : a • (a • x - b • y) + (b • a • y + b • b • x) = x := by
+  match_scalars
+  · linear_combination h
+  · ring
 
 example (h : a ^ 2 + b ^ 2 = 1) : a • (a • x - b • y) + (b • a • y + b • b • x) = x := by
   -- `linear_combination h • x`
@@ -55,8 +64,7 @@ example : (μ - ν) • a • x = (a • μ • x + b • ν • y) - ν • (a 
 
 example : (μ - ν) • b • y = μ • (a • x + b • y) - (a • μ • x + b • ν • y) := by module
 
-example (h1 : a • x + b • y = 0) (h2 : a • μ • x + b • ν • y = 0) :
-    (μ - ν) • a • x = 0 := by
+example (h1 : a • x + b • y = 0) (h2 : a • μ • x + b • ν • y = 0) : (μ - ν) • a • x = 0 := by
   -- `linear_combination h2 - ν • h1`
   apply eq_of_add (congr($h2 - ν • $h1):)
   module
@@ -128,9 +136,8 @@ example [Field K] [CharZero K] [Module K V]
 
 /-! # Linearly ordered field -/
 
-example [LinearOrderedField K] [Module K V]
-    {x y : V} {ε D : K} (hε : 0 ≤ ε) (hD : 0 < D) :
-    x = (ε / (ε + D)) • y + (D / (ε + D)) • (x + (ε / D) • (x - y)) := by
+example [LinearOrderedField K] [Module K V] (ha : 0 ≤ a) (hb : 0 < b) :
+    x = (a / (a + b)) • y + (b / (a + b)) • (x + (a / b) • (x - y)) := by
   match_scalars
   · field_simp
     ring
@@ -158,9 +165,7 @@ example [LinearOrderedField K] [Module K V]
     + ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • ((2 / (1 - a)) ^ 2 * b ^ 2 - 4) • x
     = a • x + y := by
   match_scalars
-  · linear_combination (norm := skip) h₁ / (b ^ 2 + (1 - a) ^ 2)
-    field_simp
-    ring
-  · linear_combination (norm := skip) h₁ * (a - 1) / (b ^ 2 + (1 - a) ^ 2)
-    field_simp
-    ring
+  · field_simp
+    linear_combination 4 * (1 - a) * h₁
+  · field_simp
+    linear_combination 4 * (a - 1) ^ 3 * h₁
