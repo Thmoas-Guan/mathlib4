@@ -204,17 +204,20 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
 theorem eq_cons_cons {R : Type*} {M : Type*} [AddMonoid M] [Zero R] [SMul R M] {r₁ r₂ : R} (m : M)
     {l₁ l₂ : List (R × M)} (h1 : r₁ = r₂) (h2 : smulAndSum l₁ = smulAndSum l₂) :
       smulAndSum ((r₁, m) :: l₁) = smulAndSum ((r₂, m) :: l₂) := by
-  sorry
+  simp only [smulAndSum] at *
+  simp [h1, h2]
 
-theorem eq_cons_const {R : Type*} {M : Type*} [AddMonoid M] [Zero R] [SMul R M] {r : R} (m : M)
-    {n : M} {l : List (R × M)} (h1 : r = 0) (h2 : smulAndSum l = n) :
+theorem eq_cons_const {R : Type*} {M : Type*} [AddCommMonoid M] [Semiring R] [Module R M] {r : R}
+    (m : M) {n : M} {l : List (R × M)} (h1 : r = 0) (h2 : smulAndSum l = n) :
     smulAndSum ((r, m) :: l) = n := by
-  sorry
+  simp only [smulAndSum] at *
+  simp [h1, h2]
 
-theorem eq_const_cons {R : Type*} {M : Type*} [AddMonoid M] [Zero R] [SMul R M] {r : R} (m : M)
-    {n : M} {l : List (R × M)} (h1 : 0 = r) (h2 : n = smulAndSum l) :
+theorem eq_const_cons {R : Type*} {M : Type*} [AddCommMonoid M] [Semiring R] [Module R M] {r : R}
+    (m : M) {n : M} {l : List (R × M)} (h1 : 0 = r) (h2 : n = smulAndSum l) :
     n = smulAndSum ((r, m) :: l) := by
-  sorry
+  simp only [smulAndSum] at *
+  simp [← h1, h2]
 
 partial def reduceCoefficientwise {v : Level} {R : Q(Type)} {M : Q(Type v)}
     (iM : Q(AddCommMonoid $M)) (iR : Q(Semiring $R)) (iRM : Q(Module $R $M))
@@ -230,6 +233,7 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} {M : Q(Type v)}
   trace[debug] "we'll be inspecting {← isDefEq (← g.getType).consumeMData t}"
   guard (← isDefEq (← g.getType).consumeMData t)
   trace[debug] "... ok"
+  assumeInstancesCommute
   match l₁, l₂ with
   | [], [] =>
     trace[debug] "we've reached the bottom; goal is {g}"
