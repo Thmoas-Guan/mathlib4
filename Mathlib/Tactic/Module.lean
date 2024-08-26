@@ -194,18 +194,8 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let i₂ ← synthInstanceQ q(Module $S $M)
     assumeInstancesCommute
     let ⟨R', iR', iMR', l', pf', s₂, pf₂⟩ ← matchRings' M iM y iMR l pf i₁ i₂ s
-    -- let pf'' : Q($s₂ • $x = _) := q(fasddf $pf' $s₂)
-    -- try
-    --   let _i₃ ← synthInstanceQ q(SMul $S $R)
-    --   let _i₄ ← synthInstanceQ q(IsScalarTower $S $R $M)
     let l'' : List (Q($R' × $M) × ℕ) := l'.onFst (fun p ↦ q(($s₂ * Prod.fst $p, Prod.snd $p)))
     pure ⟨R', iR', iMR', l'', q(sorry)⟩
-    -- catch _ =>
-    --   let _i₃ ← synthInstanceQ q(SMul $R $S)
-    --   let _i₄ ← synthInstanceQ q(IsScalarTower $R $S $M)
-    --   let _i₅ ← synthInstanceQ q(SMulCommClass $S $R $M)
-    --   let l' : List (Q($S × $M) × ℕ) := l.onFst (fun p ↦ q(smulLeftFst $s $p))
-    --   pure ⟨S, i₁, i₂, l', q(sorry)⟩
   | ~q(0) => pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
   | _ =>
     let k : ℕ ← AtomM.addAtom x
@@ -247,44 +237,42 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} {M : Q(Type v)}
     g.assign pf
     trace[debug] "successfully resolved bottom goal with rfl"
     pure []
-  | [], (e, _) :: l =>
+  | [], (e, _) :: L =>
     let mvar₁ : Q((0:$R) = Prod.fst $e) ← mkFreshExprMVar q((0:$R) = Prod.fst $e)
-    let ll : Q(List ($R × $M)) := foo (List.map Prod.fst l)
-    let mvar₂ : Q((0:$M) = smulAndSum $ll) ← mkFreshExprMVar q((0:$M) = smulAndSum $ll)
-    let mvars ← reduceCoefficientwise iM iR iRM [] l mvar₂.mvarId!
+    let LL : Q(List ($R × $M)) := foo (List.map Prod.fst L)
+    let mvar₂ : Q((0:$M) = smulAndSum $LL) ← mkFreshExprMVar q((0:$M) = smulAndSum $LL)
+    let mvars ← reduceCoefficientwise iM iR iRM [] L mvar₂.mvarId!
     g.assign q(eq_const_cons (Prod.snd $e) $mvar₁ $mvar₂)
     pure (mvar₁.mvarId! :: mvars)
-  | (e, _) :: l, [] =>
+  | (e, _) :: L, [] =>
     let mvar₁ : Q(Prod.fst $e = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e = (0:$R))
-    let ll : Q(List ($R × $M)) := foo (List.map Prod.fst l)
-    let mvar₂ : Q(smulAndSum $ll = (0:$M)) ← mkFreshExprMVar q(smulAndSum $ll = (0:$M))
-    let mvars ← reduceCoefficientwise iM iR iRM l [] mvar₂.mvarId!
+    let LL : Q(List ($R × $M)) := foo (List.map Prod.fst L)
+    let mvar₂ : Q(smulAndSum $LL = (0:$M)) ← mkFreshExprMVar q(smulAndSum $LL = (0:$M))
+    let mvars ← reduceCoefficientwise iM iR iRM L [] mvar₂.mvarId!
     g.assign q(eq_cons_const (Prod.snd $e) $mvar₁ $mvar₂)
     pure (mvar₁.mvarId! :: mvars)
-  | L₁@((e₁, k₁) :: l₁), L₂@((e₂, k₂) :: l₂) =>
-    let ll₁ : Q(List ($R × $M)) := foo (l₁.map Prod.fst)
-    let ll₂ : Q(List ($R × $M)) := foo (l₂.map Prod.fst)
+  | (e₁, k₁) :: L₁, (e₂, k₂) :: L₂ =>
     let LL₁ : Q(List ($R × $M)) := foo (L₁.map Prod.fst)
     let LL₂ : Q(List ($R × $M)) := foo (L₂.map Prod.fst)
     if k₁ < k₂ then
       let mvar₁ : Q(Prod.fst $e₁ = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e₁ = (0:$R))
-      let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $LL₂)
-        ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $LL₂)
-      let mvars ← reduceCoefficientwise iM iR iRM l₁ L₂ mvar₂.mvarId!
+      let mvar₂ : Q(smulAndSum $LL₁ = smulAndSum $ll₂)
+        ← mkFreshExprMVar q(smulAndSum $LL₁ = smulAndSum $ll₂)
+      let mvars ← reduceCoefficientwise iM iR iRM L₁ l₂ mvar₂.mvarId!
       g.assign q(eq_cons_const (Prod.snd $e₁) $mvar₁ $mvar₂)
       pure (mvar₁.mvarId! :: mvars)
     else if k₁ = k₂ then
       let mvar₁ : Q(Prod.fst $e₁ = Prod.fst $e₂) ← mkFreshExprMVar q(Prod.fst $e₁ = Prod.fst $e₂)
-      let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $ll₂)
-        ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $ll₂)
-      let mvars ← reduceCoefficientwise iM iR iRM l₁ l₂ mvar₂.mvarId!
+      let mvar₂ : Q(smulAndSum $LL₁ = smulAndSum $LL₂)
+        ← mkFreshExprMVar q(smulAndSum $LL₁ = smulAndSum $LL₂)
+      let mvars ← reduceCoefficientwise iM iR iRM L₁ L₂ mvar₂.mvarId!
       g.assign q(eq_cons_cons (Prod.snd $e₁) $mvar₁ $mvar₂)
       pure (mvar₁.mvarId! :: mvars)
     else
       let mvar₁ : Q((0:$R) = Prod.fst $e₂) ← mkFreshExprMVar q((0:$R) = Prod.fst $e₂)
-      let mvar₂ : Q(smulAndSum $LL₁ = smulAndSum $ll₂)
-        ← mkFreshExprMVar q(smulAndSum $LL₁ = smulAndSum $ll₂)
-      let mvars ← reduceCoefficientwise iM iRM iR L₁ l₂ mvar₂.mvarId!
+      let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $LL₂)
+        ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $LL₂)
+      let mvars ← reduceCoefficientwise iM iRM iR l₁ L₂ mvar₂.mvarId!
       g.assign q(eq_const_cons (Prod.snd $e₂) $mvar₁ $mvar₂)
       pure (mvar₁.mvarId! :: mvars)
 
@@ -307,7 +295,6 @@ def matchScalarsAux (g : MVarId) : AtomM (List MVarId) := do
   let ll₁ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₁)
   let pf₁ : Q($lhs = smulAndSum $ll₁) := e₁.snd.snd.snd.snd
   trace[debug] "unpacked the LHS parse successfully"
-  -- for now let's assume that LHS and RHS scalars have the same type
   trace[debug] "parsing RHS, {rhs}"
   let e₂ ← parse M iM rhs
   have R₂ : Q(Type) := e₂.fst
