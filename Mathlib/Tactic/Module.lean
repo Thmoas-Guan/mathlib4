@@ -1,5 +1,6 @@
 import Mathlib.Algebra.Algebra.Basic
 import Mathlib.GroupTheory.GroupAction.BigOperators
+import Mathlib.Tactic.Ring
 import Mathlib.Util.AtomM
 
 open Lean hiding Module
@@ -8,14 +9,14 @@ open Meta Elab Qq Mathlib.Tactic
 abbrev smulAndSum {R : Type*} {M : Type*} [SMul R M] [Add M] [Zero M] (l : List (R × M)) : M :=
   (l.map (fun (⟨r, x⟩ : R × M) ↦ r • x)).sum
 
-def List.onFst {α β γ : Type*} (l : List (α × β)) (f : α → γ) : List (γ × β) :=
+abbrev List.onFst {α β γ : Type*} (l : List (α × β)) (f : α → γ) : List (γ × β) :=
   l.map (fun p ↦ ⟨f p.1, p.2⟩)
 
 abbrev considerFstAs {S M : Type*} (R : Type*) [CommSemiring S] [Semiring R] [Algebra S R] :
     (S × M) → (R × M) :=
   fun ⟨s, x⟩ ↦ (algebraMap S R s, x)
 
-def combine {α : Type*} (f : α → α → α) : List (α × ℕ) → List (α × ℕ) → List (α × ℕ)
+abbrev combine {α : Type*} (f : α → α → α) : List (α × ℕ) → List (α × ℕ) → List (α × ℕ)
   | [], l => l
   | l, [] => l
   | (a₁, k₁) :: t₁, (a₂, k₂) :: t₂ =>
@@ -26,13 +27,13 @@ def combine {α : Type*} (f : α → α → α) : List (α × ℕ) → List (α 
     else
       (a₂, k₂) :: (a₁, k₁) :: combine f t₁ t₂
 
-def cob' {M : Type*} {R : Type} [Semiring R] (p₁ p₂ : R × M) : R × M :=
+abbrev cob' {M : Type*} {R : Type} [Semiring R] (p₁ p₂ : R × M) : R × M :=
   let r₁ := Prod.fst p₁
   let r₂ := Prod.fst p₂
   let m₁ := Prod.snd p₁
   (r₁ + r₂, m₁)
 
-def cob {v : Level} {M : Q(Type v)} {R : Q(Type)} (_i₂ : Q(Semiring $R)) (p₁ p₂ : Q($R × $M)) :
+abbrev cob {v : Level} {M : Q(Type v)} {R : Q(Type)} (_i₂ : Q(Semiring $R)) (p₁ p₂ : Q($R × $M)) :
     Q($R × $M) :=
   q(cob' $p₁ $p₂)
 
@@ -106,6 +107,83 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let k : ℕ ← AtomM.addAtom x
     pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [(q((1, $x)), k)], q(one_pf $x)⟩
 
+theorem eq_cons_cons {R : Type*} {M : Type*} [AddMonoid M] [Zero R] [SMul R M] {r₁ r₂ : R} (m : M)
+    {l₁ l₂ : List (R × M)} (h1 : r₁ = r₂) (h2 : smulAndSum l₁ = smulAndSum l₂) :
+      smulAndSum ((r₁, m) :: l₁) = smulAndSum ((r₂, m) :: l₂) := by
+  sorry
+
+theorem eq_cons_const {R : Type*} {M : Type*} [AddMonoid M] [Zero R] [SMul R M] {r : R} (m : M)
+    {n : M} {l : List (R × M)} (h1 : r = 0) (h2 : smulAndSum l = n) :
+    smulAndSum ((r, m) :: l) = n := by
+  sorry
+
+theorem eq_const_cons {R : Type*} {M : Type*} [AddMonoid M] [Zero R] [SMul R M] {r : R} (m : M)
+    {n : M} {l : List (R × M)} (h1 : 0 = r) (h2 : n = smulAndSum l) :
+    n = smulAndSum ((r, m) :: l) := by
+  sorry
+
+partial def reduceCoefficientwise {v : Level} {R : Q(Type)} (M : Q(Type v))
+    (iM : Q(AddCommMonoid $M)) (iRM : Q(SMul $R $M)) (l₁ l₂ : List (Q($R × $M) × ℕ)) (g : MVarId) :
+    MetaM (List MVarId) := do
+  trace[debug] "creating goals to compare {l₁} and {l₂}"
+  let _i ← synthInstanceQ q(Zero $R)
+  let ll₁ : Q(List ($R × $M)) := foo (List.map Prod.fst l₁)
+  let ll₂ : Q(List ($R × $M)) := foo (List.map Prod.fst l₂)
+  trace[debug] "current goal is {← g.getType}"
+  let t : Q(Prop) := q(smulAndSum $ll₁ = smulAndSum $ll₂)
+  trace[debug] "checking that this is the same as {t} ..."
+  guard (← isDefEq (← g.getType) t)
+  trace[debug] "ok"
+  match l₁, l₂ with
+  | [], [] =>
+    trace[debug] "we've reached the bottom; goal is {g}"
+    let pf : Q(smulAndSum $ll₁ = smulAndSum $ll₁) := q(rfl)
+    g.assign pf
+    trace[debug] "successfully resolved bottom goal with rfl"
+    pure []
+  | [], (e, _) :: l =>
+    let mvar₁ : Q((0:$R) = Prod.fst $e) ← mkFreshExprMVar q((0:$R) = Prod.fst $e)
+    let ll : Q(List ($R × $M)) := foo (List.map Prod.fst l)
+    let mvar₂ : Q((0:$M) = smulAndSum $ll) ← mkFreshExprMVar q((0:$M) = smulAndSum $ll)
+    let mvars ← reduceCoefficientwise M iM iRM [] l mvar₂.mvarId!
+    g.assign q(eq_const_cons (Prod.snd $e) $mvar₁ $mvar₂)
+    pure (mvar₁.mvarId! :: mvars)
+  | (e, _) :: l, [] =>
+    let mvar₁ : Q(Prod.fst $e = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e = (0:$R))
+    let ll : Q(List ($R × $M)) := foo (List.map Prod.fst l)
+    let mvar₂ : Q(smulAndSum $ll = (0:$M)) ← mkFreshExprMVar q(smulAndSum $ll = (0:$M))
+    let mvars ← reduceCoefficientwise M iM iRM l [] mvar₂.mvarId!
+    g.assign q(eq_cons_const (Prod.snd $e) $mvar₁ $mvar₂)
+    pure (mvar₁.mvarId! :: mvars)
+  | L₁@((e₁, k₁) :: l₁), L₂@((e₂, k₂) :: l₂) =>
+    if k₁ < k₂ then
+      let mvar₁ : Q(Prod.fst $e₁ = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e₁ = (0:$R))
+      let ll₁ : Q(List ($R × $M)) := foo (List.map Prod.fst l₁)
+      let LL₂ : Q(List ($R × $M)) := foo (List.map Prod.fst L₂)
+      let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $LL₂)
+        ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $LL₂)
+      let mvars ← reduceCoefficientwise M iM iRM l₁ L₂ mvar₂.mvarId!
+      g.assign q(eq_cons_const (Prod.snd $e₁) $mvar₁ $mvar₂)
+      pure (mvar₁.mvarId! :: mvars)
+    else if k₁ = k₂ then
+      let mvar₁ : Q(Prod.fst $e₁ = Prod.fst $e₂) ← mkFreshExprMVar q(Prod.fst $e₁ = Prod.fst $e₂)
+      let ll₁ : Q(List ($R × $M)) := foo (List.map Prod.fst l₁)
+      let ll₂ : Q(List ($R × $M)) := foo (List.map Prod.fst l₂)
+      let mvar₂ : Q(smulAndSum $ll₁ = smulAndSum $ll₂)
+        ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $ll₂)
+      let mvars ← reduceCoefficientwise M iM iRM l₁ l₂ mvar₂.mvarId!
+      g.assign q(eq_cons_cons (Prod.snd $e₁) $mvar₁ $mvar₂)
+      pure (mvar₁.mvarId! :: mvars)
+    else
+      let mvar₁ : Q((0:$R) = Prod.fst $e₂) ← mkFreshExprMVar q((0:$R) = Prod.fst $e₂)
+      let ll₂ : Q(List ($R × $M)) := foo (List.map Prod.fst l₂)
+      let LL₁ : Q(List ($R × $M)) := foo (List.map Prod.fst L₁)
+      let mvar₂ : Q(smulAndSum $LL₁ = smulAndSum $ll₂)
+        ← mkFreshExprMVar q(smulAndSum $LL₁ = smulAndSum $ll₂)
+      let mvars ← reduceCoefficientwise M iM iRM L₁ l₂ mvar₂.mvarId!
+      g.assign q(eq_const_cons (Prod.snd $e₂) $mvar₁ $mvar₂)
+      pure (mvar₁.mvarId! :: mvars)
+
 def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
   let eqData := (← g.getType).consumeMData.eq?.get!
   let .sort u ← whnf (← inferType eqData.1) | unreachable!
@@ -135,8 +213,12 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
   let mvar : Q(smulAndSum $ll₁ = smulAndSum $ll₂)
     ← mkFreshExprMVar q(smulAndSum $ll₁ = smulAndSum $ll₂)
   g.assign q(Eq.trans (Eq.trans $pf₁ $mvar) (Eq.symm $pf₂))
-  pure [mvar.mvarId!]
+  reduceCoefficientwise M iM _i₁ l₁ l₂ mvar.mvarId!
 
 def matchCoeffs (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchCoeffsAux g)
 
 elab "match_coeffs" : tactic => Tactic.liftMetaTactic matchCoeffs
+
+-- elab "module" : tactic => do
+--   Tactic.liftMetaTactic matchCoeffs
+--   Tactic.allGoals <| Tactic.evalTactic (← `(tactic | ring1))

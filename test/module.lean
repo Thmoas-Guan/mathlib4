@@ -20,7 +20,6 @@ variable [CommRing K] [Module K V]
 
 example : x + y = y + x := by
   match_coeffs
-  congrm List.sum (List.map _ [(?_, _), (?_, _)])
   · guard_target = 1 = 1
     ring
   · guard_target = 1 = 1
@@ -28,22 +27,24 @@ example : x + y = y + x := by
 
 example : x + 2 • x = 2 • x + x := by
   match_coeffs
-  congrm List.sum (List.map _ [(?_, _)])
+  dsimp only
   guard_target = 1 + 2 • 1 = 2 • 1 + 1
   ring
 
 example (h : a = b) : a • x = b • x := by
   match_coeffs
-  congrm List.sum (List.map _ [(?_, _)])
+  dsimp only
   guard_target = 1 • a = 1 • b
   linear_combination h
 
 example : a • x + b • x = (a + b) • x := by
   match_coeffs
-  congrm List.sum (List.map _ [(?_, _)])
   dsimp only
   guard_target = 1 • a + 1 • b = 1 • (a + b)
   ring
+
+example : a • x = b • y := by
+  match_coeffs <;> dsimp only <;> sorry
 
 example (h : a ^ 2 + b ^ 2 = 1) :
     a • (a • x - b • y) + (b • a • y + b • b • x) = x := by
