@@ -32,6 +32,8 @@ example : a • x - b • y = a • x + (-b) • y := by module
 
 example : -x + x = 0 := by module
 
+example : 2 • a • x = a • 2 • x := by module
+
 -- from https://leanprover.zulipchat.com/#narrow/stream/287929-mathlib4/topic/linear_combination.20for.20groups/near/437042918
 example : (1 + a ^ 2) • (v + w) - a • (a • v - w) = v + (1 + a + a ^ 2) • w := by module
 
@@ -95,6 +97,20 @@ example
   apply eq_of_add (congr($h3 - (μ + ν) • $h2 + μ • ν • $h1):)
   module
 
+/--
+error: unsolved goals
+V : Type u_1
+inst✝² : AddCommGroup V
+K : Type
+t u v w x y : V
+a b c μ ν ρ : K
+inst✝¹ : CommRing K
+inst✝ : Module K V
+⊢ 2 * (a * 1) = 2
+-/
+#guard_msgs in
+example : 2 • a • x = 2 • x := by module
+
 end
 
 /-! # Characteristic-zero field -/
@@ -114,15 +130,28 @@ example [Field K] [CharZero K] [Module K V]
 
 example [LinearOrderedField K] [Module K V]
     (h₁ : 1 = a ^ 2 + b ^ 2)
-    (h₂ : 1 - a ≠ 0)
-    (h₃ : 2 ^ 2 * b ^ 2 + 4 * (1 - a) ^ 2 ≠ 0) :
+    (h₂ : 1 - a ≠ 0) :
     ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • (4:K) • ((2 / (1 - a)) • y)
     + ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • ((2 / (1 - a)) ^ 2 * b ^ 2 - 4) • x
     = a • x + y := by
   -- `linear_combination (h₁ * (b ^ 2 + (1 - a) ^ 2)⁻¹) • (y + (a - 1) • x)`
   apply eq_of_add (congr(($h₁ * (b ^ 2 + (1 - a) ^ 2)⁻¹) • (y + (a - 1) • x)):)
-  match_coeffs <;> simp only [eq_natCast, eq_intCast, eq_ratCast, smul_eq_mul]
+  match_coeffs
   · field_simp
     ring
   · field_simp
+    ring
+
+example [LinearOrderedField K] [Module K V]
+    (h₁ : 1 = a ^ 2 + b ^ 2)
+    (h₂ : 1 - a ≠ 0) :
+    ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • (4:K) • ((2 / (1 - a)) • y)
+    + ((2 / (1 - a)) ^ 2 * b ^ 2 + 4)⁻¹ • ((2 / (1 - a)) ^ 2 * b ^ 2 - 4) • x
+    = a • x + y := by
+  match_coeffs
+  · linear_combination (norm := skip) h₁ / (b ^ 2 + (1 - a) ^ 2)
+    field_simp
+    ring
+  · linear_combination (norm := skip) h₁ * (a - 1) / (b ^ 2 + (1 - a) ^ 2)
+    field_simp
     ring

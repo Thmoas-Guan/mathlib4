@@ -109,6 +109,34 @@ def matchRings {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ x₂
     let l₂' : List (Q($R₁ × $M) × ℕ) := l₂.onFst (fun p ↦ q(considerFstAs $R₁ $p))
     pure ⟨R₁, iR₁, iMR₁, l₁, l₂', pf₁, q(sorry)⟩
 
+def matchRings' {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M))
+    {R₁ : Q(Type)} {iR₁ : Q(Semiring $R₁)} (iMR₁ : Q(@Module $R₁ $M $iR₁ $iM))
+    (l : List (Q($R₁ × $M) × ℕ)) (pf : Q($x = smulAndSum $(foo (l.map Prod.fst))))
+    {R₂ : Q(Type)} (iR₂ : Q(Semiring $R₂)) (iMR₂ : Q(@Module $R₂ $M $iR₂ $iM)) (r₂ : Q($R₂)) :
+    MetaM <| Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
+      Σ l : List (Q($R × $M) × ℕ),
+      Q($x = smulAndSum $(foo (l.map Prod.fst)))
+        × Σ r : Q($R), Q($r₂ • $x = $r • $x) := do
+  match ← isDefEqQ R₁ R₂ with
+  | .defEq (_ : $R₁ =Q $R₂) => pure ⟨R₁, iR₁, iMR₁, l, pf, r₂, mkConst ``rfl⟩
+  | _ =>
+  try
+    let _i₁ ← synthInstanceQ q(CommSemiring $R₁)
+    let _i₃ ← synthInstanceQ q(Algebra $R₁ $R₂)
+    let _i₄ ← synthInstanceQ q(IsScalarTower $R₁ $R₂ $M)
+    assumeInstancesCommute
+    let l' : List (Q($R₂ × $M) × ℕ) := l.onFst (fun p ↦ q(considerFstAs $R₂ $p))
+    let pf' : Q($r₂ • $x = $r₂ • $x) := q(rfl)
+    pure ⟨R₂, iR₂, iMR₂, l', q(sorry), r₂, pf'⟩
+  catch _ =>
+    let _i₁ ← synthInstanceQ q(CommSemiring $R₂)
+    let _i₃ ← synthInstanceQ q(Algebra $R₂ $R₁)
+    let _i₄ ← synthInstanceQ q(IsScalarTower $R₂ $R₁ $M)
+    assumeInstancesCommute
+    let r : Q($R₁) := q(algebraMap $R₂ $R₁ $r₂)
+    let pf' : Q($r₂ • $x = $r • $x) := q(sorry)
+    pure ⟨R₁, iR₁, iMR₁, l, pf, r, pf'⟩
+
 def liftRing {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ : Q($M))
     {R₁ : Q(Type)} {iR₁ : Q(Semiring $R₁)} (iMR₁ : Q(@Module $R₁ $M $iR₁ $iM))
     (l₁ : List (Q($R₁ × $M) × ℕ)) (pf₁ : Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst))))
@@ -127,6 +155,11 @@ def liftRing {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ : Q($M
     assumeInstancesCommute
     let l₁' : List (Q($R₂ × $M) × ℕ) := l₁.onFst (fun p ↦ q(considerFstAs $R₂ $p))
     pure ⟨R₂, iR₂, iMR₂, l₁', q(sorry)⟩
+
+theorem fasddf {M : Type*} [AddCommMonoid M] {R : Type*} [Semiring R] [Module R M]
+    {l : List (R × M)} {x : M} (h : x = smulAndSum l) (r : R) :
+    r • x = smulAndSum (l.onFst (r * ·)) :=
+  sorry
 
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
@@ -156,21 +189,23 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let negL := l'.onFst fun (p : Q($R' × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
     pure ⟨R', iR', iMR', negL, q(sorry)⟩
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s $y) =>
-    let ⟨R, iR, iR', l, pf⟩ ← parse M iM y
+    let ⟨R, iR, iMR, l, pf⟩ ← parse M iM y
     let i₁ ← synthInstanceQ q(Semiring $S)
     let i₂ ← synthInstanceQ q(Module $S $M)
     assumeInstancesCommute
-    try
-      let _i₃ ← synthInstanceQ q(SMul $S $R)
-      let _i₄ ← synthInstanceQ q(IsScalarTower $S $R $M)
-      let l' : List (Q($R × $M) × ℕ) := l.onFst (fun p ↦ q(smulRightFst $s $p))
-      pure ⟨R, iR, iR', l', q(sorry)⟩
-    catch _ =>
-      let _i₃ ← synthInstanceQ q(SMul $R $S)
-      let _i₄ ← synthInstanceQ q(IsScalarTower $R $S $M)
-      let _i₅ ← synthInstanceQ q(SMulCommClass $S $R $M)
-      let l' : List (Q($S × $M) × ℕ) := l.onFst (fun p ↦ q(smulLeftFst $s $p))
-      pure ⟨S, i₁, i₂, l', q(sorry)⟩
+    let ⟨R', iR', iMR', l', pf', s₂, pf₂⟩ ← matchRings' M iM y iMR l pf i₁ i₂ s
+    -- let pf'' : Q($s₂ • $x = _) := q(fasddf $pf' $s₂)
+    -- try
+    --   let _i₃ ← synthInstanceQ q(SMul $S $R)
+    --   let _i₄ ← synthInstanceQ q(IsScalarTower $S $R $M)
+    let l'' : List (Q($R' × $M) × ℕ) := l'.onFst (fun p ↦ q(($s₂ * Prod.fst $p, Prod.snd $p)))
+    pure ⟨R', iR', iMR', l'', q(sorry)⟩
+    -- catch _ =>
+    --   let _i₃ ← synthInstanceQ q(SMul $R $S)
+    --   let _i₄ ← synthInstanceQ q(IsScalarTower $R $S $M)
+    --   let _i₅ ← synthInstanceQ q(SMulCommClass $S $R $M)
+    --   let l' : List (Q($S × $M) × ℕ) := l.onFst (fun p ↦ q(smulLeftFst $s $p))
+    --   pure ⟨S, i₁, i₂, l', q(sorry)⟩
   | ~q(0) => pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
   | _ =>
     let k : ℕ ← AtomM.addAtom x
@@ -294,11 +329,14 @@ def matchCoeffsAux (g : MVarId) : AtomM (List MVarId) := do
 
 def matchCoeffs (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchCoeffsAux g)
 
-elab "match_coeffs" : tactic => Tactic.liftMetaTactic matchCoeffs
-
-elab "module" : tactic => do
+elab "match_coeffs" : tactic => Tactic.focus do
   Tactic.liftMetaTactic matchCoeffs
   Tactic.allGoals <|
+    Tactic.evalTactic <| ← `(tactic | push_cast [eq_natCast, eq_intCast, eq_ratCast])
+
+elab "module" : tactic => Tactic.focus do
+  Tactic.liftMetaTactic matchCoeffs
+  Tactic.allGoals <| do
     Tactic.evalTactic <|
-      ← `(tactic |
-      (push_cast [eq_natCast, eq_intCast, eq_ratCast, smul_eq_mul, neg_smul, one_smul]; try ring1))
+      ← `(tactic | (push_cast [eq_natCast, eq_intCast, eq_ratCast]; try ring1))
+  Tactic.done
