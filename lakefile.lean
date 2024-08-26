@@ -43,7 +43,11 @@ abbrev mathlibLeanOptions := #[
     mathlibOnlyLinters.map fun s ↦ { s with name := `weak ++ s.name }
 
 package mathlib where
-  leanOptions := mathlibLeanOptions
+  leanOptions := mathlibLeanOptions ++ #[
+    ⟨`weak.aesop.collectStats, true⟩,
+    ⟨`weak.aesop.check.script, true⟩,
+    ⟨`weak.aesop.check.script.steps, true⟩
+  ]
   -- Mathlib also enforces these linter options, which are not active by default.
   moreServerOptions := mathlibOnlyLinters
   -- These are additional settings which do not affect the lake hash,
