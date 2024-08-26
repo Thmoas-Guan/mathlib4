@@ -191,7 +191,7 @@ theorem hasFiniteIntegral_add_measure {f : α → β} :
 theorem HasFiniteIntegral.smul_measure {f : α → β} (h : HasFiniteIntegral f μ) {c : ℝ≥0∞}
     (hc : c ≠ ∞) : HasFiniteIntegral f (c • μ) := by
   simp only [HasFiniteIntegral, lintegral_smul_measure] at *
-  exact mul_lt_top hc h.ne
+  exact mul_lt_top hc.lt_top h
 
 @[simp]
 theorem hasFiniteIntegral_zero_measure {m : MeasurableSpace α} (f : α → β) :
@@ -360,7 +360,7 @@ theorem HasFiniteIntegral.smul [NormedAddCommGroup 𝕜] [SMulZeroClass 𝕜 β]
       exact mod_cast (nnnorm_smul_le c (f i))
     _ < ∞ := by
       rw [lintegral_const_mul']
-      exacts [mul_lt_top coe_ne_top hfi.ne, coe_ne_top]
+      exacts [mul_lt_top coe_lt_top hfi, coe_ne_top]
 
 theorem hasFiniteIntegral_smul_iff [NormedRing 𝕜] [MulActionWithZero 𝕜 β] [BoundedSMul 𝕜 β] {c : 𝕜}
     (hc : IsUnit c) (f : α → β) : HasFiniteIntegral (c • f) μ ↔ HasFiniteIntegral f μ := by
