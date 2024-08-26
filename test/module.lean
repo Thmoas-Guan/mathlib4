@@ -1,7 +1,14 @@
+/-
+Copyright (c) 2024 Heather Macbeth. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Heather Macbeth
+-/
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.LinearCombination
 import Mathlib.Tactic.Module
 import Mathlib.Tactic.Positivity
+
+/-! # Tests for the module-normalization tactic -/
 
 open Mathlib.Tactic.LinearCombination
 

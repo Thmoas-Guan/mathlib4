@@ -1,7 +1,15 @@
+/-
+Copyright (c) 2024 Heather Macbeth. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Heather Macbeth
+-/
 import Mathlib.Algebra.Algebra.Basic
 import Mathlib.GroupTheory.GroupAction.BigOperators
 import Mathlib.Tactic.Ring
 import Mathlib.Util.AtomM
+
+/-! # A tactic for normalization over modules
+-/
 
 open Lean hiding Module
 open Meta Elab Qq Mathlib.Tactic
