@@ -92,6 +92,9 @@ end
 
 /-! # Characteristic-zero field -/
 
+example [Field K] [CharZero K] [Module K V] : (2:K)⁻¹ • x + (3:K)⁻¹ • x + (6:K)⁻¹ • x = x := by
+  module
+
 example [Field K] [CharZero K] [Module K V]
     (h₁ : t - u = -(v - w))
     (h₂ : t + u = v + w) :
