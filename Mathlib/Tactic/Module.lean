@@ -171,10 +171,19 @@ theorem fasddf {M : Type*} [AddCommMonoid M] {R : Type*} [Semiring R] [Module R 
   sorry
 
 def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (iR : Q(Ring $R))
-    (iMR : Q(@Module $R $M Ring.toSemiring $iM)) (l : List (Q($R × $M) × ℕ)) :
-    let qneg : Q($R × $M) → Q($R × $M) := fun (p : Q($R × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
-    MetaM Q(List.onFst $(foo (l.map Prod.fst)) Neg.neg = $(foo ((l.onFst qneg).map Prod.fst))) := do
-  pure q(sorry)
+    (iMR : Q(@Module $R $M Ring.toSemiring $iM)) :
+    ∀ (l : List (Q($R × $M) × ℕ)),
+      MetaM Q(List.map (fun p ↦ (-p.1, p.2)) $(foo (l.map Prod.fst))
+        = $(foo ((l.map (fun ⟨p, k⟩ ↦ (q((- Prod.fst $p, Prod.snd $p)), k))).map Prod.fst)))
+  | [] => pure q(rfl)
+  | (e, _) :: l => do
+    let qneg' : Q($R × $M) → Q($R × $M) := fun p ↦ q((- Prod.fst $p, Prod.snd $p))
+    let qneg : Q($R × $M) × ℕ → Q($R × $M) × ℕ := fun ⟨p, k⟩ ↦ (qneg' p, k)
+    let pf' : Q(List.map (fun p ↦ (-p.1, p.2)) ($(foo (l.map Prod.fst)))
+      = $(foo ((l.map qneg).map Prod.fst))) := ← asdfa iM iR iMR l
+    let pf : Q($(qneg' e) :: List.map (fun p ↦ (-p.1, p.2)) ($(foo (l.map Prod.fst)))
+      = $(qneg' e) :: $(foo ((l.map qneg).map Prod.fst))) := q(congrArg _ $pf')
+    pure pf
 
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
@@ -303,7 +312,10 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} {M : Q(Type v)}
       pure (mvar₁.mvarId! :: mvars)
 
 def matchScalarsAux (g : MVarId) : AtomM (List MVarId) := do
-  let eqData := (← g.getType).consumeMData.eq?.get!
+  let eqData ← do
+    match (← g.getType').eq? with
+    | some e => pure e
+    | none => throwError "goal {← g.getType} is not an equality"
   let .sort u ← whnf (← inferType eqData.1) | unreachable!
   let some v := u.dec | throwError "goal cannot be an equality in Sort"
   let ((M : Q(Type v)), (lhs : Q($M)), (rhs :Q($M))) := eqData
@@ -346,12 +358,12 @@ def matchScalars (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (match
 be added to the list of algebra-maps which get special-cased here?  (The lemma would be
 `Complex.coe_algebraMap`.)-/
 
-elab "match_scalars" : tactic => Tactic.focus do
+elab "match_scalars" : tactic => Tactic.withMainContext <| Tactic.focus do
   Tactic.liftMetaTactic matchScalars
   Tactic.allGoals <|
     Tactic.evalTactic <| ← `(tactic | push_cast [eq_natCast, eq_intCast, eq_ratCast])
 
-elab "module" : tactic => Tactic.focus do
+elab "module" : tactic => Tactic.withMainContext <| Tactic.focus do
   Tactic.liftMetaTactic matchScalars
   Tactic.allGoals <| do
     Tactic.evalTactic <|

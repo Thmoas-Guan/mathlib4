@@ -26,6 +26,10 @@ example : x + (y + x) = x + x + y := by module
 example : (3 : ℕ) • x = x + (2 : ℕ) • x := by module
 example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 4 • x := by module
 
+example : x + (y + x) = x + x + y ∨ False := by
+  left
+  module
+
 -- Make sure we fail on some non-equalities.
 example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 3 • x ∨ True := by
   fail_if_success
