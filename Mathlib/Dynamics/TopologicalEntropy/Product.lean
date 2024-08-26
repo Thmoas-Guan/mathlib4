@@ -36,7 +36,7 @@ lemma coverEntropyInf_prod_swap [UniformSpace X] [UniformSpace Y] (S : X → X) 
   rw [← UniformEquiv.coe_prodComm]
   exact UniformEquiv.comap_eq (@UniformEquiv.prodComm X Y _ _)
 
-lemma coverEntropySup_prod_swap [UniformSpace X] [UniformSpace Y] (S : X → X) (T : Y → Y)
+lemma coverEntropy_prod_swap [UniformSpace X] [UniformSpace Y] (S : X → X) (T : Y → Y)
     (F : Set X) (G : Set Y) :
     coverEntropy (map T S) (G ×ˢ F) = coverEntropy (map S T) (F ×ˢ G) := by
   rw [← Set.image_swap_prod F G,
