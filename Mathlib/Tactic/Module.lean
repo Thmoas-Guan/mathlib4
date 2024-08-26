@@ -18,15 +18,15 @@ abbrev considerFstAs {S M : Type*} (R : Type*) [CommSemiring S] [Semiring R] [Al
 
 abbrev combine {α : Type*} (f : α → α → α) (fL : α → α) (fR : α → α) :
     List (α × ℕ) → List (α × ℕ) → List (α × ℕ)
-  | [], l => l
-  | l, [] => l
+  | [], l => l.onFst fR
+  | l, [] => l.onFst fL
   | (a₁, k₁) :: t₁, (a₂, k₂) :: t₂ =>
     if k₁ < k₂ then
-      (fL a₁, k₁) :: (fR a₂, k₂) :: combine f fL fR t₁ t₂
+      (fL a₁, k₁) :: combine f fL fR t₁ ((a₂, k₂) :: t₂)
     else if k₁ = k₂ then
       (f a₁ a₂, k₁) :: combine f fL fR t₁ t₂
     else
-      (fR a₂, k₂) :: (fL a₁, k₁) :: combine f fL fR t₁ t₂
+      (fR a₂, k₂) :: combine f fL fR ((a₁, k₁) :: t₁) t₂
 
 abbrev cob' {M : Type*} {R : Type} [Semiring R] (p₁ p₂ : R × M) : R × M :=
   let r₁ := Prod.fst p₁
@@ -108,21 +108,25 @@ def liftRing {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ : Q($M
     MetaM <| Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
       Σ l₁ : List (Q($R × $M) × ℕ), Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst))) := do
   try
-    let _i₁ ← synthInstanceQ q(CommSemiring $R₂)
-    let _i₃ ← synthInstanceQ q(Algebra $R₂ $R₁)
+    trace[debug] "trying to consider {R₁} as an algebra over {R₂}"
+    let _i₁ : Q(CommSemiring $R₂) ← synthInstanceQ q(CommSemiring $R₂)
+    trace[debug] "found that {R₂} is a commutative semiring"
+    let _i₃ ← synthInstance q(Algebra $R₂ $R₁)
+    trace[debug] "found that {R₁} is an algebra over {R₂}"
+    let _i₃' : Q(Algebra $R₂ $R₁) := _i₃
     let _i₄ ← synthInstanceQ q(IsScalarTower $R₂ $R₁ $M)
-    assumeInstancesCommute
+    -- assumeInstancesCommute
     pure ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩
-  catch _ =>
+  catch e =>
+    trace[debug] "while trying to consider {R₁} as an algebra over {R₂}, encountered the following exception:"
+    trace[debug] e.toMessageData
+    trace[debug] "now trying to consider {R₂} as an algebra over {R₁}"
     let _i₁ ← synthInstanceQ q(CommSemiring $R₁)
     let _i₃ ← synthInstanceQ q(Algebra $R₁ $R₂)
     let _i₄ ← synthInstanceQ q(IsScalarTower $R₁ $R₂ $M)
     assumeInstancesCommute
     let l₁' : List (Q($R₂ × $M) × ℕ) := l₁.onFst (fun p ↦ q(considerFstAs $R₂ $p))
     pure ⟨R₂, iR₂, iMR₂, l₁', q(sorry)⟩
-
-variable {M : Type*} [AddCommGroup M] in
-#synth Module ℤ M
 
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
@@ -132,43 +136,64 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁
     let ⟨R₂, iR₂, iMR₂, l₂, pf₂⟩ ← parse M iM x₂
     let ⟨R, iR, iMR, l₁', l₂', pf₁', pf₂'⟩ ← matchRings M iM x₁ x₂ iMR₁ l₁ pf₁ iMR₂ l₂ pf₂
+    trace[debug] "finished parsing the sum of {x₁} and {x₂}"
     pure ⟨R, iR, iMR, combine (cob iR) id id l₁' l₂', q(sorry)⟩
   | ~q(@HSub.hSub _ _ _ (@instHSub _ $iM') $x₁ $x₂) =>
+    trace[debug] "parsing the difference of {x₁} and {x₂}"
     let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁
     let ⟨R₂, iR₂, iMR₂, l₂, pf₂⟩ ← parse M iM x₂
+    trace[debug] "finished parsing the atoms for subtraction: {x₁} will have {x₂} subtracted"
+    trace[debug] "first is over {R₁}, second is over {R₂}"
     let iZ ← synthInstanceQ q(Semiring ℤ)
     let iMZ ← synthInstanceQ q(Module ℤ $M)
     let ⟨R₁', iR₁', iMR₁', l₁', pf₁'⟩ ← liftRing M iM x₁ iMR₁ l₁ pf₁ q(ℤ) iZ iMZ
+    trace[debug] "{R₁} successfully lifted to {R₁'}"
     let ⟨R₂', iR₂', iMR₂', l₂', pf₂'⟩ ← liftRing M iM x₂ iMR₂ l₂ pf₂ q(ℤ) iZ iMZ
+    trace[debug] "{R₂} successfully lifted to {R₂'}"
     let ⟨R, iR, iMR, l₁'', l₂'', pf₁'', pf₂''⟩ ← matchRings M iM x₁ x₂ iMR₁' l₁' pf₁' iMR₂' l₂' pf₂'
     let iR' ← synthInstanceQ q(Ring $R)
+    let dddd := combine (boc iR') id (bco iR') l₁'' l₂''
+    trace[debug] "finished parsing the difference of {x₁} and {x₂} to {dddd}"
     pure ⟨R, iR, iMR, combine (boc iR') id (bco iR') l₁'' l₂'', q(sorry)⟩
+  | ~q(@Neg.neg _ $iM' $x) =>
+    let ⟨R, iR, iMR, l, pf⟩ ← parse M iM x
+    let iZ ← synthInstanceQ q(Semiring ℤ)
+    let iMZ ← synthInstanceQ q(Module ℤ $M)
+    let ⟨R', iR', iMR', l', pf'⟩ ← liftRing M iM x iMR l pf q(ℤ) iZ iMZ
+    let iR' ← synthInstanceQ q(Ring $R')
+    let negL := l'.onFst fun (p : Q($R' × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
+    -- trace[debug] "finished parsing the negation of {x}"
+    pure ⟨R', iR', iMR', negL, q(sorry)⟩
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s $y) =>
-    trace[debug] "parsing scalar multiplication of {y} by {s}, scalar type is {S}"
+    -- trace[debug] "parsing scalar multiplication of {y} by {s}, scalar type is {S}"
     let ⟨R, iR, iR', l, pf⟩ ← parse M iM y
+    -- trace[debug] "parsing scalar multiplication of {y} by {s}, scalar type is {S}: finished parsing {y} and now doing the scalar multiplication by {s}"
     let i₁ ← synthInstanceQ q(Semiring $S)
     let i₂ ← synthInstanceQ q(Module $S $M)
-    trace[debug] "found semiring and module instances for {S}"
+    -- trace[debug] "found semiring and module instances for {S}"
     assumeInstancesCommute
     try
-      trace[debug] "trying first branch"
+      -- trace[debug] "trying first branch"
       let _i₃ ← synthInstanceQ q(SMul $S $R)
       let _i₄ ← synthInstanceQ q(IsScalarTower $S $R $M)
-      trace[debug] "found that {S} is a valid scalar type for {R}"
+      -- trace[debug] "found that {S} is a valid scalar type for {R}"
       let l' : List (Q($R × $M) × ℕ) := l.onFst (fun p ↦ q(smulRightFst $s $p))
-      trace[debug] "sending back the list {l'} now"
+      -- trace[debug] "scalar multiplication of {y} by {s} parsed to {l'} over {R}"
       pure ⟨R, iR, iR', l', q(sorry)⟩
     catch _ =>
-      trace[debug] "trying second branch"
+      -- trace[debug] "trying second branch"
       let _i₃ ← synthInstanceQ q(SMul $R $S)
       let _i₄ ← synthInstanceQ q(IsScalarTower $R $S $M)
       let _i₅ ← synthInstanceQ q(SMulCommClass $S $R $M)
-      trace[debug] "found that {R} is a valid scalar type for {S}"
+      -- trace[debug] "found that {R} is a valid scalar type for {S}"
       let l' : List (Q($S × $M) × ℕ) := l.onFst (fun p ↦ q(smulLeftFst $s $p))
-      trace[debug] "sending back the list {l'} now"
+      -- trace[debug] "scalar multiplication of {y} by {s} parsed to {l'} over {S}"
       pure ⟨S, i₁, i₂, l', q(sorry)⟩
-  | ~q(0) => pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
+  | ~q(0) =>
+    trace[debug] "parsing a zero"
+    pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
   | _ =>
+    -- trace[debug] "reached atom {x}"
     let k : ℕ ← AtomM.addAtom x
     pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [(q((1, $x)), k)], q(one_pf $x)⟩
 
@@ -292,6 +317,9 @@ def matchCoeffs (g : MVarId) : MetaM (List MVarId) := AtomM.run .default (matchC
 
 elab "match_coeffs" : tactic => Tactic.liftMetaTactic matchCoeffs
 
--- elab "module" : tactic => do
---   Tactic.liftMetaTactic matchCoeffs
---   Tactic.allGoals <| Tactic.evalTactic (← `(tactic | ring1))
+elab "module" : tactic => do
+  Tactic.liftMetaTactic matchCoeffs
+  Tactic.allGoals <|
+    Tactic.evalTactic <|
+      ← `(tactic |
+      (push_cast [eq_natCast, eq_intCast, eq_ratCast, smul_eq_mul, neg_smul, one_smul]; try ring1))
