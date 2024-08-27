@@ -54,7 +54,8 @@ variable {F K L}
 
 /-- A normal closure is always normal.
 
-[Stacks: Lemma 09DT, second part](https://stacks.math.columbia.edu/tag/09DT)-/
+[Stacks: Lemma 09DT, second part](https://stacks.math.columbia.edu/tag/09DT)
+(here need the whole thing to be hold in a normal extention)-/
 
 lemma IsNormalClosure.normal [h : IsNormalClosure F K L] : Normal F L :=
   Normal.of_algEquiv topEquiv (h := h.adjoin_rootSet ▸ IntermediateField.normal_iSup (h :=
@@ -176,7 +177,8 @@ instance normal [h : Normal F L] : Normal F (normalClosure F K L) := by
 
 /-If L/K/F is a subextension with K/F finite, then the normal closure of K/F in L/F is finite over F
 
-[Stacks: Lemma 0BMG, first part](https://stacks.math.columbia.edu/tag/0BMG)-/
+[Stacks: Lemma 0BMG, first part](https://stacks.math.columbia.edu/tag/0BMG)
+(just use the normalclosure would solve the existance for Stacks Project)-/
 
 instance is_finiteDimensional [FiniteDimensional F K] :
     FiniteDimensional F (normalClosure F K L) := by
