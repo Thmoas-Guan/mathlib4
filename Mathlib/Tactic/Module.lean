@@ -78,19 +78,27 @@ theorem one_pf {M : Type*} [AddMonoid M] (x : M) : x = smulAndSum [((1:ℕ), x)]
 
 theorem zero_pf (M : Type*) [AddMonoid M] : (0:M) = smulAndSum (R := Nat) [] := by simp [smulAndSum]
 
-def foo {v : Level} {α : Q(Type v)} : List (Q($α)) → Q(List $α)
+def List.quote {v : Level} {α : Q(Type v)} : List (Q($α)) → Q(List $α)
   | [] => q([])
-  | e :: t => q($e :: $(foo t))
+  | e :: t => q($e :: $(t.quote))
+
+def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (iR : Q(Semiring $R))
+    (iMR : Q(@Module $R $M $iR $iM)) (f : Q($R × $M → $R × $M)) :
+    ∀ (l : List (Q($R × $M) × ℕ)),
+      MetaM Q(List.map $f $((l.map Prod.fst).quote)
+        = $(((l.map (fun ⟨p, k⟩ ↦ (q($f $p), k))).map Prod.fst).quote))
+  | [] => pure q(rfl)
+  | _ :: l => do pure q(congrArg _ $(← asdfa iM iR iMR f l))
 
 def matchRings {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ x₂ : Q($M))
     {R₁ : Q(Type)} {iR₁ : Q(Semiring $R₁)} (iMR₁ : Q(@Module $R₁ $M $iR₁ $iM))
-    (l₁ : List (Q($R₁ × $M) × ℕ)) (pf₁ : Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst))))
+    (l₁ : List (Q($R₁ × $M) × ℕ)) (pf₁ : Q($x₁ = smulAndSum $((l₁.map Prod.fst).quote)))
     {R₂ : Q(Type)} {iR₂ : Q(Semiring $R₂)} (iMR₂ : Q(@Module $R₂ $M $iR₂ $iM))
-    (l₂ : List (Q($R₂ × $M) × ℕ)) (pf₂ : Q($x₂ = smulAndSum $(foo (l₂.map Prod.fst)))) :
+    (l₂ : List (Q($R₂ × $M) × ℕ)) (pf₂ : Q($x₂ = smulAndSum $((l₂.map Prod.fst).quote))) :
     MetaM <| Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
       Σ l₁ l₂ : List (Q($R × $M) × ℕ),
-      Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst)))
-        × Q($x₂ = smulAndSum $(foo (l₂.map Prod.fst))) := do
+      Q($x₁ = smulAndSum $((l₁.map Prod.fst).quote))
+        × Q($x₂ = smulAndSum $((l₂.map Prod.fst).quote)) := do
   match ← isDefEqQ R₁ R₂ with
   | .defEq (_ : $R₁ =Q $R₂) => pure ⟨R₁, iR₁, iMR₁, l₁, l₂, pf₁, pf₂⟩
   | _ =>
@@ -111,11 +119,11 @@ def matchRings {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ x₂
 
 def matchRings' {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M))
     {R₁ : Q(Type)} {iR₁ : Q(Semiring $R₁)} (iMR₁ : Q(@Module $R₁ $M $iR₁ $iM))
-    (l : List (Q($R₁ × $M) × ℕ)) (pf : Q($x = smulAndSum $(foo (l.map Prod.fst))))
+    (l : List (Q($R₁ × $M) × ℕ)) (pf : Q($x = smulAndSum $((l.map Prod.fst).quote)))
     {R₂ : Q(Type)} (iR₂ : Q(Semiring $R₂)) (iMR₂ : Q(@Module $R₂ $M $iR₂ $iM)) (r₂ : Q($R₂)) :
     MetaM <| Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
       Σ l : List (Q($R × $M) × ℕ),
-      Q($x = smulAndSum $(foo (l.map Prod.fst)))
+      Q($x = smulAndSum $((l.map Prod.fst).quote))
         × Σ r : Q($R), Q($r₂ • $x = $r • $x) := do
   match ← isDefEqQ R₁ R₂ with
   | .defEq (_ : $R₁ =Q $R₂) => pure ⟨R₁, iR₁, iMR₁, l, pf, r₂, q(sorry)⟩
@@ -139,10 +147,10 @@ def matchRings' {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M
 
 def liftRing {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ : Q($M))
     {R₁ : Q(Type)} {iR₁ : Q(Semiring $R₁)} (iMR₁ : Q(@Module $R₁ $M $iR₁ $iM))
-    (l₁ : List (Q($R₁ × $M) × ℕ)) (pf₁ : Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst))))
+    (l₁ : List (Q($R₁ × $M) × ℕ)) (pf₁ : Q($x₁ = smulAndSum $((l₁.map Prod.fst).quote)))
     (R₂ : Q(Type)) (iR₂ : Q(Semiring $R₂)) (iMR₂ : Q(@Module $R₂ $M $iR₂ $iM)) :
     MetaM <| Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
-      Σ l₁ : List (Q($R × $M) × ℕ), Q($x₁ = smulAndSum $(foo (l₁.map Prod.fst))) := do
+      Σ l₁ : List (Q($R × $M) × ℕ), Q($x₁ = smulAndSum $((l₁.map Prod.fst).quote)) := do
   try
     let _i₁ : Q(CommSemiring $R₂) ← synthInstanceQ q(CommSemiring $R₂)
     let _i₃ ← synthInstanceQ q(Algebra $R₂ $R₁)
@@ -156,7 +164,7 @@ def liftRing {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ : Q($M
     let l₁' : List (Q($R₂ × $M) × ℕ) := l₁.onFst (fun p ↦ q(considerFstAs $R₂ $p))
     pure ⟨R₂, iR₂, iMR₂, l₁', q(sorry)⟩
 
-theorem fasdasdfdf {M : Type*} [AddCommGroup M] {R : Type*} [Ring R] [Module R M]
+theorem neg_eq_smulAndSum {M : Type*} [AddCommGroup M] {R : Type*} [Ring R] [Module R M]
     {l : List (R × M)} {x : M} (h : x = smulAndSum l) :
     - x = smulAndSum (l.onFst Neg.neg) := by
   unfold smulAndSum at h ⊢
@@ -165,18 +173,14 @@ theorem fasdasdfdf {M : Type*} [AddCommGroup M] {R : Type*} [Ring R] [Module R M
   ext p
   simp
 
-theorem fasddf {M : Type*} [AddCommMonoid M] {R : Type*} [Semiring R] [Module R M]
+theorem smul_eq_smulAndSum {M : Type*} [AddCommMonoid M] {R : Type*} [Semiring R] [Module R M]
     {l : List (R × M)} {x : M} (h : x = smulAndSum l) (r : R) :
-    r • x = smulAndSum (l.onFst (r * ·)) :=
-  sorry
-
-def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (iR : Q(Semiring $R))
-    (iMR : Q(@Module $R $M $iR $iM)) (f : Q($R × $M → $R × $M)) :
-    ∀ (l : List (Q($R × $M) × ℕ)),
-      MetaM Q(List.map $f $(foo (l.map Prod.fst))
-        = $(foo ((l.map (fun ⟨p, k⟩ ↦ (q($f $p), k))).map Prod.fst)))
-  | [] => pure q(rfl)
-  | _ :: l => do pure q(congrArg _ $(← asdfa iM iR iMR f l))
+    r • x = smulAndSum (l.onFst (r * ·)) := by
+  unfold smulAndSum at h ⊢
+  simp only [List.map_map, h, List.smul_sum]
+  congr
+  ext p
+  simp [mul_smul]
 
 /-- The main algorithm behind the `match_scalars` and `module` tactics: partially-normalizing an
 expression in an additive commutative monoid `M` into the form c1 • x1 + c2 • x2 + ... c_k • x_k,
@@ -188,7 +192,7 @@ It is assumed that there is a "linear order" on all the semirings which appear i
 for any two semirings `R` and `S` which occur, we have either `Algebra R S` or `Algebra S R`). -/
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
-      Σ e : List (Q($R × $M) × ℕ), Q($x = smulAndSum $(foo (e.map Prod.fst)))) := do
+      Σ e : List (Q($R × $M) × ℕ), Q($x = smulAndSum $((e.map Prod.fst).quote))) := do
   match x with
   -- parse an addition: `x₁ + x₁`
   | ~q($x₁ + $x₂) =>
@@ -219,10 +223,10 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     assumeInstancesCommute
     let qneg : Q($R × $M) → Q($R × $M) := fun (p : Q($R × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
     have pf_right :
-        Q(List.onFst $(foo (l.map Prod.fst)) Neg.neg = $(foo ((l.onFst qneg).map Prod.fst))) :=
+        Q(List.onFst $((l.map Prod.fst).quote) Neg.neg = $(((l.onFst qneg).map Prod.fst).quote)) :=
       ← asdfa iM iR iMR q(fun p ↦ (- p.1, p.2)) l
-    have pf_left : Q(-$y = smulAndSum (R := $R) (List.onFst $(foo (l.map Prod.fst)) Neg.neg)) :=
-      q(fasdasdfdf $pf)
+    have pf_left : Q(-$y = smulAndSum (R := $R) (List.onFst $((l.map Prod.fst).quote) Neg.neg)) :=
+      q(neg_eq_smulAndSum $pf)
     pure ⟨R, iR, iMR, l.onFst qneg, q(Eq.trans $pf_left (congrArg smulAndSum $pf_right))⟩
   -- parse a scalar multiplication: `(s₀ : S) • y`
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s₀ $y) =>
@@ -231,12 +235,13 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let i₂ ← synthInstanceQ q(Module $S $M)
     assumeInstancesCommute
     -- lift from original semiring of scalars (say `R₀`) to `R₀ ⊗ S`
-    let ⟨R, iR, iMR, l, (pf₂ : Q($y = smulAndSum $(foo (List.map Prod.fst l)))), s,
+    let ⟨R, iR, iMR, l, (pf₂ : Q($y = smulAndSum $((List.map Prod.fst l).quote))), s,
       (pf₁ : Q($s₀ • $y = $s • $y))⟩ ← matchRings' M iM y iMR₀ l₀ pf₀ i₁ i₂ s₀
     let sl : List (Q($R × $M) × ℕ) := l.onFst (fun p ↦ q(($s * Prod.fst $p, Prod.snd $p)))
-    let pf₃ : Q((List.onFst $(foo (List.map Prod.fst l)) ($s * ·)) = $(foo (sl.map Prod.fst)))
+    let pf₃ : Q((List.onFst $((List.map Prod.fst l).quote) ($s * ·)) = $((sl.map Prod.fst).quote))
       ← asdfa iM iR iMR q(fun p ↦ ($s * p.1, p.2)) l
-    pure ⟨R, iR, iMR, sl, q(Eq.trans (Eq.trans $pf₁ (fasddf $pf₂ $s)) (congrArg _ $pf₃))⟩
+    pure ⟨R, iR, iMR, sl,
+      q(Eq.trans (Eq.trans $pf₁ (smul_eq_smulAndSum $pf₂ $s)) (congrArg _ $pf₃))⟩
   -- parse a `(0:M)`
   | ~q(0) => pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
   -- anything else should be treated as an atom
@@ -268,8 +273,8 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} {M : Q(Type v)}
     MetaM (List MVarId) := do
   trace[debug] "creating goals to compare {l₁} and {l₂}"
   let _i ← synthInstanceQ q(Zero $R)
-  let ll₁ : Q(List ($R × $M)) := foo (List.map Prod.fst l₁)
-  let ll₂ : Q(List ($R × $M)) := foo (List.map Prod.fst l₂)
+  let ll₁ : Q(List ($R × $M)) := (l₁.map Prod.fst).quote
+  let ll₂ : Q(List ($R × $M)) := (l₂.map Prod.fst).quote
   trace[debug] "current goal is {← g.getType}"
   let t : Q(Prop) := q(smulAndSum $ll₁ = smulAndSum $ll₂)
   trace[debug] "checking that this is the same as {t} ..."
@@ -286,21 +291,21 @@ partial def reduceCoefficientwise {v : Level} {R : Q(Type)} {M : Q(Type v)}
     pure []
   | [], (e, _) :: L =>
     let mvar₁ : Q((0:$R) = Prod.fst $e) ← mkFreshExprMVar q((0:$R) = Prod.fst $e)
-    let LL : Q(List ($R × $M)) := foo (List.map Prod.fst L)
+    let LL : Q(List ($R × $M)) := (L.map Prod.fst).quote
     let mvar₂ : Q((0:$M) = smulAndSum $LL) ← mkFreshExprMVar q((0:$M) = smulAndSum $LL)
     let mvars ← reduceCoefficientwise iM iR iRM [] L mvar₂.mvarId!
     g.assign q(eq_const_cons (Prod.snd $e) $mvar₁ $mvar₂)
     pure (mvar₁.mvarId! :: mvars)
   | (e, _) :: L, [] =>
     let mvar₁ : Q(Prod.fst $e = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e = (0:$R))
-    let LL : Q(List ($R × $M)) := foo (List.map Prod.fst L)
+    let LL : Q(List ($R × $M)) := (L.map Prod.fst).quote
     let mvar₂ : Q(smulAndSum $LL = (0:$M)) ← mkFreshExprMVar q(smulAndSum $LL = (0:$M))
     let mvars ← reduceCoefficientwise iM iR iRM L [] mvar₂.mvarId!
     g.assign q(eq_cons_const (Prod.snd $e) $mvar₁ $mvar₂)
     pure (mvar₁.mvarId! :: mvars)
   | (e₁, k₁) :: L₁, (e₂, k₂) :: L₂ =>
-    let LL₁ : Q(List ($R × $M)) := foo (L₁.map Prod.fst)
-    let LL₂ : Q(List ($R × $M)) := foo (L₂.map Prod.fst)
+    let LL₁ : Q(List ($R × $M)) := (L₁.map Prod.fst).quote
+    let LL₂ : Q(List ($R × $M)) := (L₂.map Prod.fst).quote
     if k₁ < k₂ then
       let mvar₁ : Q(Prod.fst $e₁ = (0:$R)) ← mkFreshExprMVar q(Prod.fst $e₁ = (0:$R))
       let mvar₂ : Q(smulAndSum $LL₁ = smulAndSum $ll₂)
@@ -342,7 +347,7 @@ def matchScalarsAux (g : MVarId) : AtomM (List MVarId) := do
   -- have iMR₁ : Q(@Module.{0, v} $R₁ $M $_iR₁ $iM) := e.snd.snd.fst
   assumeInstancesCommute
   have l₁ : List (Q($R₁ × $M) × ℕ) := e₁.snd.snd.snd.fst
-  let ll₁ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₁)
+  let ll₁ : Q(List ($R₁ × $M)) := (List.map Prod.fst l₁).quote
   let pf₁ : Q($lhs = smulAndSum $ll₁) := e₁.snd.snd.snd.snd
   trace[debug] "unpacked the LHS parse successfully"
   trace[debug] "parsing RHS, {rhs}"
@@ -351,14 +356,14 @@ def matchScalarsAux (g : MVarId) : AtomM (List MVarId) := do
   have _iR₂ : Q(Semiring.{0} $R₂) := e₂.snd.fst
   let iMR₂ ← synthInstanceQ q(Module $R₂ $M)
   have l₂ : List (Q($R₁ × $M) × ℕ) := e₂.snd.snd.snd.fst
-  let ll₂ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₂)
+  let ll₂ : Q(List ($R₁ × $M)) := (List.map Prod.fst l₂).quote
   let pf₂ : Q($rhs = smulAndSum $ll₂) := e₂.snd.snd.snd.snd
   trace[debug] "unpacked the RHS parse successfully"
   -- lift LHS and RHS to same scalar ring
   let ⟨R, iR, iMR, l₁', l₂', pf₁', pf₂'⟩ ← matchRings M iM lhs rhs iMR₁ l₁ pf₁ iMR₂ l₂ pf₂
   -- start to rig up the collection of goals we will reduce to
-  let ll₁' : Q(List ($R × $M)) := foo (List.map Prod.fst l₁')
-  let ll₂' : Q(List ($R × $M)) := foo (List.map Prod.fst l₂')
+  let ll₁' : Q(List ($R × $M)) := (l₁'.map Prod.fst).quote
+  let ll₂' : Q(List ($R × $M)) := (l₂'.map Prod.fst).quote
   let mvar : Q(smulAndSum $ll₁' = smulAndSum $ll₂')
     ← mkFreshExprMVar q(smulAndSum $ll₁' = smulAndSum $ll₂')
   g.assign q(Eq.trans (Eq.trans $pf₁' $mvar) (Eq.symm $pf₂'))
