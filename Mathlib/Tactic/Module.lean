@@ -118,7 +118,7 @@ def matchRings' {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M
       Q($x = smulAndSum $(foo (l.map Prod.fst)))
         × Σ r : Q($R), Q($r₂ • $x = $r • $x) := do
   match ← isDefEqQ R₁ R₂ with
-  | .defEq (_ : $R₁ =Q $R₂) => pure ⟨R₁, iR₁, iMR₁, l, pf, r₂, mkConst ``rfl⟩
+  | .defEq (_ : $R₁ =Q $R₂) => pure ⟨R₁, iR₁, iMR₁, l, pf, r₂, q(sorry)⟩
   | _ =>
   try
     let _i₁ ← synthInstanceQ q(CommSemiring $R₁)
@@ -170,8 +170,8 @@ theorem fasddf {M : Type*} [AddCommMonoid M] {R : Type*} [Semiring R] [Module R 
     r • x = smulAndSum (l.onFst (r * ·)) :=
   sorry
 
-def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (iR : Q(Ring $R))
-    (iMR : Q(@Module $R $M Ring.toSemiring $iM)) (f : Q($R × $M → $R × $M)) :
+def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (iR : Q(Semiring $R))
+    (iMR : Q(@Module $R $M $iR $iM)) (f : Q($R × $M → $R × $M)) :
     ∀ (l : List (Q($R × $M) × ℕ)),
       MetaM Q(List.map $f $(foo (l.map Prod.fst))
         = $(foo ((l.map (fun ⟨p, k⟩ ↦ (q($f $p), k))).map Prod.fst)))
@@ -198,34 +198,35 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let iR' ← synthInstanceQ q(Ring $R)
     pure ⟨R, iR, iMR, combine (boc iR') id (bco iR') l₁'' l₂'', q(sorry)⟩
   | ~q(@Neg.neg _ $iM' $y) =>
-    let ⟨_, _, iMR₀, l, pf⟩ ← parse M iM y
+    let ⟨_, _, iMR₀, l₀, pf₀⟩ ← parse M iM y
     let iZ ← synthInstanceQ q(Semiring ℤ)
     let _i ← synthInstanceQ q(AddCommGroup $M)
     let iMZ ← synthInstanceQ q(Module ℤ $M)
-    let ⟨R, iR, iMR, l', pf'⟩ ← liftRing M iM y iMR₀ l pf q(ℤ) iZ iMZ
-    let iR'' ← synthInstanceQ q(Ring $R)
+    -- lift from original semiring of scalars (say `R₀`) to `R₀ ⊗ ℤ`
+    let ⟨R, iR, iMR, l, pf⟩ ← liftRing M iM y iMR₀ l₀ pf₀ q(ℤ) iZ iMZ
+    let _i' ← synthInstanceQ q(Ring $R)
     assumeInstancesCommute
     let qneg : Q($R × $M) → Q($R × $M) := fun (p : Q($R × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
-    have pf'' :
-        Q(List.onFst $(foo (l'.map Prod.fst)) Neg.neg = $(foo ((l'.onFst qneg).map Prod.fst))) :=
-      ← asdfa iM iR'' iMR q(fun p ↦ (- p.1, p.2)) l'
-    have pf''' : Q(-$y = smulAndSum (R := $R) (List.onFst $(foo (l'.map Prod.fst)) Neg.neg)) :=
-      q(fasdasdfdf $pf')
-    pure ⟨R, iR, iMR, l'.onFst qneg, q(Eq.trans $pf''' (congrArg smulAndSum $pf''))⟩
+    have pf_right :
+        Q(List.onFst $(foo (l.map Prod.fst)) Neg.neg = $(foo ((l.onFst qneg).map Prod.fst))) :=
+      ← asdfa iM iR iMR q(fun p ↦ (- p.1, p.2)) l
+    have pf_left : Q(-$y = smulAndSum (R := $R) (List.onFst $(foo (l.map Prod.fst)) Neg.neg)) :=
+      q(fasdasdfdf $pf)
+    pure ⟨R, iR, iMR, l.onFst qneg, q(Eq.trans $pf_left (congrArg smulAndSum $pf_right))⟩
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s₀ $y) =>
-    let ⟨R₀, iR₀, iMR₀, l₀, pf₀⟩ ← parse M iM y
+    let ⟨_, _, iMR₀, l₀, pf₀⟩ ← parse M iM y
     let i₁ ← synthInstanceQ q(Semiring $S)
     let i₂ ← synthInstanceQ q(Module $S $M)
     assumeInstancesCommute
-    let ⟨R, iR, iMR, l, pf, s, pf₂⟩ ← matchRings' M iM y iMR₀ l₀ pf₀ i₁ i₂ s₀
+    -- lift from original semiring of scalars (say `R₀`) to `R₀ ⊗ S`
+    let ⟨R, iR, iMR, l, (pf₂ : Q($y = smulAndSum $(foo (List.map Prod.fst l)))), s,
+      (pf₁ : Q($s₀ • $y = $s • $y))⟩ ← matchRings' M iM y iMR₀ l₀ pf₀ i₁ i₂ s₀
     let sl : List (Q($R × $M) × ℕ) := l.onFst (fun p ↦ q(($s * Prod.fst $p, Prod.snd $p)))
-    let qsmul : Q($R × $M) → Q($R × $M) := fun (p : Q($R × $M)) ↦ q(($s * Prod.fst $p, Prod.snd $p))
-    -- have pf'' :
-    --     Q(List.onFst $(foo (l'.map Prod.fst)) Neg.neg = $(foo ((l'.onFst qneg).map Prod.fst))) :=
-    --   ← asdfa iM iR'' iMR' q(fun p ↦ (- p.1, p.2)) l'
-    -- have pf''' : Q(-$y = smulAndSum (R := $R') (List.onFst $(foo (l'.map Prod.fst)) Neg.neg)) :=
-    --   q(fasdasdfdf $pf')
-    pure ⟨R, iR, iMR, sl, q(sorry)⟩
+    let pf₂' : Q($s • $y = smulAndSum (List.onFst $(foo (List.map Prod.fst l)) ($s * ·))) :=
+      q(fasddf $pf₂ $s)
+    let pf₃ : Q((List.onFst $(foo (List.map Prod.fst l)) ($s * ·)) = $(foo (sl.map Prod.fst)))
+      ← asdfa iM iR iMR q(fun p ↦ ($s * p.1, p.2)) l
+    pure ⟨R, iR, iMR, sl, q(Eq.trans (Eq.trans $pf₁ $pf₂') (congrArg _ $pf₃))⟩
   | ~q(0) => pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
   | _ =>
     let k : ℕ ← AtomM.addAtom x
