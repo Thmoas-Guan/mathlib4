@@ -188,17 +188,20 @@ expression is not pre-determined: instead it starts as `ℕ` (when each atom is 
 scalar `(1:ℕ)`) and gets bumped up into bigger semirings when such semirings are encountered.
 
 It is assumed that there is a "linear order" on all the semirings which appear in the expression:
-for any two semirings `R` and `S` which occur, we have either `Algebra R S` or `Algebra S R`). -/
+for any two semirings `R` and `S` which occur, we have either `Algebra R S` or `Algebra S R`).
+(TODO: implement a variant in which a semiring `R` is provided by the user, and the assumption is
+instead that for any semiring `S` which occurs, we have `Algebra S R`.) -/
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
       Σ e : List (Q($R × $M) × ℕ), Q($x = smulAndSum $((e.map Prod.fst).quote))) := do
   match x with
   -- parse an addition: `x₁ + x₁`
   | ~q($x₁ + $x₂) =>
-    let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁
-    let ⟨R₂, iR₂, iMR₂, l₂, pf₂⟩ ← parse M iM x₂
-    let ⟨R, iR, iMR, l₁', l₂', pf₁', pf₂'⟩ ← matchRings M iM x₁ x₂ iMR₁ l₁ pf₁ iMR₂ l₂ pf₂
-    pure ⟨R, iR, iMR, combine (cob iR) id id l₁' l₂', q(sorry)⟩
+    let ⟨_, _, iMR₁, l₁', pf₁'⟩ ← parse M iM x₁
+    let ⟨_, _, iMR₂, l₂', pf₂'⟩ ← parse M iM x₂
+    -- lift from the original semirings of scalars (say `R₁` and `R₂`) to `R₁ ⊗ R₂`
+    let ⟨R, iR, iMR, l₁, l₂, pf₁, pf₂⟩ ← matchRings M iM x₁ x₂ iMR₁ l₁' pf₁' iMR₂ l₂' pf₂'
+    pure ⟨R, iR, iMR, combine (cob iR) id id l₁ l₂, q(sorry)⟩
   -- parse a subtraction: `x₁ - x₂`
   | ~q(@HSub.hSub _ _ _ (@instHSub _ $iM') $x₁ $x₂) =>
     let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁

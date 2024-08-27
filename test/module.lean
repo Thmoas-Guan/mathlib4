@@ -40,13 +40,11 @@ inst✝ : AddCommMonoid V
 ⊢ False
 -/
 #guard_msgs in
-example : x + (y + (x + (z + (x + (u + (x + v)))))) = v + u + z + y + 3 • x:= by
-  module
+example : x + y = x + 2 • y := by module
 
 /-- error: goal x ≠ y is not an equality -/
 #guard_msgs in
-example : x ≠ y := by
-  module
+example : x ≠ y := by module
 
 end Nat
 
