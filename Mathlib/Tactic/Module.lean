@@ -193,13 +193,13 @@ for any two semirings `R` and `S` which occur, we have either `Algebra R S` or `
 instead that for any semiring `S` which occurs, we have `Algebra S R`.) -/
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
-      Σ e : List (Q($R × $M) × ℕ), Q($x = smulAndSum $((e.map Prod.fst).quote))) := do
+      Σ l : List (Q($R × $M) × ℕ), Q($x = smulAndSum $((l.map Prod.fst).quote))) := do
   match x with
-  -- parse an addition: `x₁ + x₁`
+  -- parse an addition: `x₁ + x₂`
   | ~q($x₁ + $x₂) =>
     let ⟨_, _, iMR₁, l₁', pf₁'⟩ ← parse M iM x₁
     let ⟨_, _, iMR₂, l₂', pf₂'⟩ ← parse M iM x₂
-    -- lift from the original semirings of scalars (say `R₁` and `R₂`) to `R₁ ⊗ R₂`
+    -- lift from the semirings of scalars parsed from `x₁`, `x₂` (say `R₁`, `R₂`) to `R₁ ⊗ R₂`
     let ⟨R, iR, iMR, l₁, l₂, pf₁, pf₂⟩ ← matchRings M iM x₁ x₂ iMR₁ l₁' pf₁' iMR₂ l₂' pf₂'
     pure ⟨R, iR, iMR, combine (cob iR) id id l₁ l₂, q(sorry)⟩
   -- parse a subtraction: `x₁ - x₂`
