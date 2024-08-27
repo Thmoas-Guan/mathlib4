@@ -471,6 +471,11 @@ theorem card_orderOf_eq_totient_aux₂ {d : ℕ} (hd : d ∣ Fintype.card α) :
       sum_erase_lt_of_pos (mem_divisors.2 ⟨hd, hc0.ne'⟩) (totient_pos.2 (pos_of_dvd_of_pos hd hc0))
     _ = c := sum_totient _
 
+/-For a group G, if any n > 0, the cardinality of {x : G | x ^ n = 1} has cardinality at most n,
+then G is cyclic.
+
+[Stacks: Lemma 09HXs](https://stacks.math.columbia.edu/tag/09HX) (only the abelian ones)-/
+
 @[to_additive isAddCyclic_of_card_nsmul_eq_zero_le]
 theorem isCyclic_of_card_pow_eq_one_le : IsCyclic α :=
   have : (univ.filter fun a : α => orderOf a = Fintype.card α).Nonempty :=

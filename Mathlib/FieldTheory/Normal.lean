@@ -127,6 +127,10 @@ theorem Normal.of_isSplittingField (p : F[X]) [hFEp : IsSplittingField F E p] : 
   · rw [Polynomial.map_ne_zero_iff (algebraMap F L).injective, mul_ne_zero_iff]
     exact ⟨hp, minpoly.ne_zero hx⟩
 
+/-For any polynomial p over F, the spliting field of p over F is normal over F
+
+[Stacks: Lemma 09HU, fourth part](https://stacks.math.columbia.edu/tag/09HU)-/
+
 instance Polynomial.SplittingField.instNormal (p : F[X]) : Normal F p.SplittingField :=
   Normal.of_isSplittingField p
 

@@ -38,7 +38,12 @@ class IsNormalClosure : Prop where
 /- TODO: show `IsNormalClosure F K L ↔ IsNormalClosure F (integralClosure F K) L`; we can't state
   this yet because `integralClosure F K` needs to have a `Field` instance. -/
 
-/-- The normal closure of `K/F` in `L/F`. -/
+/-- The normal closure of `K/F` in `L/F`.
+
+[Stacks: Lemma 09DT, first part](https://stacks.math.columbia.edu/tag/09DT)
+
+[Stacks: Definition 09BMF, first part](https://stacks.math.columbia.edu/tag/09BMF)-/
+
 noncomputable def normalClosure : IntermediateField F L :=
   ⨆ f : K →ₐ[F] L, f.fieldRange
 
@@ -47,7 +52,10 @@ lemma normalClosure_def : normalClosure F K L = ⨆ f : K →ₐ[F] L, f.fieldRa
 
 variable {F K L}
 
-/-- A normal closure is always normal. -/
+/-- A normal closure is always normal.
+
+[Stacks: Lemma 09DT, second part](https://stacks.math.columbia.edu/tag/09DT)-/
+
 lemma IsNormalClosure.normal [h : IsNormalClosure F K L] : Normal F L :=
   Normal.of_algEquiv topEquiv (h := h.adjoin_rootSet ▸ IntermediateField.normal_iSup (h :=
     fun _ ↦ Normal.of_isSplittingField (hFEp := adjoin_rootSet_isSplittingField <| h.splits _)))
@@ -107,7 +115,10 @@ lemma isNormalClosure_normalClosure : IsNormalClosure F K (normalClosure F K L) 
 end Algebra.IsAlgebraic
 
 /-- A normal closure of `K/F` embeds into any `L/F`
-  where the minimal polynomials of `K/F` splits. -/
+  where the minimal polynomials of `K/F` splits.
+
+[Stacks: Lemma 09DT, third part](https://stacks.math.columbia.edu/tag/09DT)-/
+
 noncomputable def IsNormalClosure.lift [h : IsNormalClosure F K L] {L'} [Field L'] [Algebra F L']
     (splits : ∀ x : K, (minpoly F x).Splits (algebraMap F L')) : L →ₐ[F] L' := by
   have := h.adjoin_rootSet; rw [← gc.l_iSup] at this
@@ -162,6 +173,10 @@ instance normal [h : Normal F L] : Normal F (normalClosure F K L) := by
   obtain _ | φ := isEmpty_or_nonempty (K →ₐ[F] L)
   · rw [normalClosure, iSup_of_empty]; exact Normal.of_algEquiv (botEquiv F L).symm
   · exact (isNormalClosure_normalClosure F K L).normal
+
+/-If L/K/F is a subextension with K/F finite, then the normal closure of K/F in L/F is finite over F
+
+[Stacks: Lemma 0BMG, first part](https://stacks.math.columbia.edu/tag/0BMG)-/
 
 instance is_finiteDimensional [FiniteDimensional F K] :
     FiniteDimensional F (normalClosure F K L) := by

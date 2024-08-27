@@ -208,7 +208,12 @@ instance (f : K[X]) : IsSplittingField K (SplittingFieldAux f.natDegree f) f :=
 
 end SplittingFieldAux
 
-/-- A splitting field of a polynomial. -/
+/-- A splitting field of a polynomial.
+
+[Stacks: Lemma 09HU, first part](https://stacks.math.columbia.edu/tag/09HU)
+
+[Stacks: Definition 09HV](https://stacks.math.columbia.edu/tag/09HV)-/
+
 def SplittingField (f : K[X]) :=
   MvPolynomial (SplittingFieldAux f.natDegree f) K ⧸
     RingHom.ker (MvPolynomial.aeval (R := K) id).toRingHom
@@ -276,12 +281,19 @@ instance _root_.Polynomial.IsSplittingField.splittingField (f : K[X]) :
     IsSplittingField K (SplittingField f) f :=
   IsSplittingField.of_algEquiv _ f (algEquivSplittingFieldAux f).symm
 
+/-Any polynomial f over K splits in the splittingfield of f over K
+
+[Stacks: Lemma 09HU, second part](https://stacks.math.columbia.edu/tag/09HU)-/
+
 protected theorem splits : Splits (algebraMap K (SplittingField f)) f :=
   IsSplittingField.splits f.SplittingField f
 
 variable [Algebra K L] (hb : Splits (algebraMap K L) f)
 
-/-- Embeds the splitting field into any other field that splits the polynomial. -/
+/-- Embeds the splitting field into any other field that splits the polynomial.
+
+[Stacks: Lemma 09HU, third part](https://stacks.math.columbia.edu/tag/09HU)-/
+
 def lift : SplittingField f →ₐ[K] L :=
   IsSplittingField.lift f.SplittingField f hb
 
@@ -307,7 +319,10 @@ instance [Fintype K] (f : K[X]) : Fintype f.SplittingField :=
 instance (f : K[X]) : NoZeroSMulDivisors K f.SplittingField :=
   inferInstance
 
-/-- Any splitting field is isomorphic to `SplittingFieldAux f`. -/
+/-- Any splitting field is isomorphic to `SplittingFieldAux f`.
+
+[Stacks: Lemma 09HU, fifth part](https://stacks.math.columbia.edu/tag/09HU)-/
+
 def algEquiv (f : K[X]) [h : IsSplittingField K L f] : L ≃ₐ[K] SplittingField f :=
   AlgEquiv.ofBijective (lift L f <| splits (SplittingField f) f) <|
     have := finiteDimensional L f
