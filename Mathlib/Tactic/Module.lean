@@ -171,18 +171,12 @@ theorem fasddf {M : Type*} [AddCommMonoid M] {R : Type*} [Semiring R] [Module R 
   sorry
 
 def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (iR : Q(Ring $R))
-    (iMR : Q(@Module $R $M Ring.toSemiring $iM)) :
+    (iMR : Q(@Module $R $M Ring.toSemiring $iM)) (f : Q($R × $M → $R × $M)) :
     ∀ (l : List (Q($R × $M) × ℕ)),
-      MetaM Q(List.map (fun p ↦ (-p.1, p.2)) $(foo (l.map Prod.fst))
-        = $(foo ((l.map (fun ⟨p, k⟩ ↦ (q((- Prod.fst $p, Prod.snd $p)), k))).map Prod.fst)))
+      MetaM Q(List.map $f $(foo (l.map Prod.fst))
+        = $(foo ((l.map (fun ⟨p, k⟩ ↦ (q($f $p), k))).map Prod.fst)))
   | [] => pure q(rfl)
-  | (e, _) :: l => do
-    let r : Q($R) := q(Prod.fst $e)
-    let m : Q($M) := q(Prod.snd $e)
-    let pf : Q((-$r, $m) :: List.map (fun p ↦ (-p.1, p.2)) $(foo (l.map Prod.fst)) = (-$r, $m)
-        :: $(foo ((l.map (fun ⟨p, k⟩ ↦ (q((- Prod.fst $p, Prod.snd $p)), k))).map Prod.fst))) :=
-      q(congrArg _ $(← asdfa iM iR iMR l))
-    pure pf
+  | _ :: l => do pure q(congrArg _ $(← asdfa iM iR iMR f l))
 
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
@@ -204,28 +198,34 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let iR' ← synthInstanceQ q(Ring $R)
     pure ⟨R, iR, iMR, combine (boc iR') id (bco iR') l₁'' l₂'', q(sorry)⟩
   | ~q(@Neg.neg _ $iM' $y) =>
-    let ⟨R, iR, iMR, l, pf⟩ ← parse M iM y
+    let ⟨_, _, iMR₀, l, pf⟩ ← parse M iM y
     let iZ ← synthInstanceQ q(Semiring ℤ)
     let _i ← synthInstanceQ q(AddCommGroup $M)
     let iMZ ← synthInstanceQ q(Module ℤ $M)
-    let ⟨R', iR', iMR', l', pf'⟩ ← liftRing M iM y iMR l pf q(ℤ) iZ iMZ
-    let iR'' ← synthInstanceQ q(Ring $R')
+    let ⟨R, iR, iMR, l', pf'⟩ ← liftRing M iM y iMR₀ l pf q(ℤ) iZ iMZ
+    let iR'' ← synthInstanceQ q(Ring $R)
     assumeInstancesCommute
-    let qneg : Q($R' × $M) → Q($R' × $M) := fun (p : Q($R' × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
+    let qneg : Q($R × $M) → Q($R × $M) := fun (p : Q($R × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
     have pf'' :
         Q(List.onFst $(foo (l'.map Prod.fst)) Neg.neg = $(foo ((l'.onFst qneg).map Prod.fst))) :=
-      ← asdfa iM iR'' iMR' l'
-    have pf''' : Q(-$y = smulAndSum (R := $R') (List.onFst $(foo (l'.map Prod.fst)) Neg.neg)) :=
+      ← asdfa iM iR'' iMR q(fun p ↦ (- p.1, p.2)) l'
+    have pf''' : Q(-$y = smulAndSum (R := $R) (List.onFst $(foo (l'.map Prod.fst)) Neg.neg)) :=
       q(fasdasdfdf $pf')
-    pure ⟨R', iR', iMR', l'.onFst qneg, q(Eq.trans $pf''' (congrArg smulAndSum $pf''))⟩
-  | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s $y) =>
-    let ⟨R, iR, iMR, l, pf⟩ ← parse M iM y
+    pure ⟨R, iR, iMR, l'.onFst qneg, q(Eq.trans $pf''' (congrArg smulAndSum $pf''))⟩
+  | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s₀ $y) =>
+    let ⟨R₀, iR₀, iMR₀, l₀, pf₀⟩ ← parse M iM y
     let i₁ ← synthInstanceQ q(Semiring $S)
     let i₂ ← synthInstanceQ q(Module $S $M)
     assumeInstancesCommute
-    let ⟨R', iR', iMR', l', pf', s₂, pf₂⟩ ← matchRings' M iM y iMR l pf i₁ i₂ s
-    let l'' : List (Q($R' × $M) × ℕ) := l'.onFst (fun p ↦ q(($s₂ * Prod.fst $p, Prod.snd $p)))
-    pure ⟨R', iR', iMR', l'', q(sorry)⟩
+    let ⟨R, iR, iMR, l, pf, s, pf₂⟩ ← matchRings' M iM y iMR₀ l₀ pf₀ i₁ i₂ s₀
+    let sl : List (Q($R × $M) × ℕ) := l.onFst (fun p ↦ q(($s * Prod.fst $p, Prod.snd $p)))
+    let qsmul : Q($R × $M) → Q($R × $M) := fun (p : Q($R × $M)) ↦ q(($s * Prod.fst $p, Prod.snd $p))
+    -- have pf'' :
+    --     Q(List.onFst $(foo (l'.map Prod.fst)) Neg.neg = $(foo ((l'.onFst qneg).map Prod.fst))) :=
+    --   ← asdfa iM iR'' iMR' q(fun p ↦ (- p.1, p.2)) l'
+    -- have pf''' : Q(-$y = smulAndSum (R := $R') (List.onFst $(foo (l'.map Prod.fst)) Neg.neg)) :=
+    --   q(fasdasdfdf $pf')
+    pure ⟨R, iR, iMR, sl, q(sorry)⟩
   | ~q(0) => pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
   | _ =>
     let k : ℕ ← AtomM.addAtom x
