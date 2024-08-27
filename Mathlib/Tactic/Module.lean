@@ -178,15 +178,25 @@ def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (
   | [] => pure q(rfl)
   | _ :: l => do pure q(congrArg _ $(← asdfa iM iR iMR f l))
 
+/-- The main algorithm behind the `match_scalars` and `module` tactics: partially-normalizing an
+expression in an additive commutative monoid `M` into the form c1 • x1 + c2 • x2 + ... c_k • x_k,
+where x1, x2, ... are distinct atoms in `M`, and c1, c2, ... are scalars. The scalar type of the
+expression is not pre-determined: instead it starts as `ℕ` (when each atom is initially given a
+scalar `(1:ℕ)`) and gets bumped up into bigger semirings when such semirings are encountered.
+
+It is assumed that there is a "linear order" on all the semirings which appear in the expression:
+for any two semirings `R` and `S` which occur, we have either `Algebra R S` or `Algebra S R`). -/
 partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q($M)) :
     AtomM (Σ R : Q(Type), Σ iR : Q(Semiring $R), Σ _ : Q(@Module $R $M $iR $iM),
       Σ e : List (Q($R × $M) × ℕ), Q($x = smulAndSum $(foo (e.map Prod.fst)))) := do
   match x with
+  -- parse an addition: `x₁ + x₁`
   | ~q($x₁ + $x₂) =>
     let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁
     let ⟨R₂, iR₂, iMR₂, l₂, pf₂⟩ ← parse M iM x₂
     let ⟨R, iR, iMR, l₁', l₂', pf₁', pf₂'⟩ ← matchRings M iM x₁ x₂ iMR₁ l₁ pf₁ iMR₂ l₂ pf₂
     pure ⟨R, iR, iMR, combine (cob iR) id id l₁' l₂', q(sorry)⟩
+  -- parse a subtraction: `x₁ - x₂`
   | ~q(@HSub.hSub _ _ _ (@instHSub _ $iM') $x₁ $x₂) =>
     let ⟨R₁, iR₁, iMR₁, l₁, pf₁⟩ ← parse M iM x₁
     let ⟨R₂, iR₂, iMR₂, l₂, pf₂⟩ ← parse M iM x₂
@@ -197,6 +207,7 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let ⟨R, iR, iMR, l₁'', l₂'', pf₁'', pf₂''⟩ ← matchRings M iM x₁ x₂ iMR₁' l₁' pf₁' iMR₂' l₂' pf₂'
     let iR' ← synthInstanceQ q(Ring $R)
     pure ⟨R, iR, iMR, combine (boc iR') id (bco iR') l₁'' l₂'', q(sorry)⟩
+  -- parse a negation: `-y`
   | ~q(@Neg.neg _ $iM' $y) =>
     let ⟨_, _, iMR₀, l₀, pf₀⟩ ← parse M iM y
     let iZ ← synthInstanceQ q(Semiring ℤ)
@@ -213,6 +224,7 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     have pf_left : Q(-$y = smulAndSum (R := $R) (List.onFst $(foo (l.map Prod.fst)) Neg.neg)) :=
       q(fasdasdfdf $pf)
     pure ⟨R, iR, iMR, l.onFst qneg, q(Eq.trans $pf_left (congrArg smulAndSum $pf_right))⟩
+  -- parse a scalar multiplication: `(s₀ : S) • y`
   | ~q(@HSMul.hSMul _ _ _ (@instHSMul $S _ $iS) $s₀ $y) =>
     let ⟨_, _, iMR₀, l₀, pf₀⟩ ← parse M iM y
     let i₁ ← synthInstanceQ q(Semiring $S)
@@ -222,12 +234,12 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let ⟨R, iR, iMR, l, (pf₂ : Q($y = smulAndSum $(foo (List.map Prod.fst l)))), s,
       (pf₁ : Q($s₀ • $y = $s • $y))⟩ ← matchRings' M iM y iMR₀ l₀ pf₀ i₁ i₂ s₀
     let sl : List (Q($R × $M) × ℕ) := l.onFst (fun p ↦ q(($s * Prod.fst $p, Prod.snd $p)))
-    let pf₂' : Q($s • $y = smulAndSum (List.onFst $(foo (List.map Prod.fst l)) ($s * ·))) :=
-      q(fasddf $pf₂ $s)
     let pf₃ : Q((List.onFst $(foo (List.map Prod.fst l)) ($s * ·)) = $(foo (sl.map Prod.fst)))
       ← asdfa iM iR iMR q(fun p ↦ ($s * p.1, p.2)) l
-    pure ⟨R, iR, iMR, sl, q(Eq.trans (Eq.trans $pf₁ $pf₂') (congrArg _ $pf₃))⟩
+    pure ⟨R, iR, iMR, sl, q(Eq.trans (Eq.trans $pf₁ (fasddf $pf₂ $s)) (congrArg _ $pf₃))⟩
+  -- parse a `(0:M)`
   | ~q(0) => pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [], q(zero_pf $M)⟩
+  -- anything else should be treated as an atom
   | _ =>
     let k : ℕ ← AtomM.addAtom x
     pure ⟨q(Nat), q(Nat.instSemiring), q(AddCommGroup.toNatModule), [(q((1, $x)), k)], q(one_pf $x)⟩
@@ -327,7 +339,7 @@ def matchScalarsAux (g : MVarId) : AtomM (List MVarId) := do
   have _iR₁ : Q(Semiring.{0} $R₁) := e₁.snd.fst
   let iMR₁ ← synthInstanceQ q(Module $R₁ $M)
   -- would be better to do the following, but doesn't work?
-  -- have iMR₁ : Q(@Module.{0, v} $R₁ $M $iR₁ $iM) := e.snd.snd.fst
+  -- have iMR₁ : Q(@Module.{0, v} $R₁ $M $_iR₁ $iM) := e.snd.snd.fst
   assumeInstancesCommute
   have l₁ : List (Q($R₁ × $M) × ℕ) := e₁.snd.snd.snd.fst
   let ll₁ : Q(List ($R₁ × $M)) := foo (List.map Prod.fst l₁)
