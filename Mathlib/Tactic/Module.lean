@@ -82,13 +82,12 @@ def List.quote {v : Level} {α : Q(Type v)} : List (Q($α)) → Q(List $α)
   | [] => q([])
   | e :: t => q($e :: $(t.quote))
 
-def asdfa {v : Level} {M : Q(Type v)} (iM : Q(AddCommMonoid $M)) {R : Q(Type)} (iR : Q(Semiring $R))
-    (iMR : Q(@Module $R $M $iR $iM)) (f : Q($R × $M → $R × $M)) :
-    ∀ (l : List (Q($R × $M) × ℕ)),
-      MetaM Q(List.map $f $((l.map Prod.fst).quote)
+def List.map_quote_map_fst {v : Level} (α : Q(Type v)) (f : Q($α → $α)) :
+    ∀ (l : List (Q($α) × ℕ)),
+      Q(List.map $f $((l.map Prod.fst).quote)
         = $(((l.map (fun ⟨p, k⟩ ↦ (q($f $p), k))).map Prod.fst).quote))
-  | [] => pure q(rfl)
-  | _ :: l => do pure q(congrArg _ $(← asdfa iM iR iMR f l))
+  | [] => q(rfl)
+  | _ :: l => q(congrArg _ $(map_quote_map_fst α f l))
 
 def matchRings {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x₁ x₂ : Q($M))
     {R₁ : Q(Type)} {iR₁ : Q(Semiring $R₁)} (iMR₁ : Q(@Module $R₁ $M $iR₁ $iM))
@@ -224,7 +223,7 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let qneg : Q($R × $M) → Q($R × $M) := fun (p : Q($R × $M)) ↦ q((- Prod.fst $p, Prod.snd $p))
     have pf_right :
         Q(List.onFst $((l.map Prod.fst).quote) Neg.neg = $(((l.onFst qneg).map Prod.fst).quote)) :=
-      ← asdfa iM iR iMR q(fun p ↦ (- p.1, p.2)) l
+      l.map_quote_map_fst q($R × $M) q(fun p ↦ (- p.1, p.2))
     have pf_left : Q(-$y = smulAndSum (R := $R) (List.onFst $((l.map Prod.fst).quote) Neg.neg)) :=
       q(neg_eq_smulAndSum $pf)
     pure ⟨R, iR, iMR, l.onFst qneg, q(Eq.trans $pf_left (congrArg smulAndSum $pf_right))⟩
@@ -235,11 +234,11 @@ partial def parse {v : Level} (M : Q(Type v)) (iM : Q(AddCommMonoid $M)) (x : Q(
     let i₂ ← synthInstanceQ q(Module $S $M)
     assumeInstancesCommute
     -- lift from original semiring of scalars (say `R₀`) to `R₀ ⊗ S`
-    let ⟨R, iR, iMR, l, (pf₂ : Q($y = smulAndSum $((List.map Prod.fst l).quote))), s,
+    let ⟨R, iR, iMR, l, (pf₂ : Q($y = smulAndSum $((l.map Prod.fst).quote))), s,
       (pf₁ : Q($s₀ • $y = $s • $y))⟩ ← matchRings' M iM y iMR₀ l₀ pf₀ i₁ i₂ s₀
     let sl : List (Q($R × $M) × ℕ) := l.onFst (fun p ↦ q(($s * Prod.fst $p, Prod.snd $p)))
-    let pf₃ : Q((List.onFst $((List.map Prod.fst l).quote) ($s * ·)) = $((sl.map Prod.fst).quote))
-      ← asdfa iM iR iMR q(fun p ↦ ($s * p.1, p.2)) l
+    let pf₃ : Q((List.onFst $((l.map Prod.fst).quote) ($s * ·)) = $((sl.map Prod.fst).quote)) :=
+      l.map_quote_map_fst q($R × $M) q(fun p ↦ ($s * p.1, p.2))
     pure ⟨R, iR, iMR, sl,
       q(Eq.trans (Eq.trans $pf₁ (smul_eq_smulAndSum $pf₂ $s)) (congrArg _ $pf₃))⟩
   -- parse a `(0:M)`
